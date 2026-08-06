@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - QHphysio</title>
     <style>
-        /* CSS Cơ bản */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -14,7 +13,6 @@
             color: #333;
         }
 
-        /* Thanh điều hướng */
         .navbar {
             background-color: #2c3e50;
             color: white;
@@ -63,7 +61,6 @@
             background-color: #c0392b;
         }
 
-        /* Layout 2 cột */
         .container {
             max-width: 1200px;
             margin: 30px auto;
@@ -73,7 +70,7 @@
             gap: 30px;
         }
 
-        /* Cột Sidebar - Danh sách bài */
+        /* Sidebar */
         .sidebar {
             background: white;
             padding: 20px;
@@ -122,7 +119,7 @@
             font-weight: 600;
         }
 
-        /* Cột Nội dung chính */
+        /* Main Content */
         .main-content {
             background: white;
             padding: 40px;
@@ -153,7 +150,7 @@
             font-size: 1.05em;
         }
 
-        /* CSS cho Bảng được tạo từ Admin */
+        /* CSS hiển thị Bảng đẹp mắt */
         .document-text table {
             width: 100%;
             border-collapse: collapse;
@@ -170,7 +167,6 @@
             background-color: #f8f9fa;
         }
 
-        /* Trạng thái Loading */
         .loading-text {
             text-align: center;
             color: #7f8c8d;
@@ -181,7 +177,6 @@
 </head>
 <body>
 
-    <!-- Navbar -->
     <nav class="navbar">
         <h2>QHphysio</h2>
         <div class="nav-links">
@@ -192,7 +187,7 @@
     </nav>
 
     <div class="container">
-        <!-- Sidebar -->
+        <!-- Cột Sidebar -->
         <aside class="sidebar">
             <h3>Danh mục tra cứu</h3>
             <ul class="category-list" id="document-list">
@@ -200,7 +195,7 @@
             </ul>
         </aside>
 
-        <!-- Main Content -->
+        <!-- Cột Nội dung -->
         <main class="main-content">
             <div id="content-viewer" style="display: none;">
                 <div class="content-header">
@@ -218,36 +213,35 @@
         </main>
     </div>
 
-    <!-- Script kết nối Firebase và xử lý Logic -->
+    <!-- Script kết nối Firebase -->
     <script type="module">
         import { auth, db, onAuthStateChanged, signOut, collection, getDocs } from './firebase-config.js';
 
-        // Biến toàn cục để lưu trữ dữ liệu bài viết đã tải về (giúp chuyển bài nhanh không cần tải lại)
-        let articlesData = {};
+        let articlesData = {}; // Biến lưu tạm dữ liệu để chuyển bài mượt mà
 
-        // 1. Kiểm tra trạng thái đăng nhập
+        // 1. Kiểm tra đăng nhập
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('user-info').innerText = user.email;
-                loadArticles(); // Gọi hàm lấy dữ liệu
+                loadArticles(); 
             } else {
-                window.location.href = 'index.html'; // Đá văng nếu chưa đăng nhập
+                window.location.href = 'index.html'; // Chưa đăng nhập thì quay về trang chủ
             }
         });
 
-        // 2. Xử lý Đăng xuất
+        // 2. Nút Đăng xuất
         document.getElementById('logout-btn').addEventListener('click', () => {
             signOut(auth).then(() => {
                 window.location.href = 'index.html';
             });
         });
 
-        // 3. Hàm tải danh sách bài viết từ Firestore
+        // 3. Hàm tải danh sách tài liệu
         async function loadArticles() {
             try {
                 const querySnapshot = await getDocs(collection(db, "articles"));
                 const listElement = document.getElementById('document-list');
-                listElement.innerHTML = ''; // Xóa chữ "Đang tải..."
+                listElement.innerHTML = ''; 
 
                 if (querySnapshot.empty) {
                     listElement.innerHTML = '<li class="loading-text">Chưa có tài liệu nào.</li>';
@@ -258,9 +252,9 @@
 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    articlesData[doc.id] = data; // Lưu dữ liệu vào object
+                    articlesData[doc.id] = data;
 
-                    // Tạo thẻ danh sách (<li> và <a>)
+                    // Khởi tạo thẻ menu bên trái
                     const li = document.createElement('li');
                     const a = document.createElement('a');
                     a.href = "#";
@@ -268,7 +262,6 @@
                     a.id = `link-${doc.id}`;
                     a.innerText = data.title;
                     
-                    // Sự kiện khi bấm vào 1 bài viết
                     a.onclick = (e) => {
                         e.preventDefault();
                         window.showArticle(doc.id);
@@ -277,7 +270,7 @@
                     li.appendChild(a);
                     listElement.appendChild(li);
 
-                    // Tự động hiển thị bài viết đầu tiên khi vừa load xong
+                    // Mặc định mở bài đầu tiên
                     if (isFirstArticle) {
                         window.showArticle(doc.id);
                         isFirstArticle = false;
@@ -285,35 +278,43 @@
                 });
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu: ", error);
-                document.getElementById('document-list').innerHTML = '<li class="loading-text">Lỗi tải dữ liệu. Hãy kiểm tra Security Rules.</li>';
+                document.getElementById('document-list').innerHTML = '<li class="loading-text">Lỗi tải dữ liệu. Hãy kiểm tra Console (F12).</li>';
             }
         }
 
-        // 4. Hàm hiển thị nội dung bài viết (Gắn vào window để gọi từ thuộc tính onclick)
+        // 4. Hàm hiển thị nội dung chi tiết
         window.showArticle = function(id) {
             const data = articlesData[id];
             if (!data) return;
 
-            // Xử lý làm nổi bật (active) bài đang chọn trên thanh Sidebar
+            // Đổi màu nền (active) cho bài đang xem ở menu trái
             document.querySelectorAll('.doc-link').forEach(el => el.classList.remove('active'));
             const activeLink = document.getElementById(`link-${id}`);
             if (activeLink) activeLink.classList.add('active');
 
-            // Ẩn lời chào, hiện khu vực đọc bài
+            // Bật khung đọc bài
             document.getElementById('welcome-viewer').style.display = 'none';
             document.getElementById('content-viewer').style.display = 'block';
 
-            // Đổ dữ liệu vào HTML
             document.getElementById('doc-title').innerText = data.title;
             
-            // Chuyển đổi timestamp của Firebase sang ngày tháng năm
+            // Thuật toán xử lý ngày tháng (hỗ trợ cả Firebase Timestamp cũ và Chuỗi ISO mới)
             let dateString = "Không rõ";
             if (data.createdAt) {
-                const dateObj = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-                dateString = dateObj.toLocaleDateString('vi-VN');
+                try {
+                    // Nếu là Object Timestamp của Firebase
+                    if (typeof data.createdAt.toDate === 'function') {
+                        dateString = data.createdAt.toDate().toLocaleDateString('vi-VN');
+                    } 
+                    // Nếu là chuỗi ISO (từ file admin.html mới nhất)
+                    else {
+                        dateString = new Date(data.createdAt).toLocaleDateString('vi-VN');
+                    }
+                } catch(e) {
+                    console.log("Lỗi định dạng ngày:", e);
+                }
             }
 
-            // Dịch danh mục ra tiếng Việt (tùy chọn)
             let categoryName = data.category;
             if (categoryName === 'ly-luan') categoryName = "Lý luận lâm sàng";
             if (categoryName === 'danh-gia') categoryName = "Thang điểm đánh giá";
@@ -321,7 +322,7 @@
 
             document.getElementById('doc-meta').innerText = `Cập nhật: ${dateString} | Danh mục: ${categoryName}`;
             
-            // Render nguyên vẹn các thẻ HTML (in đậm, in nghiêng, table) tạo từ admin
+            // Nhúng thẳng HTML sinh ra từ bảng quản trị
             document.getElementById('doc-body').innerHTML = data.content;
         };
     </script>
