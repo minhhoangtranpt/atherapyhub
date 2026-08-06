@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản trị nội dung - QHphysio</title>
+    
+    <style>
+        /* CSS Cơ bản */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        .navbar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #bdc3c7;
+            text-decoration: none;
+            font-size: 0.95em;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .btn-action {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Layout Form */
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .header-section {
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        /* Tùy chỉnh Trình soạn thảo (Native Editor) */
+        .editor-toolbar {
+            background-color: #f1f2f6;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            padding: 10px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .editor-toolbar button {
+            background: white;
+            border: 1px solid #dcdde1;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #2f3640;
+            transition: background 0.2s;
+        }
+
+        .editor-toolbar button:hover {
+            background: #e1b12c;
+            color: white;
+            border-color: #e1b12c;
+        }
+
+        .custom-editor {
+            border: 1px solid #ccc;
+            border-radius: 0 0 4px 4px;
+            min-height: 400px;
+            padding: 15px;
+            font-size: 1.05em;
+            line-height: 1.6;
+            outline: none;
+            background-color: white;
+            overflow-y: auto;
+        }
+
+        /* Định dạng Bảng hiển thị bên trong Editor */
+        .custom-editor table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .custom-editor table, .custom-editor th, .custom-editor td {
+            border: 1px solid #bdc3c7;
+        }
+        
+        .custom-editor td, .custom-editor th {
+            padding: 8px;
+        }
+
+        /* Nút đăng bài */
+        .submit-wrapper {
+            margin-top: 30px;
+            text-align: right;
+        }
+
+        .btn-publish {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <h2>QHphysio | Bảng Quản Trị</h2>
+        <div class="nav-links">
+            <a href="dashboard.html">← Trở về Dashboard</a>
+            <span style="color: #f1c40f; margin-left: 15px;">Admin</span>
+            <button class="btn-action" id="logout-btn">Đăng xuất</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header-section">
+            <h1 style="margin: 0; color: #2c3e50;">Tạo Bài Viết / Tài Liệu Mới</h1>
+        </div>
+
+        <form id="article-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="doc-title">Tiêu đề bài viết</label>
+                    <input type="text" id="doc-title" placeholder="VD: Khung lý luận lâm sàng ICF..." required>
+                </div>
+                <div class="form-group">
+                    <label for="doc-category">Danh mục</label>
+                    <select id="doc-category">
+                        <option value="ly-luan">Lý luận lâm sàng</option>
+                        <option value="danh-gia">Thang điểm đánh giá</option>
+                        <option value="phac-do">Phác đồ bài tập</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Nội dung tóm tắt</label>
+                
+                <!-- Thanh công cụ tự làm -->
+                <div class="editor-toolbar">
+                    <!-- Thuộc tính type="button" rất quan trọng để không kích hoạt submit form khi bấm -->
+                    <button type="button" onclick="formatText('bold')"><b>B</b> (Đậm)</button>
+                    <button type="button" onclick="formatText('italic')"><i>I</i> (Nghiêng)</button>
+                    <button type="button" onclick="formatText('underline')"><u>U</u> (Gạch dưới)</button>
+                    <button type="button" onclick="formatText('insertUnorderedList')">Danh sách chấm</button>
+                    <button type="button" onclick="formatText('insertOrderedList')">Danh sách số</button>
+                    <button type="button" onclick="insertTable()" style="background-color: #3498db; color: white; border: none;">+ Thêm Bảng</button>
+                </div>
+                
+                <!-- Khung soạn thảo thuần HTML5 -->
+                <div id="editor-container" class="custom-editor" contenteditable="true">
+                    <p>Bắt đầu viết tóm tắt lâm sàng tại đây...</p>
+                </div>
+            </div>
+
+            <div class="submit-wrapper">
+                <button type="submit" class="btn-publish">Đăng Tài Liệu</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Hàm định dạng văn bản cơ bản (đậm, nghiêng, danh sách)
+        function formatText(command) {
+            document.execCommand(command, false, null);
+            document.getElementById('editor-container').focus();
+        }
+
+        // Hàm tạo Bảng tùy chỉnh
+        function insertTable() {
+            // Hiển thị hộp thoại hỏi số lượng hàng và cột
+            let rows = prompt("Nhập số hàng của bảng:", "3");
+            let cols = prompt("Nhập số cột của bảng:", "3");
+
+            if (rows != null && cols != null && !isNaN(rows) && !isNaN(cols)) {
+                // Tạo chuỗi HTML cho bảng
+                let tableHTML = '<table><tbody>';
+                for (let i = 0; i < rows; i++) {
+                    tableHTML += '<tr>';
+                    for (let j = 0; j < cols; j++) {
+                        tableHTML += '<td>Nhập liệu...</td>';
+                    }
+                    tableHTML += '</tr>';
+                }
+                tableHTML += '</tbody></table><p><br></p>'; // Thêm 1 dòng trống dưới bảng để dễ gõ tiếp
+
+                // Chèn bảng vào vị trí con trỏ chuột trong khung soạn thảo
+                document.execCommand('insertHTML', false, tableHTML);
+            } else {
+                alert("Số hàng và cột phải là số hợp lệ!");
+            }
+        }
+
+        // Xử lý khi nhấn nút đăng bài
+        document.getElementById('article-form').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+
+            const title = document.getElementById('doc-title').value;
+            const category = document.getElementById('doc-category').value;
+            
+            // Lấy toàn bộ nội dung HTML bên trong div soạn thảo
+            const contentHTML = document.getElementById('editor-container').innerHTML;
+
+            console.log("Dữ liệu chuẩn bị gửi (Không phụ thuộc bên thứ 3):");
+            console.log("Tiêu đề:", title);
+            console.log("HTML Bài viết:", contentHTML);
+
+            alert("Tạo bài thành công! Xem kết quả log ở Console (F12).");
+        });
+    </script>
+</body>
+</html>
