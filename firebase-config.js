@@ -1,16 +1,16 @@
-// firebase-config.js
-
-// 1. Nhập các module Firebase cốt lõi từ CDN (Phiên bản 12.17.1)
+// Nhập các module Firebase cốt lõi từ CDN (Phiên bản 12.17.1)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
 
-// 2. Nhập các module cho tính năng Đăng nhập (Authentication)
+// TẠM TẮT Analytics để tránh bị lỗi do các phần mềm chặn quảng cáo (Adblock) trên trình duyệt của người dùng
+// import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
+
+// Nhập module cho tính năng Đăng nhập
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
-// 3. Nhập các module cho Cơ sở dữ liệu (Firestore)
+// Nhập module cho Cơ sở dữ liệu (Firestore)
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-// Cấu hình ứng dụng web QHphysio của bạn
+// Cấu hình dự án QHphysio
 const firebaseConfig = {
     apiKey: "AIzaSyA9X9Ot7qA88POY2JmsRaQuagvRq2M83Aw",
     authDomain: "qhphysio.firebaseapp.com",
@@ -24,12 +24,11 @@ const firebaseConfig = {
 // Khởi tạo Firebase
 const app = initializeApp(firebaseConfig);
 
-// Khởi tạo các dịch vụ
-const analytics = getAnalytics(app);
+// Khởi tạo các dịch vụ cần thiết (bỏ qua Analytics)
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Xuất (export) các biến và hàm này để các trang HTML khác gọi được
+// Xuất để các file HTML sử dụng
 export { 
     auth, 
     db, 
