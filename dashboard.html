@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - QHphysio</title>
+    <style>
+        /* CSS Reset & Cơ bản */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        /* Thanh điều hướng Navbar */
+        .navbar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h2 {
+            margin: 0;
+            font-size: 1.5em;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links span {
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+
+        .btn-logout {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn-logout:hover {
+            background-color: #c0392b;
+        }
+
+        /* Layout chính */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+        }
+
+        /* Sidebar - Danh mục (Directory) */
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            margin-top: 0;
+            color: #34495e;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+
+        .category-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .category-list li {
+            margin-bottom: 10px;
+        }
+
+        .category-list a {
+            text-decoration: none;
+            color: #555;
+            display: block;
+            padding: 8px 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .category-list a:hover, .category-list a.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* Vùng hiển thị nội dung chính */
+        .main-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .content-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .content-header h1 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+        }
+
+        .meta-data {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .document-text {
+            line-height: 1.6;
+            color: #444;
+            font-size: 1.05em;
+            margin-bottom: 30px;
+        }
+
+        /* Khu vực Video/Hình ảnh */
+        .media-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .media-section h3 {
+            margin-top: 0;
+            color: #34495e;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* Tỷ lệ 16:9 */
+            height: 0;
+            overflow: hidden;
+            border-radius: 4px;
+            background-color: #000;
+        }
+
+        /* Khung xám giả lập video chờ dữ liệu thực */
+        .video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <h2>QHphysio</h2>
+        <div class="nav-links">
+            <span id="user-info">Đang tải tài khoản...</span>
+            <button class="btn-logout" id="logout-btn">Đăng xuất</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Cột trái: Cấu trúc danh mục (Directory Layout) -->
+        <aside class="sidebar">
+            <h3>Danh mục tra cứu</h3>
+            <ul class="category-list" id="document-list">
+                <!-- Danh sách này sau này sẽ được render tự động từ Firebase -->
+                <li><a href="#" class="active">Khung lý luận lâm sàng (ICF)</a></li>
+                <li><a href="#">Mô hình Planetary</a></li>
+                <li><a href="#">Phân loại STarT Back</a></li>
+                <li><a href="#">Đánh giá sinh cơ học khớp</a></li>
+                <li><a href="#">Phác đồ bài tập chi dưới</a></li>
+            </ul>
+        </aside>
+
+        <!-- Cột phải: Nội dung bài viết -->
+        <main class="main-content" id="content-viewer">
+            <div class="content-header">
+                <h1 id="doc-title">Khung lý luận lâm sàng (ICF)</h1>
+                <div class="meta-data">Cập nhật lần cuối: 06/08/2026 | Danh mục: Lý luận lâm sàng</div>
+            </div>
+
+            <div class="document-text" id="doc-body">
+                <p>Nội dung tóm tắt chi tiết sẽ được hiển thị tại đây. Phần này được thiết kế để dễ đọc, trình bày văn bản rõ ràng phục vụ cho quá trình đánh giá và ra quyết định lâm sàng.</p>
+                <p>Trong thực tế, khi bạn kết nối với Firestore, đoạn văn bản này sẽ được thay thế bằng dữ liệu HTML được lưu trữ trên Database (ví dụ: dữ liệu từ trang quản trị viên tạo ra).</p>
+                <ul>
+                    <li>Cấu trúc và Chức năng cơ thể</li>
+                    <li>Hoạt động (Giới hạn hoạt động)</li>
+                    <li>Sự tham gia (Hạn chế tham gia)</li>
+                </ul>
+            </div>
+
+            <!-- Khu vực hiển thị Hình ảnh / Video bài tập -->
+            <div class="media-section" id="doc-media">
+                <h3>Video hướng dẫn thao tác</h3>
+                <div class="video-container">
+                    <!-- Nơi nhúng thẻ <video> hoặc <iframe> YouTube -->
+                    <div class="video-placeholder">Khu vực hiển thị Video/Hình ảnh bài tập</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Script giữ chỗ cho logic lấy dữ liệu (Fetch Data) -->
+    <script>
+        // File này đã sẵn sàng để gắn logic kiểm tra đăng nhập và tải nội dung từ Firebase
+        /* 
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            // Logic đăng xuất Firebase ở đây
+        });
+        */
+    </script>
+</body>
+</html>
