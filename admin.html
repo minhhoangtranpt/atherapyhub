@@ -170,6 +170,11 @@
             font-weight: bold;
             cursor: pointer;
         }
+        
+        .btn-publish:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -178,7 +183,7 @@
         <h2>QHphysio | Bảng Quản Trị</h2>
         <div class="nav-links">
             <a href="dashboard.html">← Trở về Dashboard</a>
-            <span style="color: #f1c40f; margin-left: 15px;">Admin</span>
+            <span style="color: #f1c40f; margin-left: 15px;" id="admin-email">Đang kiểm tra...</span>
             <button class="btn-action" id="logout-btn">Đăng xuất</button>
         </div>
     </nav>
@@ -207,9 +212,8 @@
             <div class="form-group">
                 <label>Nội dung tóm tắt</label>
                 
-                <!-- Thanh công cụ tự làm -->
+                <!-- Thanh công cụ -->
                 <div class="editor-toolbar">
-                    <!-- Thuộc tính type="button" rất quan trọng để không kích hoạt submit form khi bấm -->
                     <button type="button" onclick="formatText('bold')"><b>B</b> (Đậm)</button>
                     <button type="button" onclick="formatText('italic')"><i>I</i> (Nghiêng)</button>
                     <button type="button" onclick="formatText('underline')"><u>U</u> (Gạch dưới)</button>
@@ -225,26 +229,43 @@
             </div>
 
             <div class="submit-wrapper">
-                <button type="submit" class="btn-publish">Đăng Tài Liệu</button>
+                <button type="submit" class="btn-publish" id="publish-btn">Đăng Tài Liệu</button>
             </div>
         </form>
     </div>
 
-    <script>
-        // Hàm định dạng văn bản cơ bản (đậm, nghiêng, danh sách)
-        function formatText(command) {
+    <!-- Script kết nối Firebase và xử lý Logic -->
+    <script type="module">
+        import { auth, db, onAuthStateChanged, signOut, collection, addDoc } from './firebase-config.js';
+
+        // 1. Kiểm tra trạng thái đăng nhập
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('admin-email').innerText = user.email;
+            } else {
+                // Nếu chưa đăng nhập, đá văng ra trang chủ
+                window.location.href = 'index.html';
+            }
+        });
+
+        // 2. Xử lý Đăng xuất
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            });
+        });
+
+        // 3. Khai báo các hàm giao diện lên đối tượng 'window' để HTML có thể gọi được
+        window.formatText = function(command) {
             document.execCommand(command, false, null);
             document.getElementById('editor-container').focus();
-        }
+        };
 
-        // Hàm tạo Bảng tùy chỉnh
-        function insertTable() {
-            // Hiển thị hộp thoại hỏi số lượng hàng và cột
+        window.insertTable = function() {
             let rows = prompt("Nhập số hàng của bảng:", "3");
             let cols = prompt("Nhập số cột của bảng:", "3");
 
             if (rows != null && cols != null && !isNaN(rows) && !isNaN(cols)) {
-                // Tạo chuỗi HTML cho bảng
                 let tableHTML = '<table><tbody>';
                 for (let i = 0; i < rows; i++) {
                     tableHTML += '<tr>';
@@ -253,30 +274,47 @@
                     }
                     tableHTML += '</tr>';
                 }
-                tableHTML += '</tbody></table><p><br></p>'; // Thêm 1 dòng trống dưới bảng để dễ gõ tiếp
-
-                // Chèn bảng vào vị trí con trỏ chuột trong khung soạn thảo
+                tableHTML += '</tbody></table><p><br></p>';
                 document.execCommand('insertHTML', false, tableHTML);
             } else {
-                alert("Số hàng và cột phải là số hợp lệ!");
+                alert("Số hàng và cột phải hợp lệ!");
             }
-        }
+        };
 
-        // Xử lý khi nhấn nút đăng bài
-        document.getElementById('article-form').addEventListener('submit', function(e) {
+        // 4. Xử lý lưu bài viết lên Firestore Database
+        document.getElementById('article-form').addEventListener('submit', async (e) => {
             e.preventDefault(); 
+
+            const btn = document.getElementById('publish-btn');
+            btn.innerText = "Đang lưu lên hệ thống...";
+            btn.disabled = true;
 
             const title = document.getElementById('doc-title').value;
             const category = document.getElementById('doc-category').value;
-            
-            // Lấy toàn bộ nội dung HTML bên trong div soạn thảo
             const contentHTML = document.getElementById('editor-container').innerHTML;
 
-            console.log("Dữ liệu chuẩn bị gửi (Không phụ thuộc bên thứ 3):");
-            console.log("Tiêu đề:", title);
-            console.log("HTML Bài viết:", contentHTML);
+            try {
+                // Đẩy dữ liệu vào collection 'articles'
+                await addDoc(collection(db, "articles"), {
+                    title: title,
+                    category: category,
+                    content: contentHTML,
+                    createdAt: new Date() // Lưu thời gian tạo
+                });
 
-            alert("Tạo bài thành công! Xem kết quả log ở Console (F12).");
+                alert("Tạo tài liệu thành công!");
+                
+                // Reset form sau khi đăng thành công
+                document.getElementById('article-form').reset();
+                document.getElementById('editor-container').innerHTML = "<p>Bắt đầu viết tóm tắt lâm sàng tại đây...</p>";
+            } catch (error) {
+                console.error("Lỗi thêm tài liệu: ", error);
+                alert("Không thể lưu tài liệu. Kiểm tra quyền Admin trong Security Rules!");
+            } finally {
+                // Khôi phục nút bấm
+                btn.innerText = "Đăng Tài Liệu";
+                btn.disabled = false;
+            }
         });
     </script>
 </body>
