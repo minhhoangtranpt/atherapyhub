@@ -3,111 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QHphysio - Đăng nhập Hệ thống</title>
+    <title>Đăng nhập Quản trị - QHphysio</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f7f6;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 20px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            font-size: 3em;
-            margin: 0;
-            letter-spacing: 1px;
-        }
-
-        .login-wrapper {
-            background: #ffffff;
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border-top: 4px solid #3498db;
-        }
-
-        .login-wrapper h2 {
-            text-align: center;
-            margin-top: 0;
-            color: #2c3e50;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #34495e;
-        }
-
-        input[type="email"], 
-        input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 1em;
-        }
-
-        input[type="email"]:focus, 
-        input[type="password"]:focus {
-            border-color: #3498db;
-            outline: none;
-        }
-
-        button.btn-login {
-            width: 100%;
-            padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button.btn-login:hover {
-            background-color: #2980b9;
-        }
-
-        button.btn-login:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px 0;
-            color: #95a5a6;
-            font-size: 0.9em;
-            margin-top: auto;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+        .container { max-width: 900px; margin: auto; padding: 20px; width: 100%; box-sizing: border-box; }
+        header { text-align: center; margin-bottom: 40px; }
+        h1 { color: #2c3e50; font-size: 3em; margin: 0; letter-spacing: 1px; }
+        .login-wrapper { background: #ffffff; max-width: 400px; margin: 0 auto; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid #3498db; }
+        .login-wrapper h2 { text-align: center; margin-top: 0; color: #2c3e50; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #34495e; }
+        input[type="email"], input[type="password"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 1em; }
+        input[type="email"]:focus, input[type="password"]:focus { border-color: #3498db; outline: none; }
+        button.btn-login { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+        button.btn-login:hover { background-color: #2980b9; }
+        button.btn-login:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        .return-link { display: block; text-align: center; margin-top: 20px; color: #7f8c8d; text-decoration: none; font-size: 0.9em; }
+        .return-link:hover { color: #3498db; }
+        footer { text-align: center; padding: 30px 0; color: #95a5a6; font-size: 0.9em; margin-top: auto; }
     </style>
 </head>
 <body>
@@ -118,11 +31,11 @@
         </header>
 
         <div class="login-wrapper">
-            <h2>Đăng nhập</h2>
+            <h2>Đăng nhập Admin</h2>
             <form id="auth-form">
                 <div class="form-group">
                     <label for="user-email">Email</label>
-                    <input type="email" id="user-email" placeholder="Nhập email" required>
+                    <input type="email" id="user-email" placeholder="Nhập email quản trị" required>
                 </div>
                 <div class="form-group">
                     <label for="user-password">Mật khẩu</label>
@@ -130,6 +43,7 @@
                 </div>
                 <button type="submit" class="btn-login" id="login-btn">Đăng nhập</button>
             </form>
+            <a href="dashboard.html" class="return-link">← Trở về trang tra cứu tài liệu</a>
         </div>
     </div>
 
@@ -137,20 +51,16 @@
         &copy; 2026 QHphysio.
     </footer>
 
-    <!-- Script kết nối Firebase xử lý đăng nhập -->
     <script type="module">
-        // Import thêm onAuthStateChanged để kiểm tra phiên đăng nhập cũ
         import { auth, signInWithEmailAndPassword, onAuthStateChanged } from './firebase-config.js';
 
-        // 1. Kiểm tra xem người dùng đã đăng nhập từ trước chưa
+        // Tự động vào trang admin nếu phiên đăng nhập còn hạn
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Nếu đã đăng nhập, tự động chuyển thẳng vào Dashboard
-                window.location.href = 'dashboard.html';
+                window.location.href = 'admin.html';
             }
         });
 
-        // 2. Xử lý khi người dùng nhập tài khoản mới
         document.getElementById('auth-form').addEventListener('submit', (e) => {
             e.preventDefault(); 
             
@@ -158,19 +68,15 @@
             const pass = document.getElementById('user-password').value;
             const btn = document.getElementById('login-btn');
             
-            // Đổi trạng thái nút và khóa lại (disabled) để chống click 2 lần
             btn.innerText = "Đang kiểm tra...";
             btn.disabled = true;
 
             signInWithEmailAndPassword(auth, email, pass)
                 .then((userCredential) => {
-                    // Đăng nhập thành công, trình duyệt sẽ lưu trạng thái và hàm onAuthStateChanged ở trên sẽ tự chuyển trang
                     btn.innerText = "Đang chuyển hướng...";
+                    window.location.href = 'admin.html';
                 })
                 .catch((error) => {
-                    console.error("Lỗi đăng nhập: ", error.code, error.message);
-                    
-                    // Phân loại lỗi để báo tiếng Việt cho dễ hiểu
                     let msg = "Đăng nhập thất bại. Vui lòng kiểm tra lại.";
                     if(error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
                         msg = "Email hoặc mật khẩu không chính xác!";
@@ -179,7 +85,6 @@
                     }
                     alert(msg);
                     
-                    // Mở khóa nút lại nếu đăng nhập sai
                     btn.innerText = "Đăng nhập";
                     btn.disabled = false;
                 });
