@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QHphysio - Đăng nhập Hệ thống</title>
     <style>
-        /* Thiết lập giao diện tối giản, sạch sẽ */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -19,13 +18,12 @@
         
         .container {
             max-width: 900px;
-            margin: auto; /* Căn giữa toàn bộ theo chiều dọc và ngang */
+            margin: auto;
             padding: 20px;
             width: 100%;
             box-sizing: border-box;
         }
 
-        /* Phần Header */
         header {
             text-align: center;
             margin-bottom: 40px;
@@ -38,7 +36,6 @@
             letter-spacing: 1px;
         }
 
-        /* Khung Đăng nhập */
         .login-wrapper {
             background: #ffffff;
             max-width: 400px;
@@ -99,13 +96,17 @@
             background-color: #2980b9;
         }
 
-        /* Footer */
+        button.btn-login:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
         footer {
             text-align: center;
             padding: 30px 0;
             color: #95a5a6;
             font-size: 0.9em;
-            margin-top: auto; /* Đẩy footer xuống đáy trang */
+            margin-top: auto;
         }
     </style>
 </head>
@@ -138,8 +139,18 @@
 
     <!-- Script kết nối Firebase xử lý đăng nhập -->
     <script type="module">
-        import { auth, signInWithEmailAndPassword } from './firebase-config.js';
+        // Import thêm onAuthStateChanged để kiểm tra phiên đăng nhập cũ
+        import { auth, signInWithEmailAndPassword, onAuthStateChanged } from './firebase-config.js';
 
+        // 1. Kiểm tra xem người dùng đã đăng nhập từ trước chưa
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Nếu đã đăng nhập, tự động chuyển thẳng vào Dashboard
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        // 2. Xử lý khi người dùng nhập tài khoản mới
         document.getElementById('auth-form').addEventListener('submit', (e) => {
             e.preventDefault(); 
             
@@ -147,19 +158,30 @@
             const pass = document.getElementById('user-password').value;
             const btn = document.getElementById('login-btn');
             
+            // Đổi trạng thái nút và khóa lại (disabled) để chống click 2 lần
             btn.innerText = "Đang kiểm tra...";
-            btn.style.backgroundColor = "#95a5a6";
+            btn.disabled = true;
 
             signInWithEmailAndPassword(auth, email, pass)
                 .then((userCredential) => {
-                    window.location.href = 'dashboard.html';
+                    // Đăng nhập thành công, trình duyệt sẽ lưu trạng thái và hàm onAuthStateChanged ở trên sẽ tự chuyển trang
+                    btn.innerText = "Đang chuyển hướng...";
                 })
                 .catch((error) => {
-                    console.error("Lỗi đăng nhập: ", error.message);
-                    alert("Đăng nhập thất bại. Vui lòng kiểm tra lại email hoặc mật khẩu.");
+                    console.error("Lỗi đăng nhập: ", error.code, error.message);
                     
+                    // Phân loại lỗi để báo tiếng Việt cho dễ hiểu
+                    let msg = "Đăng nhập thất bại. Vui lòng kiểm tra lại.";
+                    if(error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+                        msg = "Email hoặc mật khẩu không chính xác!";
+                    } else if (error.code === 'auth/too-many-requests') {
+                        msg = "Tài khoản tạm khóa do nhập sai nhiều lần. Hãy thử lại sau.";
+                    }
+                    alert(msg);
+                    
+                    // Mở khóa nút lại nếu đăng nhập sai
                     btn.innerText = "Đăng nhập";
-                    btn.style.backgroundColor = "#3498db";
+                    btn.disabled = false;
                 });
         });
     </script>
