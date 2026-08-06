@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - QHphysio</title>
     <style>
-        /* CSS Reset & Cơ bản */
+        /* CSS Cơ bản */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -14,7 +14,7 @@
             color: #333;
         }
 
-        /* Thanh điều hướng Navbar */
+        /* Thanh điều hướng */
         .navbar {
             background-color: #2c3e50;
             color: white;
@@ -41,6 +41,13 @@
             color: #bdc3c7;
         }
 
+        .nav-links a.admin-link {
+            color: #f1c40f;
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
         .btn-logout {
             background-color: #e74c3c;
             color: white;
@@ -56,23 +63,25 @@
             background-color: #c0392b;
         }
 
-        /* Layout chính */
+        /* Layout 2 cột */
         .container {
             max-width: 1200px;
             margin: 30px auto;
             padding: 0 20px;
             display: grid;
-            grid-template-columns: 250px 1fr;
+            grid-template-columns: 300px 1fr;
             gap: 30px;
         }
 
-        /* Sidebar - Danh mục (Directory) */
+        /* Cột Sidebar - Danh sách bài */
         .sidebar {
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             height: fit-content;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .sidebar h3 {
@@ -89,35 +98,43 @@
         }
 
         .category-list li {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .category-list a {
             text-decoration: none;
             color: #555;
             display: block;
-            padding: 8px 10px;
+            padding: 10px;
             border-radius: 4px;
             transition: background-color 0.2s, color 0.2s;
+            border-left: 3px solid transparent;
         }
 
-        .category-list a:hover, .category-list a.active {
-            background-color: #3498db;
-            color: white;
+        .category-list a:hover {
+            background-color: #f1f2f6;
         }
 
-        /* Vùng hiển thị nội dung chính */
+        .category-list a.active {
+            background-color: #e8f4f8;
+            color: #2980b9;
+            border-left: 3px solid #3498db;
+            font-weight: 600;
+        }
+
+        /* Cột Nội dung chính */
         .main-content {
             background: white;
-            padding: 30px;
+            padding: 40px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            min-height: 60vh;
         }
 
         .content-header {
             border-bottom: 1px solid #eee;
             padding-bottom: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .content-header h1 {
@@ -131,46 +148,34 @@
         }
 
         .document-text {
-            line-height: 1.6;
-            color: #444;
+            line-height: 1.7;
+            color: #2d3436;
             font-size: 1.05em;
-            margin-bottom: 30px;
         }
 
-        /* Khu vực Video/Hình ảnh */
-        .media-section {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #eee;
-        }
-
-        .media-section h3 {
-            margin-top: 0;
-            color: #34495e;
-        }
-
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%; /* Tỷ lệ 16:9 */
-            height: 0;
-            overflow: hidden;
-            border-radius: 4px;
-            background-color: #000;
-        }
-
-        /* Khung xám giả lập video chờ dữ liệu thực */
-        .video-placeholder {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* CSS cho Bảng được tạo từ Admin */
+        .document-text table {
             width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            background-color: #ddd;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .document-text th, .document-text td {
+            border: 1px solid #bdc3c7;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .document-text th {
+            background-color: #f8f9fa;
+        }
+
+        /* Trạng thái Loading */
+        .loading-text {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 20px;
         }
     </style>
 </head>
@@ -180,61 +185,145 @@
     <nav class="navbar">
         <h2>QHphysio</h2>
         <div class="nav-links">
-            <span id="user-info">Đang tải tài khoản...</span>
+            <span id="user-info">Đang tải...</span>
+            <a href="admin.html" class="admin-link">Trang Quản Trị</a>
             <button class="btn-logout" id="logout-btn">Đăng xuất</button>
         </div>
     </nav>
 
     <div class="container">
-        <!-- Cột trái: Cấu trúc danh mục (Directory Layout) -->
+        <!-- Sidebar -->
         <aside class="sidebar">
             <h3>Danh mục tra cứu</h3>
             <ul class="category-list" id="document-list">
-                <!-- Danh sách này sau này sẽ được render tự động từ Firebase -->
-                <li><a href="#" class="active">Khung lý luận lâm sàng (ICF)</a></li>
-                <li><a href="#">Mô hình Planetary</a></li>
-                <li><a href="#">Phân loại STarT Back</a></li>
-                <li><a href="#">Đánh giá sinh cơ học khớp</a></li>
-                <li><a href="#">Phác đồ bài tập chi dưới</a></li>
+                <li class="loading-text">Đang tải dữ liệu...</li>
             </ul>
         </aside>
 
-        <!-- Cột phải: Nội dung bài viết -->
-        <main class="main-content" id="content-viewer">
-            <div class="content-header">
-                <h1 id="doc-title">Khung lý luận lâm sàng (ICF)</h1>
-                <div class="meta-data">Cập nhật lần cuối: 06/08/2026 | Danh mục: Lý luận lâm sàng</div>
-            </div>
-
-            <div class="document-text" id="doc-body">
-                <p>Nội dung tóm tắt chi tiết sẽ được hiển thị tại đây. Phần này được thiết kế để dễ đọc, trình bày văn bản rõ ràng phục vụ cho quá trình đánh giá và ra quyết định lâm sàng.</p>
-                <p>Trong thực tế, khi bạn kết nối với Firestore, đoạn văn bản này sẽ được thay thế bằng dữ liệu HTML được lưu trữ trên Database (ví dụ: dữ liệu từ trang quản trị viên tạo ra).</p>
-                <ul>
-                    <li>Cấu trúc và Chức năng cơ thể</li>
-                    <li>Hoạt động (Giới hạn hoạt động)</li>
-                    <li>Sự tham gia (Hạn chế tham gia)</li>
-                </ul>
-            </div>
-
-            <!-- Khu vực hiển thị Hình ảnh / Video bài tập -->
-            <div class="media-section" id="doc-media">
-                <h3>Video hướng dẫn thao tác</h3>
-                <div class="video-container">
-                    <!-- Nơi nhúng thẻ <video> hoặc <iframe> YouTube -->
-                    <div class="video-placeholder">Khu vực hiển thị Video/Hình ảnh bài tập</div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div id="content-viewer" style="display: none;">
+                <div class="content-header">
+                    <h1 id="doc-title">Tiêu đề bài viết</h1>
+                    <div class="meta-data" id="doc-meta">Cập nhật: ... | Danh mục: ...</div>
                 </div>
+                <div class="document-text" id="doc-body">
+                    <!-- Nội dung HTML sẽ được đổ vào đây -->
+                </div>
+            </div>
+            
+            <div id="welcome-viewer" class="loading-text" style="margin-top: 50px;">
+                Vui lòng chọn một tài liệu ở danh mục bên trái để đọc.
             </div>
         </main>
     </div>
 
-    <!-- Script giữ chỗ cho logic lấy dữ liệu (Fetch Data) -->
-    <script>
-        // File này đã sẵn sàng để gắn logic kiểm tra đăng nhập và tải nội dung từ Firebase
-        /* 
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            // Logic đăng xuất Firebase ở đây
+    <!-- Script kết nối Firebase và xử lý Logic -->
+    <script type="module">
+        import { auth, db, onAuthStateChanged, signOut, collection, getDocs } from './firebase-config.js';
+
+        // Biến toàn cục để lưu trữ dữ liệu bài viết đã tải về (giúp chuyển bài nhanh không cần tải lại)
+        let articlesData = {};
+
+        // 1. Kiểm tra trạng thái đăng nhập
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('user-info').innerText = user.email;
+                loadArticles(); // Gọi hàm lấy dữ liệu
+            } else {
+                window.location.href = 'index.html'; // Đá văng nếu chưa đăng nhập
+            }
         });
-        */
+
+        // 2. Xử lý Đăng xuất
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'index.html';
+            });
+        });
+
+        // 3. Hàm tải danh sách bài viết từ Firestore
+        async function loadArticles() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "articles"));
+                const listElement = document.getElementById('document-list');
+                listElement.innerHTML = ''; // Xóa chữ "Đang tải..."
+
+                if (querySnapshot.empty) {
+                    listElement.innerHTML = '<li class="loading-text">Chưa có tài liệu nào.</li>';
+                    return;
+                }
+
+                let isFirstArticle = true;
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    articlesData[doc.id] = data; // Lưu dữ liệu vào object
+
+                    // Tạo thẻ danh sách (<li> và <a>)
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = "#";
+                    a.className = "doc-link";
+                    a.id = `link-${doc.id}`;
+                    a.innerText = data.title;
+                    
+                    // Sự kiện khi bấm vào 1 bài viết
+                    a.onclick = (e) => {
+                        e.preventDefault();
+                        window.showArticle(doc.id);
+                    };
+
+                    li.appendChild(a);
+                    listElement.appendChild(li);
+
+                    // Tự động hiển thị bài viết đầu tiên khi vừa load xong
+                    if (isFirstArticle) {
+                        window.showArticle(doc.id);
+                        isFirstArticle = false;
+                    }
+                });
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu: ", error);
+                document.getElementById('document-list').innerHTML = '<li class="loading-text">Lỗi tải dữ liệu. Hãy kiểm tra Security Rules.</li>';
+            }
+        }
+
+        // 4. Hàm hiển thị nội dung bài viết (Gắn vào window để gọi từ thuộc tính onclick)
+        window.showArticle = function(id) {
+            const data = articlesData[id];
+            if (!data) return;
+
+            // Xử lý làm nổi bật (active) bài đang chọn trên thanh Sidebar
+            document.querySelectorAll('.doc-link').forEach(el => el.classList.remove('active'));
+            const activeLink = document.getElementById(`link-${id}`);
+            if (activeLink) activeLink.classList.add('active');
+
+            // Ẩn lời chào, hiện khu vực đọc bài
+            document.getElementById('welcome-viewer').style.display = 'none';
+            document.getElementById('content-viewer').style.display = 'block';
+
+            // Đổ dữ liệu vào HTML
+            document.getElementById('doc-title').innerText = data.title;
+            
+            // Chuyển đổi timestamp của Firebase sang ngày tháng năm
+            let dateString = "Không rõ";
+            if (data.createdAt) {
+                const dateObj = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+                dateString = dateObj.toLocaleDateString('vi-VN');
+            }
+
+            // Dịch danh mục ra tiếng Việt (tùy chọn)
+            let categoryName = data.category;
+            if (categoryName === 'ly-luan') categoryName = "Lý luận lâm sàng";
+            if (categoryName === 'danh-gia') categoryName = "Thang điểm đánh giá";
+            if (categoryName === 'phac-do') categoryName = "Phác đồ bài tập";
+
+            document.getElementById('doc-meta').innerText = `Cập nhật: ${dateString} | Danh mục: ${categoryName}`;
+            
+            // Render nguyên vẹn các thẻ HTML (in đậm, in nghiêng, table) tạo từ admin
+            document.getElementById('doc-body').innerHTML = data.content;
+        };
     </script>
 </body>
 </html>
