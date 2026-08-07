@@ -21,13 +21,21 @@
         .article-title { font-size: 32px; color: #0f172a; margin: 0 0 10px 0; line-height: 1.3; }
         .article-meta { font-size: 14px; color: var(--text-muted); margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
 
-        /* Định dạng hiển thị vùng nội dung (Bao gồm ảnh và chữ) */
-        .article-content { font-size: 17px; color: #334155; background: var(--bg-card); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        /* Định dạng hiển thị vùng nội dung */
+        .article-content { 
+            font-size: 17px; 
+            color: #334155; 
+            background: var(--bg-card); 
+            padding: 40px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-color); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            text-align: justify; /* Thêm căn đều 2 bên tại đây */
+        }
         
-        /* Cực kỳ quan trọng: Giúp ảnh không bị tràn màn hình điện thoại */
         .article-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0; display: block; }
-        .article-content h2, .article-content h3 { color: #0f172a; margin-top: 30px; }
-        .article-content ul, .article-content ol { padding-left: 20px; }
+        .article-content h2, .article-content h3 { color: #0f172a; margin-top: 30px; text-align: left; /* Giữ tiêu đề căn trái để dễ nhìn */ }
+        .article-content ul, .article-content ol { padding-left: 20px; text-align: left; /* Giữ danh sách căn trái để tránh lỗi khoảng trắng */ }
 
         #status-msg { text-align: center; margin-top: 100px; font-size: 16px; color: var(--text-muted); }
         .hidden { display: none !important; }
@@ -90,8 +98,6 @@
                     document.getElementById('article-container').style.display = 'block';
 
                     document.getElementById('art-title').textContent = data.title;
-                    
-                    // SỬ DỤNG .innerHTML ĐỂ ĐỌC ĐƯỢC ẢNH VÀ ĐỊNH DẠNG HTML (Thay vì text thường)
                     document.getElementById('art-content').innerHTML = data.content;
 
                     if (data.createdAt) {
@@ -110,7 +116,7 @@
                 document.getElementById('main-header').classList.remove('hidden');
                 fetchArticleDetails();
             } else {
-                window.location.href = "index.html"; // Đá về trang chủ nếu chưa đăng nhập
+                window.location.href = "index.html"; 
             }
         });
     </script>
