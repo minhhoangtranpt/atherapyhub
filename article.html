@@ -6,155 +6,61 @@
     <title>Đọc bài viết - QH Physio</title>
     <style>
         :root {
-            --primary: #0284c7;
-            --primary-hover: #0369a1;
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --text-main: #334155;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --primary: #0284c7; --bg-body: #f8fafc;
+            --bg-card: #ffffff; --text-main: #334155;
+            --text-muted: #64748b; --border-color: #e2e8f0;
         }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            line-height: 1.7;
-        }
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; line-height: 1.7; }
 
-        /* Header */
-        header {
-            background-color: var(--bg-card);
-            padding: 16px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header-left { display: flex; align-items: center; gap: 15px; }
+        header { background-color: var(--bg-card); padding: 16px 5%; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; }
         header h1 { margin: 0; font-size: 20px; color: var(--primary); font-weight: 700; }
+        .btn-back { text-decoration: none; color: var(--text-main); background: #f1f5f9; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; }
+
+        #article-container { max-width: 800px; margin: 40px auto; padding: 0 20px; display: none; }
+        .article-title { font-size: 32px; color: #0f172a; margin: 0 0 10px 0; line-height: 1.3; }
+        .article-meta { font-size: 14px; color: var(--text-muted); margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+
+        /* Định dạng hiển thị vùng nội dung (Bao gồm ảnh và chữ) */
+        .article-content { font-size: 17px; color: #334155; background: var(--bg-card); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         
-        .btn-back {
-            text-decoration: none;
-            color: var(--text-main);
-            background: #f1f5f9;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        .btn-back:hover { background: #e2e8f0; }
+        /* Cực kỳ quan trọng: Giúp ảnh không bị tràn màn hình điện thoại */
+        .article-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0; display: block; }
+        .article-content h2, .article-content h3 { color: #0f172a; margin-top: 30px; }
+        .article-content ul, .article-content ol { padding-left: 20px; }
 
-        /* Article Container */
-        #article-container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
-            display: none; /* Ẩn cho đến khi tải xong data */
-        }
-
-        .article-header { margin-bottom: 30px; }
-        .article-category {
-            display: inline-block;
-            background-color: #e0f2fe;
-            color: var(--primary);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-        .article-title { font-size: 32px; color: #0f172a; margin: 0 0 15px 0; line-height: 1.3; }
-        .article-meta { font-size: 14px; color: var(--text-muted); }
-
-        .article-cover {
-            width: 100%;
-            height: 400px;
-            background-color: #e2e8f0;
-            border-radius: 12px;
-            background-size: cover;
-            background-position: center;
-            margin-bottom: 30px;
-            display: none; /* Sẽ hiện nếu có ảnh */
-        }
-
-        .article-content {
-            font-size: 17px;
-            color: #334155;
-            background: var(--bg-card);
-            padding: 40px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            white-space: pre-wrap; /* Giữ nguyên các dấu xuống dòng của Admin */
-        }
-
-        .article-footer {
-            margin-top: 30px;
-            display: flex;
-            justify-content: center;
-        }
-        .btn-pdf {
-            text-decoration: none;
-            display: inline-block;
-            background: #fee2e2;
-            color: #b91c1c;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        .btn-pdf:hover { background: #fecaca; }
-
-        /* Loading / Error state */
-        #status-msg {
-            text-align: center;
-            margin-top: 100px;
-            font-size: 18px;
-            color: var(--text-muted);
-        }
-        
+        #status-msg { text-align: center; margin-top: 100px; font-size: 16px; color: var(--text-muted); }
         .hidden { display: none !important; }
+
+        /* TỐI ƯU GIAO DIỆN ĐIỆN THOẠI */
+        @media (max-width: 768px) {
+            header { padding: 12px 15px; }
+            #article-container { margin: 20px auto; padding: 0 15px; }
+            .article-title { font-size: 26px; }
+            .article-content { padding: 20px; font-size: 16px; border-radius: 8px; }
+        }
     </style>
 </head>
 <body>
 
     <header id="main-header" class="hidden">
-        <div class="header-left">
-            <a href="index.html" class="btn-back">← Quay lại</a>
-            <h1>QH Physio</h1>
-        </div>
+        <a href="index.html" class="btn-back">← Quay lại</a>
+        <h1>QH Physio</h1>
     </header>
 
-    <div id="status-msg">Đang tải nội dung bài viết...</div>
+    <div id="status-msg">Đang tải nội dung...</div>
 
     <div id="article-container">
-        <div class="article-header">
-            <div id="art-category" class="article-category hidden"></div>
-            <h1 id="art-title" class="article-title"></h1>
-            <div id="art-meta" class="article-meta"></div>
-        </div>
-
-        <div id="art-cover" class="article-cover"></div>
-
+        <h1 id="art-title" class="article-title"></h1>
+        <div id="art-meta" class="article-meta"></div>
+        
+        <!-- Vùng chứa HTML đã được biên soạn bởi admin -->
         <div id="art-content" class="article-content"></div>
-
-        <div id="art-footer" class="article-footer hidden">
-            <a href="#" id="art-pdf" target="_blank" class="btn-pdf">📄 Tải tài liệu PDF đính kèm</a>
-        </div>
     </div>
 
-    <!-- Firebase Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        // Import getDoc và doc để lấy 1 bài viết cụ thể
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -170,84 +76,41 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Lấy ID bài viết từ URL (ví dụ: article.html?id=123)
         const urlParams = new URLSearchParams(window.location.search);
         const articleId = urlParams.get('id');
 
-        // Elements
-        const statusMsg = document.getElementById('status-msg');
-        const articleContainer = document.getElementById('article-container');
-        const mainHeader = document.getElementById('main-header');
-
-        const elTitle = document.getElementById('art-title');
-        const elCategory = document.getElementById('art-category');
-        const elMeta = document.getElementById('art-meta');
-        const elCover = document.getElementById('art-cover');
-        const elContent = document.getElementById('art-content');
-        const elFooter = document.getElementById('art-footer');
-        const elPdf = document.getElementById('art-pdf');
-
-        // Hàm tải chi tiết bài viết
         async function fetchArticleDetails() {
-            if (!articleId) {
-                statusMsg.innerHTML = "Không tìm thấy ID bài viết. <br><br><a href='index.html'>Quay lại trang chủ</a>";
-                return;
-            }
+            if (!articleId) { document.getElementById('status-msg').innerHTML = "Không tìm thấy bài viết. <a href='index.html'>Trang chủ</a>"; return; }
 
             try {
-                // Tham chiếu tới document cụ thể trong collection "articles"
-                const docRef = doc(db, "articles", articleId);
-                const docSnap = await getDoc(docRef);
-
+                const docSnap = await getDoc(doc(db, "articles", articleId));
                 if (docSnap.exists()) {
                     const data = docSnap.data();
+                    document.getElementById('status-msg').style.display = 'none';
+                    document.getElementById('article-container').style.display = 'block';
 
-                    // Ẩn loading, hiện nội dung
-                    statusMsg.style.display = 'none';
-                    articleContainer.style.display = 'block';
+                    document.getElementById('art-title').textContent = data.title;
+                    
+                    // SỬ DỤNG .innerHTML ĐỂ ĐỌC ĐƯỢC ẢNH VÀ ĐỊNH DẠNG HTML (Thay vì text thường)
+                    document.getElementById('art-content').innerHTML = data.content;
 
-                    // Gắn dữ liệu vào giao diện
-                    elTitle.textContent = data.title;
-                    elContent.textContent = data.content; // textContent kết hợp với css white-space: pre-wrap sẽ giữ nguyên format
-
-                    if (data.category) {
-                        elCategory.textContent = data.category;
-                        elCategory.classList.remove('hidden');
-                    }
-
-                    // Xử lý ngày tháng
                     if (data.createdAt) {
-                        const date = data.createdAt.toDate();
-                        elMeta.textContent = "Đăng ngày: " + date.toLocaleDateString('vi-VN');
+                        document.getElementById('art-meta').textContent = "Đăng ngày: " + data.createdAt.toDate().toLocaleDateString('vi-VN');
                     }
-
-                    if (data.imageUrl) {
-                        elCover.style.backgroundImage = `url('${data.imageUrl}')`;
-                        elCover.style.display = 'block';
-                    }
-
-                    if (data.pdfUrl) {
-                        elPdf.href = data.pdfUrl;
-                        elFooter.classList.remove('hidden');
-                    }
-
                 } else {
-                    statusMsg.innerHTML = "Bài viết không tồn tại hoặc đã bị xóa. <br><br><a href='index.html'>Quay lại trang chủ</a>";
+                    document.getElementById('status-msg').innerHTML = "Bài viết đã bị xóa.";
                 }
             } catch (error) {
-                console.error("Lỗi:", error);
-                statusMsg.innerHTML = "Có lỗi xảy ra khi tải bài viết: " + error.message;
+                document.getElementById('status-msg').innerHTML = "Lỗi: " + error.message;
             }
         }
 
-        // Kiểm tra quyền truy cập (Chỉ cho phép đọc khi đã đăng nhập)
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                mainHeader.classList.remove('hidden');
+                document.getElementById('main-header').classList.remove('hidden');
                 fetchArticleDetails();
             } else {
-                // Nếu chưa đăng nhập, đá về trang chủ
-                window.location.href = "index.html";
+                window.location.href = "index.html"; // Đá về trang chủ nếu chưa đăng nhập
             }
         });
     </script>
