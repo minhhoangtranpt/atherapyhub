@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QH Physio - Hệ thống Tài liệu Vật Lý Trị Liệu</title>
+    <style>
+        :root {
+            --primary: #0284c7; /* Xanh y tế hiện đại */
+            --primary-hover: #0369a1;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--bg-card);
+            padding: 16px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 22px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .user-controls { display: flex; align-items: center; gap: 16px; }
+        #user-email-display { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+        
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-logout {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            padding: 8px 16px;
+        }
+        .btn-logout:hover { background-color: #e2e8f0; color: #ef4444; }
+
+        /* Login Container */
+        #login-container {
+            max-width: 400px;
+            margin: 10vh auto;
+            background: var(--bg-card);
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+        #login-container h2 { text-align: center; color: var(--text-main); margin-top: 0; margin-bottom: 24px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1); }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            font-size: 16px;
+        }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .error-message { color: #ef4444; text-align: center; margin-top: 16px; font-size: 14px; min-height: 20px; }
+
+        /* Main Content */
+        #main-content {
+            display: none;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 5%;
+        }
+        .section-title { font-size: 24px; margin-bottom: 24px; color: var(--text-main); }
+        
+        /* Grid Articles */
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        
+        /* Loading & Empty State */
+        .status-state { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 16px; background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border-color); grid-column: 1 / -1; }
+
+        /* Article Card */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.1); }
+        
+        .card-img {
+            height: 180px;
+            background-color: #e0f2fe;
+            background-size: cover;
+            background-position: center;
+        }
+        .card-content { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .card-category {
+            display: inline-block;
+            background-color: #e0f2fe;
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            align-self: flex-start;
+        }
+        .card-title { margin: 0 0 12px 0; font-size: 18px; color: var(--text-main); line-height: 1.4; }
+        .card-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .card-actions { display: flex; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: auto; }
+        .btn-view { flex: 1; text-align: center; text-decoration: none; background: #f1f5f9; color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px; font-weight: 600; transition: background 0.2s; }
+        .btn-view:hover { background: #e2e8f0; }
+        .btn-pdf { background: #fee2e2; color: #b91c1c; }
+        .btn-pdf:hover { background: #fecaca; }
+
+        /* Helpers */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <header id="main-header" class="hidden">
+        <h1>QH Physio</h1>
+        <div class="user-controls">
+            <span id="user-email-display"></span>
+            <button id="logout-btn" class="btn-logout">Đăng xuất</button>
+        </div>
+    </header>
+
+    <div id="login-container">
+        <h2>Đăng Nhập</h2>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="Nhập email của bạn" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Mật khẩu</label>
+            <input type="password" id="password" placeholder="Nhập mật khẩu" required>
+        </div>
+        <button id="login-btn" class="btn-primary">Đăng nhập ngay</button>
+        <div id="error-msg" class="error-message"></div>
+    </div>
+
+    <div id="main-content">
+        <h2 class="section-title">Kho Tài Liệu & Phác Đồ</h2>
+        <div id="articles-grid" class="articles-grid">
+            <!-- Dữ liệu sẽ được render tự động vào đây -->
+            <div class="status-state">Đang tải dữ liệu...</div>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9X9Ot7qA88POY2JmsRaQuagvRq2M83Aw",
+            authDomain: "qhphysio.firebaseapp.com",
+            projectId: "qhphysio",
+            storageBucket: "qhphysio.firebasestorage.app",
+            messagingSenderId: "1074697284977",
+            appId: "1:1074697284977:web:8f4d73f7fca0a2ea09dad0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Elements
+        const loginContainer = document.getElementById('login-container');
+        const mainContent = document.getElementById('main-content');
+        const mainHeader = document.getElementById('main-header');
+        const userEmailDisplay = document.getElementById('user-email-display');
+        const articlesGrid = document.getElementById('articles-grid');
+        
+        // Login Elements
+        const loginBtn = document.getElementById('login-btn');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const errorMsg = document.getElementById('error-msg');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // Hàm lấy dữ liệu từ Firestore
+        async function fetchArticles() {
+            articlesGrid.innerHTML = '<div class="status-state">Đang tải dữ liệu...</div>';
+            try {
+                const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    articlesGrid.innerHTML = '<div class="status-state">Hiện tại chưa có bài viết tài liệu nào.</div>';
+                    return;
+                }
+
+                articlesGrid.innerHTML = ''; // Xóa trạng thái loading
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // Tạo HTML cho từng bài viết
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    
+                    let bgImage = data.imageUrl ? `style="background-image: url('${data.imageUrl}')"` : '';
+                    let pdfButton = data.pdfUrl ? `<a href="${data.pdfUrl}" target="_blank" class="btn-view btn-pdf">📄 Tải PDF</a>` : '';
+                    let categoryHTML = data.category ? `<span class="card-category">${data.category}</span>` : '';
+
+                    card.innerHTML = `
+                        <div class="card-img" ${bgImage}></div>
+                        <div class="card-content">
+                            ${categoryHTML}
+                            <h3 class="card-title">${data.title}</h3>
+                            <p class="card-desc">${data.description || 'Không có mô tả.'}</p>
+                            <div class="card-actions">
+                                <a href="#" class="btn-view">Đọc bài viết</a>
+                                ${pdfButton}
+                            </div>
+                        </div>
+                    `;
+                    articlesGrid.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Lỗi khi tải bài viết:", error);
+                articlesGrid.innerHTML = `<div class="status-state" style="color: #ef4444;">Không thể tải dữ liệu: ${error.message}</div>`;
+            }
+        }
+
+        // Lắng nghe trạng thái đăng nhập
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loginContainer.classList.add('hidden');
+                mainHeader.classList.remove('hidden');
+                mainContent.style.display = 'block';
+                userEmailDisplay.textContent = user.email;
+                fetchArticles(); // Tự động lấy bài viết khi đăng nhập thành công
+            } else {
+                loginContainer.classList.remove('hidden');
+                mainHeader.classList.add('hidden');
+                mainContent.style.display = 'none';
+                emailInput.value = '';
+                passwordInput.value = '';
+            }
+        });
+
+        // Xử lý Đăng nhập
+        loginBtn.addEventListener('click', () => {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            errorMsg.textContent = "Đang xử lý...";
+            errorMsg.style.color = "var(--text-main)";
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => { errorMsg.textContent = ""; })
+                .catch((error) => {
+                    errorMsg.style.color = "#ef4444";
+                    errorMsg.textContent = "Sai email hoặc mật khẩu. Vui lòng thử lại!";
+                });
+        });
+
+        passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') loginBtn.click(); });
+        logoutBtn.addEventListener('click', () => signOut(auth));
+    </script>
+</body>
+</html>
