@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QH Physio - Hệ thống Tài liệu Vật Lý Trị Liệu</title>
+    <title>QH Physio</title>
     <style>
         :root {
             --primary: #0284c7;
@@ -45,6 +45,11 @@
         .user-controls { display: flex; align-items: center; gap: 16px; }
         #user-email-display { font-size: 14px; color: var(--text-muted); font-weight: 500; }
         
+        /* Tối ưu Mobile: Ẩn email trên màn hình nhỏ */
+        @media (max-width: 600px) {
+            #user-email-display { display: none; }
+        }
+        
         button, .btn-link {
             font-family: inherit;
             cursor: pointer;
@@ -63,7 +68,7 @@
 
         /* Nút đăng bài (Chỉ admin) */
         .btn-create {
-            background-color: #10b981; /* Màu xanh lá nổi bật */
+            background-color: #10b981;
             color: white;
             padding: 8px 16px;
             font-size: 14px;
@@ -109,25 +114,20 @@
         #main-content {
             display: none;
             max-width: 1200px;
-            margin: 40px auto;
+            margin: 30px auto;
             padding: 0 5%;
         }
         
         .content-header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 15px;
         }
-        .section-title { font-size: 24px; margin: 0; color: var(--text-main); }
         
         /* Thanh tìm kiếm */
         .search-box {
             position: relative;
             width: 100%;
-            max-width: 350px;
+            max-width: 400px;
         }
         .search-box input {
             width: 100%;
@@ -153,13 +153,13 @@
         .articles-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
+            gap: 20px;
         }
         
         /* Loading & Empty State */
         .status-state { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 16px; background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border-color); grid-column: 1 / -1; }
 
-        /* Article Card */
+        /* Article Card (Đã xóa ảnh) */
         .card {
             background: var(--bg-card);
             border-radius: 12px;
@@ -168,16 +168,10 @@
             transition: transform 0.2s, box-shadow 0.2s;
             display: flex;
             flex-direction: column;
+            padding: 24px;
         }
         .card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.1); }
         
-        .card-img {
-            height: 180px;
-            background-color: #e0f2fe;
-            background-size: cover;
-            background-position: center;
-        }
-        .card-content { padding: 20px; flex: 1; display: flex; flex-direction: column; }
         .card-category {
             display: inline-block;
             background-color: #e0f2fe;
@@ -189,10 +183,10 @@
             margin-bottom: 12px;
             align-self: flex-start;
         }
-        .card-title { margin: 0 0 12px 0; font-size: 18px; color: var(--text-main); line-height: 1.4; }
-        .card-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-title { margin: 0 0 12px 0; font-size: 20px; color: var(--text-main); line-height: 1.4; }
+        .card-desc { font-size: 15px; color: var(--text-muted); margin-bottom: 24px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
         
-        .card-actions { display: flex; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: auto; }
+        .card-actions { display: flex; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: auto; }
         .btn-view { flex: 1; text-align: center; text-decoration: none; background: #f1f5f9; color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px; font-weight: 600; transition: background 0.2s; }
         .btn-view:hover { background: #e2e8f0; }
         .btn-pdf { background: #fee2e2; color: #b91c1c; }
@@ -218,23 +212,22 @@
         <h2>Đăng Nhập</h2>
         <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" placeholder="Nhập email của bạn" required>
+            <input type="email" id="email" placeholder="Nhập email" required>
         </div>
         <div class="form-group">
             <label for="password">Mật khẩu</label>
             <input type="password" id="password" placeholder="Nhập mật khẩu" required>
         </div>
-        <button id="login-btn" class="btn-primary">Đăng nhập ngay</button>
+        <button id="login-btn" class="btn-primary">Đăng nhập</button>
         <div id="error-msg" class="error-message"></div>
     </div>
 
     <div id="main-content">
         <div class="content-header">
-            <h2 class="section-title">Kho Tài Liệu & Phác Đồ</h2>
-            <!-- Thanh tìm kiếm -->
+            <!-- Thanh tìm kiếm đứng một mình -->
             <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" placeholder="Tìm tên bệnh lý, phân loại...">
+                <input type="text" id="search-input" placeholder="Tìm kiếm bài viết, phân loại...">
             </div>
         </div>
 
@@ -262,10 +255,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // ĐỊNH NGHĨA EMAIL ADMIN
         const ADMIN_EMAIL = "hoangtran1483@gmail.com";
-
-        // Mảng lưu trữ toàn bộ bài viết để tìm kiếm client-side
         let allArticles = [];
 
         // Elements
@@ -277,19 +267,17 @@
         const searchInput = document.getElementById('search-input');
         const btnCreatePost = document.getElementById('btn-create-post');
         
-        // Login Elements
         const loginBtn = document.getElementById('login-btn');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const errorMsg = document.getElementById('error-msg');
         const logoutBtn = document.getElementById('logout-btn');
 
-        // Hàm render bài viết ra màn hình
         function renderArticles(articlesToRender) {
-            articlesGrid.innerHTML = ''; // Xóa sạch grid hiện tại
+            articlesGrid.innerHTML = ''; 
 
             if (articlesToRender.length === 0) {
-                articlesGrid.innerHTML = '<div class="status-state">Không tìm thấy tài liệu nào phù hợp.</div>';
+                articlesGrid.innerHTML = '<div class="status-state">Không tìm thấy bài viết nào.</div>';
                 return;
             }
             
@@ -297,92 +285,77 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 
-                let bgImage = article.imageUrl ? `style="background-image: url('${article.imageUrl}')"` : '';
-                let pdfButton = article.pdfUrl ? `<a href="${article.pdfUrl}" target="_blank" class="btn-view btn-pdf">📄 Tải PDF</a>` : '';
+                let pdfButton = article.pdfUrl ? `<a href="${article.pdfUrl}" target="_blank" class="btn-view btn-pdf">📄 PDF</a>` : '';
                 let categoryHTML = article.category ? `<span class="card-category">${article.category}</span>` : '';
 
                 card.innerHTML = `
-                    <div class="card-img" ${bgImage}></div>
-                    <div class="card-content">
-                        ${categoryHTML}
-                        <h3 class="card-title">${article.title}</h3>
-                        <p class="card-desc">${article.description || 'Không có mô tả.'}</p>
-                        <div class="card-actions">
-                            <a href="article.html?id=${article.id}" class="btn-view">Đọc bài viết</a>
-                            ${pdfButton}
-                        </div>
+                    ${categoryHTML}
+                    <h3 class="card-title">${article.title}</h3>
+                    <p class="card-desc">${article.description || ''}</p>
+                    <div class="card-actions">
+                        <a href="article.html?id=${article.id}" class="btn-view">Đọc bài viết</a>
+                        ${pdfButton}
                     </div>
                 `;
                 articlesGrid.appendChild(card);
             });
         }
 
-        // Hàm lấy dữ liệu từ Firestore 1 lần
         async function fetchArticles() {
             articlesGrid.innerHTML = '<div class="status-state">Đang tải dữ liệu...</div>';
             try {
                 const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
                 const querySnapshot = await getDocs(q);
                 
-                allArticles = []; // Reset mảng
+                allArticles = [];
                 querySnapshot.forEach((doc) => {
-                    // Đẩy dữ liệu vào mảng (kèm theo id)
                     allArticles.push({
                         id: doc.id,
                         ...doc.data()
                     });
                 });
                 
-                renderArticles(allArticles); // Render toàn bộ lúc mới tải
+                renderArticles(allArticles); 
             } catch (error) {
-                console.error("Lỗi khi tải bài viết:", error);
-                articlesGrid.innerHTML = `<div class="status-state" style="color: #ef4444;">Không thể tải dữ liệu: ${error.message}</div>`;
+                console.error("Lỗi:", error);
+                articlesGrid.innerHTML = `<div class="status-state" style="color: #ef4444;">Lỗi tải dữ liệu: ${error.message}</div>`;
             }
         }
 
-        // Bắt sự kiện gõ phím vào ô tìm kiếm
         searchInput.addEventListener('input', (e) => {
             const keyword = e.target.value.toLowerCase().trim();
-            
-            // Lọc các bài viết có tiêu đề hoặc chuyên mục chứa từ khóa
             const filteredArticles = allArticles.filter(article => {
                 const titleMatch = article.title && article.title.toLowerCase().includes(keyword);
                 const categoryMatch = article.category && article.category.toLowerCase().includes(keyword);
                 return titleMatch || categoryMatch;
             });
-
             renderArticles(filteredArticles);
         });
 
-        // Lắng nghe trạng thái đăng nhập
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Đã đăng nhập
                 loginContainer.classList.add('hidden');
                 mainHeader.classList.remove('hidden');
                 mainContent.style.display = 'block';
                 userEmailDisplay.textContent = user.email;
                 
-                // KIỂM TRA QUYỀN ADMIN ĐỂ HIỆN NÚT "ĐĂNG BÀI"
                 if (user.email === ADMIN_EMAIL) {
                     btnCreatePost.classList.remove('hidden');
                 } else {
                     btnCreatePost.classList.add('hidden');
                 }
 
-                fetchArticles(); // Tải dữ liệu
+                fetchArticles();
             } else {
-                // Chưa đăng nhập
                 loginContainer.classList.remove('hidden');
                 mainHeader.classList.add('hidden');
                 mainContent.style.display = 'none';
                 emailInput.value = '';
                 passwordInput.value = '';
-                searchInput.value = ''; // Xóa trống ô tìm kiếm
+                searchInput.value = '';
             }
         });
 
-        // Xử lý Đăng nhập
         loginBtn.addEventListener('click', () => {
             const email = emailInput.value.trim();
             const password = passwordInput.value;
