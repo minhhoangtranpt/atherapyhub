@@ -14,6 +14,7 @@
 
         header { background-color: var(--bg-card); padding: 16px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; }
         header h1 { margin: 0; font-size: 22px; color: var(--primary); font-weight: 700; }
+        
         .user-controls { display: flex; align-items: center; gap: 16px; }
         #user-email-display { font-size: 14px; color: var(--text-muted); font-weight: 500; }
         
@@ -35,6 +36,7 @@
         .btn-primary { width: 100%; padding: 14px; background-color: var(--primary); color: white; font-size: 16px; }
 
         #main-content { display: none; max-width: 1200px; margin: 30px auto; padding: 0 5%; }
+        
         .content-header { display: flex; margin-bottom: 24px; }
         .search-box { position: relative; width: 100%; max-width: 400px; }
         .search-box input { width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 15px; box-sizing: border-box; outline: none; }
@@ -45,13 +47,11 @@
 
         .card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 24px; }
         .card-title { margin: 0 0 12px 0; font-size: 20px; color: var(--text-main); line-height: 1.4; }
-        .card-desc { font-size: 15px; color: var(--text-muted); margin-bottom: 24px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-desc { font-size: 15px; color: var(--text-muted); margin-bottom: 24px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-align: justify; }
         
         .card-actions { display: flex; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: auto; }
         .btn-view { flex: 1; text-align: center; text-decoration: none; background: #f1f5f9; color: var(--text-main); padding: 10px; border-radius: 6px; font-size: 14px; font-weight: 600; }
         .btn-view:hover { background: #e2e8f0; }
-        
-        /* CSS Nút sửa bài (Chỉ admin thấy) */
         .btn-edit { background: #fef3c7; color: #b45309; }
         .btn-edit:hover { background: #fde68a; }
 
@@ -102,12 +102,12 @@
         import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyA9X9Ot7qA88POY2JmsRaQuagvRq2M83Aw",
-            authDomain: "qhphysio.firebaseapp.com",
-            projectId: "qhphysio",
-            storageBucket: "qhphysio.firebasestorage.app",
-            messagingSenderId: "1074697284977",
-            appId: "1:1074697284977:web:8f4d73f7fca0a2ea09dad0"
+            apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
+            authDomain: "datatherapy-52437.firebaseapp.com",
+            projectId: "datatherapy-52437",
+            storageBucket: "datatherapy-52437.firebasestorage.app",
+            messagingSenderId: "206559916642",
+            appId: "1:206559916642:web:d4e911752ef2bb3b58973b"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -116,7 +116,7 @@
 
         const ADMIN_EMAIL = "hoangtran1483@gmail.com";
         let allArticles = [];
-        let isAdmin = false; // Biến kiểm tra Admin
+        let isAdmin = false;
 
         const articlesGrid = document.getElementById('articles-grid');
 
@@ -131,7 +131,6 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 
-                // Nút sửa chỉ hiện ra nếu isAdmin = true
                 let editBtn = isAdmin ? `<a href="admin.html?id=${article.id}" class="btn-view btn-edit">✏️ Sửa</a>` : '';
 
                 card.innerHTML = `
@@ -176,9 +175,7 @@
                 document.getElementById('main-content').style.display = 'block';
                 document.getElementById('user-email-display').textContent = user.email;
                 
-                // Gán quyền Admin
                 isAdmin = (user.email === ADMIN_EMAIL);
-                
                 if (isAdmin) document.getElementById('btn-create-post').classList.remove('hidden');
                 else document.getElementById('btn-create-post').classList.add('hidden');
 
@@ -195,6 +192,11 @@
             signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
                 .catch(() => { document.getElementById('error-msg').textContent = "Sai email hoặc mật khẩu!"; });
         });
+        
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('login-btn').click();
+        });
+
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
     </script>
 </body>
