@@ -108,7 +108,7 @@
 
         var quill = new Quill('#editor-container', {
             theme: 'snow',
-            placeholder: 'Viết nội dung phác đồ, hỗ trợ chèn ảnh và định dạng...',
+            placeholder: 'Viết nội dung, hỗ trợ chèn ảnh và định dạng...',
             modules: { toolbar: [ [{ 'header': [2, 3, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link', 'image'] ] }
         });
 
@@ -174,22 +174,14 @@
                         title: title, description: desc, content: contentHTML,
                         createdAt: serverTimestamp(), authorEmail: auth.currentUser.email
                     });
-                    document.getElementById('status-text').textContent = "Đã xuất bản!";
-                    document.getElementById('post-title').value = ""; 
-                    document.getElementById('post-desc').value = ""; 
-                    quill.root.innerHTML = ""; 
+                    document.getElementById('status-text').textContent = "Đã xuất bản thành công!";
                 }
 
                 document.getElementById('status-text').style.color = "#10B981";
 
+                // Thay đổi: Cả Đăng mới và Cập nhật đều tự động về trang chủ sau 1 giây
                 setTimeout(() => {
-                    if (editArticleId) {
-                        window.location.href = "index.html";
-                    } else {
-                        document.getElementById('status-text').textContent = "Đang sẵn sàng";
-                        document.getElementById('status-text').style.color = "#6B7280";
-                        publishBtn.disabled = false; publishBtn.textContent = "Xuất bản";
-                    }
+                    window.location.href = "index.html";
                 }, 1000);
 
             } catch (error) {
