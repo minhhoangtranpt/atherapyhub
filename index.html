@@ -3,40 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QH Physio</title>
+    <title>ATherapyHub</title>
     <style>
-        :root {
-            --primary: #0284c7; --primary-hover: #0369a1; --bg-body: #f8fafc;
-            --bg-card: #ffffff; --text-main: #334155; --text-muted: #64748b; --border-color: #e2e8f0;
-        }
-
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; line-height: 1.6; }
-
+        :root { --primary: #0284c7; --primary-hover: #0369a1; --bg-body: #f8fafc; --bg-card: #ffffff; --text-main: #334155; --text-muted: #64748b; --border-color: #e2e8f0; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; line-height: 1.6; }
         header { background-color: var(--bg-card); padding: 16px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; }
         header h1 { margin: 0; font-size: 22px; color: var(--primary); font-weight: 700; }
-        
         .user-controls { display: flex; align-items: center; gap: 16px; }
         #user-email-display { font-size: 14px; color: var(--text-muted); font-weight: 500; }
-        
         @media (max-width: 600px) { #user-email-display { display: none; } }
-        
-        button, .btn-link { font-family: inherit; cursor: pointer; border: none; border-radius: 8px; font-weight: 600; transition: all 0.2s ease; text-decoration: none; }
+        button, .btn-link { font-family: inherit; cursor: pointer; border: none; border-radius: 8px; font-weight: 600; transition: all 0.2s ease; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
         .btn-logout { background-color: #f1f5f9; color: var(--text-main); padding: 8px 16px; }
         .btn-logout:hover { background-color: #e2e8f0; color: #ef4444; }
-
         .btn-create { background-color: #10b981; color: white; padding: 8px 16px; font-size: 14px; }
         .btn-create:hover { background-color: #059669; }
+        .btn-login-nav { background-color: var(--primary); color: white; padding: 8px 16px; font-size: 14px; }
+        .btn-login-nav:hover { background-color: var(--primary-hover); }
 
-        #login-container { max-width: 400px; margin: 10vh auto; background: var(--bg-card); padding: 40px 30px; border-radius: 16px; border: 1px solid var(--border-color); }
-        #login-container h2 { text-align: center; color: var(--text-main); margin-top: 0; margin-bottom: 24px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        #login-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .login-box { background: var(--bg-card); padding: 30px; border-radius: 16px; border: 1px solid var(--border-color); width: 100%; max-width: 380px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); position: relative; }
+        .login-box h2 { text-align: center; color: var(--text-main); margin-top: 0; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 15px; }
         .form-group input:focus { outline: none; border-color: var(--primary); }
-        .btn-primary { width: 100%; padding: 14px; background-color: var(--primary); color: white; font-size: 16px; }
+        .btn-primary { width: 100%; padding: 12px; background-color: var(--primary); color: white; font-size: 15px; }
+        .btn-close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 18px; color: var(--text-muted); cursor: pointer; }
 
-        #main-content { display: none; max-width: 1200px; margin: 30px auto; padding: 0 5%; }
-        
+        #main-content { max-width: 1200px; margin: 30px auto; padding: 0 5%; }
         .content-header { display: flex; margin-bottom: 24px; }
         .search-box { position: relative; width: 100%; max-width: 400px; }
         .search-box input { width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 15px; box-sizing: border-box; outline: none; }
@@ -44,7 +38,6 @@
 
         .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
         .status-state { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 16px; background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border-color); grid-column: 1 / -1; }
-
         .card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 24px; }
         .card-title { margin: 0 0 12px 0; font-size: 20px; color: var(--text-main); line-height: 1.4; }
         .card-desc { font-size: 15px; color: var(--text-muted); margin-bottom: 24px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-align: justify; }
@@ -54,33 +47,36 @@
         .btn-view:hover { background: #e2e8f0; }
         .btn-edit { background: #fef3c7; color: #b45309; }
         .btn-edit:hover { background: #fde68a; }
-
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <header id="main-header" class="hidden">
-        <h1>QH Physio</h1>
+    <header>
+        <h1>ATherapyHub</h1>
         <div class="user-controls">
             <a href="admin.html" id="btn-create-post" class="btn-link btn-create hidden">✍️ Đăng bài</a>
-            <span id="user-email-display"></span>
-            <button id="logout-btn" class="btn-logout">Đăng xuất</button>
+            <span id="user-email-display" class="hidden"></span>
+            <button id="logout-btn" class="btn-logout hidden">Đăng xuất</button>
+            <button id="open-login-modal" class="btn-login-nav">Đăng nhập</button>
         </div>
     </header>
 
-    <div id="login-container">
-        <h2>Đăng Nhập</h2>
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" placeholder="Nhập email" required>
+    <div id="login-modal">
+        <div class="login-box">
+            <button id="close-login-modal" class="btn-close-modal">&times;</button>
+            <h2>Đăng Nhập Quản Trị</h2>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Nhập email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input type="password" id="password" placeholder="Nhập mật khẩu" required>
+            </div>
+            <button id="login-btn" class="btn-primary">Đăng nhập</button>
+            <div id="error-msg" style="color: #ef4444; text-align: center; margin-top: 16px; font-size: 14px;"></div>
         </div>
-        <div class="form-group">
-            <label for="password">Mật khẩu</label>
-            <input type="password" id="password" placeholder="Nhập mật khẩu" required>
-        </div>
-        <button id="login-btn" class="btn-primary">Đăng nhập</button>
-        <div id="error-msg" style="color: #ef4444; text-align: center; margin-top: 16px;"></div>
     </div>
 
     <div id="main-content">
@@ -114,11 +110,15 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const ADMIN_EMAIL = "hoangtran1483@gmail.com";
         let allArticles = [];
-        let isAdmin = false;
+        let isLoggedIn = false; // Bất kỳ ai đăng nhập đều được quyền sửa
 
         const articlesGrid = document.getElementById('articles-grid');
+        const loginModal = document.getElementById('login-modal');
+
+        document.getElementById('open-login-modal').addEventListener('click', () => { loginModal.style.display = 'flex'; });
+        document.getElementById('close-login-modal').addEventListener('click', () => { loginModal.style.display = 'none'; });
+        window.addEventListener('click', (e) => { if (e.target === loginModal) loginModal.style.display = 'none'; });
 
         function renderArticles(articlesToRender) {
             articlesGrid.innerHTML = ''; 
@@ -131,7 +131,8 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 
-                let editBtn = isAdmin ? `<a href="admin.html?id=${article.id}" class="btn-view btn-edit">✏️ Sửa</a>` : '';
+                // Nút sửa hiện nếu người dùng ĐÃ ĐĂNG NHẬP
+                let editBtn = isLoggedIn ? `<a href="admin.html?id=${article.id}" class="btn-view btn-edit">✏️ Sửa</a>` : '';
 
                 card.innerHTML = `
                     <h3 class="card-title">${article.title}</h3>
@@ -169,27 +170,36 @@
         });
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('login-container').classList.add('hidden');
-                document.getElementById('main-header').classList.remove('hidden');
-                document.getElementById('main-content').style.display = 'block';
-                document.getElementById('user-email-display').textContent = user.email;
-                
-                isAdmin = (user.email === ADMIN_EMAIL);
-                if (isAdmin) document.getElementById('btn-create-post').classList.remove('hidden');
-                else document.getElementById('btn-create-post').classList.add('hidden');
+            const userEmailDisplay = document.getElementById('user-email-display');
+            const logoutBtn = document.getElementById('logout-btn');
+            const openLoginBtn = document.getElementById('open-login-modal');
+            const btnCreatePost = document.getElementById('btn-create-post');
 
-                fetchArticles();
+            if (user) {
+                isLoggedIn = true;
+                loginModal.style.display = 'none';
+                userEmailDisplay.textContent = user.email;
+                userEmailDisplay.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+                openLoginBtn.classList.add('hidden');
+                btnCreatePost.classList.remove('hidden'); // Hiện nút đăng bài cho mọi tài khoản
             } else {
-                document.getElementById('login-container').classList.remove('hidden');
-                document.getElementById('main-header').classList.add('hidden');
-                document.getElementById('main-content').style.display = 'none';
-                isAdmin = false;
+                isLoggedIn = false;
+                userEmailDisplay.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                openLoginBtn.classList.remove('hidden');
+                btnCreatePost.classList.add('hidden');
             }
+            fetchArticles();
         });
 
         document.getElementById('login-btn').addEventListener('click', () => {
-            signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            document.getElementById('error-msg').textContent = "Đang xử lý...";
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => { document.getElementById('error-msg').textContent = ""; })
                 .catch(() => { document.getElementById('error-msg').textContent = "Sai email hoặc mật khẩu!"; });
         });
         
