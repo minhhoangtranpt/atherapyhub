@@ -78,18 +78,17 @@
 
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script type="module">
-        // Bổ sung doc, getDoc, updateDoc vào import
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyA9X9Ot7qA88POY2JmsRaQuagvRq2M83Aw",
-            authDomain: "qhphysio.firebaseapp.com",
-            projectId: "qhphysio",
-            storageBucket: "qhphysio.firebasestorage.app",
-            messagingSenderId: "1074697284977",
-            appId: "1:1074697284977:web:8f4d73f7fca0a2ea09dad0"
+            apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
+            authDomain: "datatherapy-52437.firebaseapp.com",
+            projectId: "datatherapy-52437",
+            storageBucket: "datatherapy-52437.firebasestorage.app",
+            messagingSenderId: "206559916642",
+            appId: "1:206559916642:web:d4e911752ef2bb3b58973b"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -98,7 +97,6 @@
 
         const ADMIN_EMAIL = "hoangtran1483@gmail.com";
 
-        // Kiểm tra xem URL có ID không (Nghĩa là đang Sửa bài)
         const urlParams = new URLSearchParams(window.location.search);
         const editArticleId = urlParams.get('id');
 
@@ -108,7 +106,6 @@
             modules: { toolbar: [ [{ 'header': [2, 3, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link', 'image'], ['clean'] ] }
         });
 
-        // Hàm kéo dữ liệu bài viết cũ về để sửa
         async function loadArticleData(id) {
             document.getElementById('status-text').textContent = "Đang tải bài viết...";
             try {
@@ -133,7 +130,6 @@
                 document.getElementById('admin-login-overlay').classList.add('hidden');
                 document.getElementById('app-interface').classList.remove('hidden');
                 
-                // Nếu đang ở chế độ Sửa, đổi giao diện và tải data
                 if (editArticleId) {
                     document.getElementById('page-title').textContent = "Cập Nhật Bài Viết";
                     document.getElementById('btn-publish').textContent = "Cập nhật";
@@ -162,16 +158,13 @@
 
             try {
                 if (editArticleId) {
-                    // CHẾ ĐỘ SỬA BÀI CŨ
                     await updateDoc(doc(db, "articles", editArticleId), {
                         title: title,
                         description: desc,
                         content: contentHTML
-                        // Chú ý: Không tạo lại createdAt để giữ nguyên ngày đăng ban đầu
                     });
                     document.getElementById('status-text').textContent = "Đã cập nhật thành công!";
                 } else {
-                    // CHẾ ĐỘ ĐĂNG BÀI MỚI
                     await addDoc(collection(db, "articles"), {
                         title: title,
                         description: desc,
@@ -188,7 +181,6 @@
                 document.getElementById('status-text').style.color = "#16a34a";
 
                 setTimeout(() => {
-                    // Nếu đang sửa bài, cập nhật xong đá về trang chủ. Nếu đăng bài mới thì ở lại
                     if (editArticleId) {
                         window.location.href = "index.html";
                     } else {
