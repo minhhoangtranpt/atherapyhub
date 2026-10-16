@@ -17,7 +17,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 // =========================================================
-// 1. TẠO CẤU TRÚC HTML CHO HEADER VÀ MODAL ĐĂNG NHẬP
+// 1. TẠO CẤU TRÚC HTML CHO HEADER, TÌM KIẾM VÀ MODAL
 // =========================================================
 const headerHTML = `
     <header>
@@ -26,11 +26,19 @@ const headerHTML = `
             <nav id="main-nav"></nav>
         </div>
         <div class="user-controls">
+            <!-- Nút Tìm kiếm -->
+            <button id="toggle-search-btn" class="search-icon-btn" title="Tìm kiếm">🔍</button>
+            
             <span id="user-email-display" class="hidden"></span>
             <button id="logout-btn" class="btn-logout hidden">Đăng xuất</button>
             <button id="open-login-modal" class="btn-login-nav">Đăng nhập</button>
         </div>
     </header>
+
+    <!-- Thanh Tìm kiếm sổ xuống -->
+    <div id="search-bar" class="search-bar-container">
+        <input type="text" id="global-search-input" placeholder="Nhập từ khóa tìm kiếm bài viết, chuyên mục...">
+    </div>
 
     <div id="login-modal" class="modal-overlay">
         <div class="modal-box">
@@ -82,8 +90,33 @@ fetch('./json/header.json')
     .catch(() => navContainer.innerHTML = `<a href="index.html">Trang chủ</a>`);
 
 // =========================================================
-// 5. XỬ LÝ GIAO DIỆN VÀ LOGIC FIREBASE
+// 5. XỬ LÝ GIAO DIỆN VÀ LOGIC
 // =========================================================
+
+// Logic đóng mở thanh Tìm Kiếm
+const toggleSearchBtn = document.getElementById('toggle-search-btn');
+const searchBar = document.getElementById('search-bar');
+const globalSearchInput = document.getElementById('global-search-input');
+
+toggleSearchBtn.addEventListener('click', () => {
+    searchBar.classList.toggle('active');
+    if (searchBar.classList.contains('active')) {
+        globalSearchInput.focus(); // Tự động trỏ chuột vào ô nhập khi mở
+    }
+});
+
+// Xử lý sự kiện khi ấn Enter ở ô Tìm Kiếm (Ví dụ: chuyển hướng sang trang tìm kiếm)
+globalSearchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const keyword = globalSearchInput.value.trim();
+        if (keyword) {
+            // Sau này bạn có thể thay đổi đường dẫn này theo trang hiển thị kết quả của bạn
+            window.location.href = `search.html?q=${encodeURIComponent(keyword)}`;
+        }
+    }
+});
+
+// Logic Firebase & Modal Đăng Nhập
 const loginModal = document.getElementById('login-modal');
 const openLoginBtn = document.getElementById('open-login-modal');
 const closeLoginBtn = document.getElementById('close-login-modal');
@@ -92,20 +125,16 @@ const logoutBtn = document.getElementById('logout-btn');
 const userEmailDisplay = document.getElementById('user-email-display');
 const errorMsg = document.getElementById('error-msg');
 
-// Mở/Đóng Modal
 openLoginBtn.addEventListener('click', () => loginModal.style.display = 'flex');
 closeLoginBtn.addEventListener('click', () => loginModal.style.display = 'none');
 
-// Lắng nghe trạng thái đăng nhập từ Firebase
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Đã đăng nhập
         openLoginBtn.classList.add('hidden');
         logoutBtn.classList.remove('hidden');
         userEmailDisplay.textContent = user.email;
         userEmailDisplay.classList.remove('hidden');
     } else {
-        // Chưa đăng nhập
         logoutBtn.classList.add('hidden');
         userEmailDisplay.classList.add('hidden');
         userEmailDisplay.textContent = '';
@@ -113,7 +142,6 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Xử lý nút Đăng nhập
 loginBtn.addEventListener('click', () => {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
@@ -135,12 +163,10 @@ loginBtn.addEventListener('click', () => {
     }
 });
 
-// Hỗ trợ ấn Enter để đăng nhập
 document.getElementById('password').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') loginBtn.click();
 });
 
-// Xử lý nút Đăng xuất
 logoutBtn.addEventListener('click', () => {
     if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
         signOut(auth);
