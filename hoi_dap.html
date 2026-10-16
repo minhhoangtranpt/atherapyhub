@@ -13,23 +13,12 @@
         }
         .qa-header-section h2 { margin: 0; color: var(--navy-primary); font-size: 20px; }
         
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .header-actions { display: flex; align-items: center; gap: 15px; }
 
-        /* Bộ lọc sắp xếp */
         .sort-select {
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-size: 13px;
-            font-family: inherit;
-            outline: none;
-            cursor: pointer;
+            padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color);
+            background-color: var(--bg-body); color: var(--text-main); font-size: 13px;
+            font-family: inherit; outline: none; cursor: pointer;
         }
         .sort-select:focus { border-color: var(--navy-secondary); }
 
@@ -40,13 +29,10 @@
         }
         .btn-ask:hover { background-color: var(--navy-primary); }
 
-        /* Giao diện Danh sách Phẳng */
         .qa-list-vertical { 
             display: flex; flex-direction: column; gap: 0; 
-            background: var(--bg-card); 
-            border: 1px solid var(--border-color); 
-            border-radius: 8px;
-            overflow: hidden;
+            background: var(--bg-card); border: 1px solid var(--border-color); 
+            border-radius: 8px; overflow: hidden;
         }
         
         .qa-card-horizontal {
@@ -55,7 +41,6 @@
             text-decoration: none; color: inherit; gap: 15px; transition: background-color 0.2s;
         }
         .qa-card-horizontal:last-child { border-bottom: none; }
-        
         .qa-card-horizontal:hover { background-color: var(--navy-light); }
 
         .qa-main-content { flex: 1; min-width: 0; }
@@ -92,12 +77,18 @@
             margin-bottom: 10px; background: #F8FAFC;
         }
         .ask-textarea:focus { outline: none; border-color: var(--navy-secondary); background: white; }
-        .file-upload-wrapper { margin-bottom: 10px; }
-        .file-upload-wrapper input[type="file"] {
-            display: block; width: 100%; padding: 6px; font-size: 12px;
-            border: 1px dashed var(--border-color); border-radius: 6px; background: white; cursor: pointer;
+        
+        /* Giao diện vùng tải/dán ảnh */
+        .file-upload-wrapper {
+            margin-bottom: 15px; padding: 15px; text-align: center;
+            border: 1px dashed var(--border-color); border-radius: 6px; 
+            background: #F8FAFC; cursor: pointer; transition: border-color 0.2s;
         }
-        #image-preview { max-width: 100%; max-height: 120px; margin-top: 8px; border-radius: 4px; display: none; object-fit: contain; border: 1px solid var(--border-color); }
+        .file-upload-wrapper:hover { border-color: var(--navy-secondary); }
+        .file-upload-wrapper label { cursor: pointer; display: block; }
+        .file-upload-wrapper input[type="file"] { display: none; } /* Ẩn nút chọn file mặc định xấu xí */
+        .paste-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        #image-preview { max-width: 100%; max-height: 150px; margin-top: 10px; border-radius: 4px; display: none; object-fit: contain; border: 1px solid var(--border-color); }
 
         @media (max-width: 768px) {
             #main-content { margin: 15px auto; padding: 0 10px; }
@@ -138,14 +129,17 @@
             <div class="form-group" style="margin-bottom: 10px;">
                 <input type="text" id="ask-title" placeholder="Nhập tiêu đề ngắn gọn..." required style="padding: 10px; font-weight: 500;">
             </div>
-            <div class="form-group" style="margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom: 10px;">
                 <textarea id="ask-content" class="ask-textarea" placeholder="Mô tả chi tiết vấn đề lâm sàng, thắc mắc..." required></textarea>
             </div>
-            <div class="form-group file-upload-wrapper">
-                <label style="font-size: 12px; margin-bottom: 4px; color: var(--text-main); font-weight: 600;">Đính kèm ảnh minh họa (Không chọn tệp PDF, Word...)</label>
+            
+            <div class="form-group file-upload-wrapper" id="drop-zone" onclick="document.getElementById('ask-image').click()">
+                <label style="font-size: 13px; color: var(--navy-primary); font-weight: 600;">📁 Nhấn để chọn ảnh hoặc dán ảnh (Ctrl+V) vào đây</label>
+                <div class="paste-hint">(Hỗ trợ JPG, PNG, GIF...)</div>
                 <input type="file" id="ask-image" accept="image/png, image/jpeg, image/jpg, image/gif, image/webp">
                 <img id="image-preview" alt="Preview">
             </div>
+
             <button id="btn-submit-ask" class="btn-primary" style="padding: 10px; font-size: 14px; border-radius: 6px; margin-top: 0;">Đăng câu hỏi</button>
         </div>
     </div>
@@ -175,21 +169,19 @@
         const imageInput = document.getElementById('ask-image');
         const imagePreview = document.getElementById('image-preview');
         const sortSelect = document.getElementById('sort-select');
+        const askModal = document.getElementById('ask-modal');
         
         let allQuestions = [];
         let currentPage = 1;
-        const itemsPerPage = 15; // ĐIỀU CHỈNH XUỐNG 15 BÀI/TRANG
+        const itemsPerPage = 15;
         let currentAuthorName = null;
         let compressedImageBase64 = null;
 
-        // Xử lý nén ảnh (HTML5 Canvas)
-        imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
+        // HÀM XỬ LÝ NÉN VÀ HIỂN THỊ ẢNH CHUNG
+        function processImageFile(file) {
             if (!file) return;
-
             if (!file.type.startsWith('image/')) {
-                alert('Vui lòng chỉ chọn các tệp hình ảnh (JPG, PNG, GIF...).');
-                imageInput.value = '';
+                alert('Vui lòng chỉ tải lên các tệp hình ảnh.');
                 return;
             }
 
@@ -218,12 +210,29 @@
                     imagePreview.style.display = 'block';
                 };
             };
+        }
+
+        // Xử lý khi chọn file qua nút
+        imageInput.addEventListener('change', (e) => {
+            processImageFile(e.target.files[0]);
+        });
+
+        // XỬ LÝ SỰ KIỆN DÁN ẢNH (CTRL+V / CMD+V)
+        askModal.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.startsWith('image/')) {
+                    const blob = item.getAsFile();
+                    processImageFile(blob);
+                }
+            }
         });
 
         async function fetchQuestions() {
             qaContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:14px;">Đang tải dữ liệu...</div>';
             try {
-                const q = query(collection(db, "hoi_dap")); // Tải tất cả, sắp xếp bằng JS
+                const q = query(collection(db, "hoi_dap"));
                 const querySnapshot = await getDocs(q);
                 
                 allQuestions = [];
@@ -236,12 +245,12 @@
                     if (data.createdAt && data.createdAt.toDate) {
                         const dateObj = data.createdAt.toDate();
                         createdTime = dateObj.getTime();
-                        updatedTime = createdTime; // Mặc định thời gian cập nhật bằng lúc tạo
+                        updatedTime = createdTime;
                         dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
                     }
 
                     if (data.updatedAt && data.updatedAt.toDate) {
-                        updatedTime = data.updatedAt.toDate().getTime(); // Lấy thời gian trả lời gần nhất
+                        updatedTime = data.updatedAt.toDate().getTime(); 
                     }
 
                     allQuestions.push({ 
@@ -263,7 +272,6 @@
             }
         }
 
-        // HÀM SẮP XẾP BẰNG JAVASCRIPT
         function sortAndRenderQuestions() {
             const sortType = sortSelect.value;
             
@@ -279,7 +287,6 @@
             renderQAList();
         }
 
-        // Lắng nghe sự thay đổi của Dropdown bộ lọc
         sortSelect.addEventListener('change', sortAndRenderQuestions);
 
         function renderQAList() {
@@ -339,7 +346,6 @@
             }
         }
 
-        const askModal = document.getElementById('ask-modal');
         const btnSubmitAsk = document.getElementById('btn-submit-ask');
 
         document.getElementById('btn-open-ask').addEventListener('click', async () => {
@@ -383,7 +389,7 @@
                     imageUrl: compressedImageBase64, 
                     repliesCount: 0,
                     createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp() // Gắn thời gian cập nhật để hỗ trợ Lọc "Mới trả lời"
+                    updatedAt: serverTimestamp() 
                 });
 
                 await setDoc(doc(db, "users", user.uid), { postCount: increment(1) }, { merge: true });
