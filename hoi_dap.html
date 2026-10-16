@@ -9,8 +9,30 @@
         .qa-header-section {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;
+            flex-wrap: wrap; gap: 10px;
         }
         .qa-header-section h2 { margin: 0; color: var(--navy-primary); font-size: 20px; }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Bộ lọc sắp xếp */
+        .sort-select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+        .sort-select:focus { border-color: var(--navy-secondary); }
+
         .btn-ask {
             background-color: var(--accent-blue); color: white; padding: 6px 16px;
             border-radius: 6px; font-weight: 600; border: none; cursor: pointer;
@@ -18,30 +40,23 @@
         }
         .btn-ask:hover { background-color: var(--navy-primary); }
 
-        /* Giao diện Danh sách Phẳng (Flat List View) - Không đổ bóng */
+        /* Giao diện Danh sách Phẳng */
         .qa-list-vertical { 
             display: flex; flex-direction: column; gap: 0; 
             background: var(--bg-card); 
             border: 1px solid var(--border-color); 
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: none; /* Bỏ đổ bóng */
         }
         
         .qa-card-horizontal {
             padding: 12px 15px; border-bottom: 1px solid var(--border-color);
             display: flex; align-items: center; justify-content: space-between; 
             text-decoration: none; color: inherit; gap: 15px; transition: background-color 0.2s;
-            box-shadow: none; /* Đảm bảo không có bóng */
         }
         .qa-card-horizontal:last-child { border-bottom: none; }
         
-        /* Hiệu ứng hover phẳng (chỉ đổi màu nền, không nổi khối) */
-        .qa-card-horizontal:hover { 
-            background-color: var(--navy-light); 
-            transform: none; 
-            box-shadow: none;
-        }
+        .qa-card-horizontal:hover { background-color: var(--navy-light); }
 
         .qa-main-content { flex: 1; min-width: 0; }
         .qa-card-title {
@@ -87,6 +102,7 @@
         @media (max-width: 768px) {
             #main-content { margin: 15px auto; padding: 0 10px; }
             .qa-header-section { margin-bottom: 10px; padding-bottom: 8px; }
+            .header-actions { width: 100%; justify-content: space-between; }
             .qa-card-horizontal { padding: 10px; gap: 10px; }
             .qa-card-thumb { display: none; }
             .qa-card-replies { border-left: none; padding-left: 0; min-width: 40px; }
@@ -98,10 +114,16 @@
     <main id="main-content">
         <div class="qa-header-section">
             <h2>Hỏi & Đáp</h2>
-            <button id="btn-open-ask" class="btn-ask">Đặt câu hỏi</button>
+            <div class="header-actions">
+                <select id="sort-select" class="sort-select">
+                    <option value="newest">Mới đăng</option>
+                    <option value="replies">Nhiều lượt trả lời</option>
+                    <option value="active">Mới trả lời</option>
+                </select>
+                <button id="btn-open-ask" class="btn-ask">Đặt câu hỏi</button>
+            </div>
         </div>
 
-        <!-- Khung danh sách bài viết phẳng -->
         <div id="qa-list-container" class="qa-list-vertical">
             <div style="text-align: center; padding: 30px; color: var(--text-muted); font-size: 14px;">Đang tải dữ liệu...</div>
         </div>
@@ -120,8 +142,7 @@
                 <textarea id="ask-content" class="ask-textarea" placeholder="Mô tả chi tiết vấn đề lâm sàng, thắc mắc..." required></textarea>
             </div>
             <div class="form-group file-upload-wrapper">
-                <label style="font-size: 12px; margin-bottom: 4px; color: var(--text-main); font-weight: 600;">Đính kèm ảnh minh họa</label>
-                <!-- Chỉ cho phép chọn file ảnh -->
+                <label style="font-size: 12px; margin-bottom: 4px; color: var(--text-main); font-weight: 600;">Đính kèm ảnh minh họa (Không chọn tệp PDF, Word...)</label>
                 <input type="file" id="ask-image" accept="image/png, image/jpeg, image/jpg, image/gif, image/webp">
                 <img id="image-preview" alt="Preview">
             </div>
@@ -153,10 +174,11 @@
         const paginationContainer = document.getElementById('pagination-container');
         const imageInput = document.getElementById('ask-image');
         const imagePreview = document.getElementById('image-preview');
+        const sortSelect = document.getElementById('sort-select');
         
         let allQuestions = [];
         let currentPage = 1;
-        const itemsPerPage = 30; 
+        const itemsPerPage = 15; // ĐIỀU CHỈNH XUỐNG 15 BÀI/TRANG
         let currentAuthorName = null;
         let compressedImageBase64 = null;
 
@@ -165,7 +187,6 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            // Kiểm tra định dạng file một lần nữa bằng JS để chống việc upload file lạ
             if (!file.type.startsWith('image/')) {
                 alert('Vui lòng chỉ chọn các tệp hình ảnh (JPG, PNG, GIF...).');
                 imageInput.value = '';
@@ -202,26 +223,64 @@
         async function fetchQuestions() {
             qaContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:14px;">Đang tải dữ liệu...</div>';
             try {
-                const q = query(collection(db, "hoi_dap"), orderBy("createdAt", "desc"));
+                const q = query(collection(db, "hoi_dap")); // Tải tất cả, sắp xếp bằng JS
                 const querySnapshot = await getDocs(q);
                 
                 allQuestions = [];
                 querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     let dateStr = "Vừa xong";
+                    let createdTime = 0;
+                    let updatedTime = 0;
+
                     if (data.createdAt && data.createdAt.toDate) {
                         const dateObj = data.createdAt.toDate();
+                        createdTime = dateObj.getTime();
+                        updatedTime = createdTime; // Mặc định thời gian cập nhật bằng lúc tạo
                         dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
                     }
-                    allQuestions.push({ id: docSnap.id, ...data, date: dateStr });
+
+                    if (data.updatedAt && data.updatedAt.toDate) {
+                        updatedTime = data.updatedAt.toDate().getTime(); // Lấy thời gian trả lời gần nhất
+                    }
+
+                    allQuestions.push({ 
+                        id: docSnap.id, 
+                        title: data.title,
+                        author: data.author || "Người dùng ẩn danh",
+                        date: dateStr,
+                        imageUrl: data.imageUrl || null,
+                        repliesCount: data.repliesCount || 0,
+                        createdTime: createdTime,
+                        updatedTime: updatedTime
+                    });
                 });
-                currentPage = 1;
-                renderQAList();
+                
+                sortAndRenderQuestions();
             } catch (error) {
                 console.error("Lỗi lấy dữ liệu:", error);
                 qaContainer.innerHTML = `<div style="text-align:center; padding:30px; color:var(--danger); font-size:14px;">Lỗi tải dữ liệu.</div>`;
             }
         }
+
+        // HÀM SẮP XẾP BẰNG JAVASCRIPT
+        function sortAndRenderQuestions() {
+            const sortType = sortSelect.value;
+            
+            if (sortType === 'newest') {
+                allQuestions.sort((a, b) => b.createdTime - a.createdTime);
+            } else if (sortType === 'replies') {
+                allQuestions.sort((a, b) => b.repliesCount - a.repliesCount);
+            } else if (sortType === 'active') {
+                allQuestions.sort((a, b) => b.updatedTime - a.updatedTime);
+            }
+
+            currentPage = 1;
+            renderQAList();
+        }
+
+        // Lắng nghe sự thay đổi của Dropdown bộ lọc
+        sortSelect.addEventListener('change', sortAndRenderQuestions);
 
         function renderQAList() {
             qaContainer.innerHTML = '';
@@ -249,7 +308,7 @@
                     </div>
                     ${thumbDisplay}
                     <div class="qa-card-replies">
-                        <div class="count">${q.repliesCount || 0}</div>
+                        <div class="count">${q.repliesCount}</div>
                         <div class="label">Trả lời</div>
                     </div>
                 `;
@@ -323,7 +382,8 @@
                     authorUid: user.uid,
                     imageUrl: compressedImageBase64, 
                     repliesCount: 0,
-                    createdAt: serverTimestamp() 
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp() // Gắn thời gian cập nhật để hỗ trợ Lọc "Mới trả lời"
                 });
 
                 await setDoc(doc(db, "users", user.uid), { postCount: increment(1) }, { merge: true });
