@@ -41,6 +41,28 @@
             white-space: pre-wrap; 
         }
 
+        /* Định dạng hiển thị ảnh đính kèm */
+        .attached-image {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid var(--border-color);
+            object-fit: contain;
+        }
+
+        /* Badge Cấp bậc */
+        .rank-badge {
+            background-color: #EFF6FF;
+            color: var(--accent-blue);
+            border: 1px solid #BFDBFE;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 6px;
+        }
+
         /* Khu vực Bình luận / Câu trả lời */
         .replies-section-title {
             font-size: 18px;
@@ -59,7 +81,6 @@
             margin-bottom: 15px;
         }
 
-        /* Thiết kế cho Câu Phản hồi (Sub-reply) */
         .sub-reply-card {
             margin-left: 40px;
             background-color: #F8FAFC;
@@ -72,11 +93,14 @@
             justify-content: space-between;
             margin-bottom: 12px;
             font-size: 13px;
+            align-items: center;
         }
 
         .reply-author {
             font-weight: 600;
             color: var(--navy-primary);
+            display: flex;
+            align-items: center;
         }
 
         .reply-content {
@@ -85,7 +109,6 @@
             white-space: pre-wrap;
         }
 
-        /* Nút Phản hồi nhỏ dưới mỗi comment */
         .btn-reply-action {
             background: none;
             border: none;
@@ -103,7 +126,7 @@
             text-decoration: underline;
         }
 
-        /* Form trả lời gốc */
+        /* Form trả lời */
         .reply-form-container {
             margin-top: 30px;
             background-color: var(--navy-light);
@@ -129,7 +152,6 @@
             border-color: var(--navy-secondary);
         }
 
-        /* Nút quay lại */
         .btn-back {
             display: inline-block;
             margin-bottom: 20px;
@@ -144,12 +166,8 @@
         }
 
         @media (max-width: 768px) {
-            .question-box {
-                padding: 20px;
-            }
-            .sub-reply-card {
-                margin-left: 20px; 
-            }
+            .question-box { padding: 20px; }
+            .sub-reply-card { margin-left: 20px; }
         }
     </style>
 </head>
@@ -178,10 +196,8 @@
                     Câu trả lời (<span id="replies-count">0</span>)
                 </div>
                 
-                <!-- Nơi chứa tất cả bình luận và bình luận con -->
                 <div id="replies-list"></div>
 
-                <!-- Khung nhập câu trả lời TỔNG QUÁT -->
                 <div class="reply-form-container">
                     <h4 style="margin-top: 0; margin-bottom: 15px; color: var(--navy-primary);">Viết câu trả lời của bạn</h4>
                     <textarea id="reply-input" class="reply-textarea" placeholder="Chia sẻ kiến thức hoặc kinh nghiệm của bạn..."></textarea>
@@ -202,7 +218,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
             getFirestore, doc, getDoc, collection, addDoc, getDocs, 
-            query, orderBy, serverTimestamp, updateDoc, increment
+            query, orderBy, serverTimestamp, updateDoc, increment, setDoc
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -229,13 +245,31 @@
         const btnSubmitReply = document.getElementById('btn-submit-reply');
         const replyInput = document.getElementById('reply-input');
 
-        onAuthStateChanged(auth, (user) => {
+        let currentAuthorName = null; 
+        let currentAuthorRank = 1;
+
+        onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 authWarning.style.display = 'block';
                 qaContentWrapper.style.display = 'none';
+                currentAuthorName = null;
             } else {
                 authWarning.style.display = 'none';
                 qaContentWrapper.style.display = 'block';
+                
+                try {
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        if (userDocSnap.data().displayName && userDocSnap.data().displayName.trim() !== '') {
+                            currentAuthorName = userDocSnap.data().displayName;
+                        }
+                        currentAuthorRank = userDocSnap.data().rankLevel || 1;
+                    }
+                } catch (error) {
+                    console.error("Lỗi lấy thông tin user:", error);
+                }
+
                 if (questionId) {
                     loadQuestionData();
                     loadRepliesData();
@@ -259,15 +293,19 @@
                     }
 
                     repliesCountDisplay.textContent = data.repliesCount || 0;
+                    
+                    const rankDisplay = data.authorRank ? `<span class="rank-badge">Cấp ${data.authorRank}</span>` : `<span class="rank-badge">Cấp 1</span>`;
+                    const imageDisplay = data.imageUrl ? `<img src="${data.imageUrl}" class="attached-image" alt="Ảnh đính kèm">` : ``;
 
                     questionContainer.innerHTML = `
                         <h1 class="question-title">${data.title}</h1>
                         <div class="post-meta">
-                            <span>Tác giả: <strong style="color: var(--text-main);">${data.author}</strong></span>
+                            <span style="display:flex; align-items:center;">Tác giả: <strong style="color: var(--text-main); margin-left: 4px;">${data.author}</strong> ${rankDisplay}</span>
                             <span>•</span>
                             <span>Ngày đăng: ${dateStr}</span>
                         </div>
                         <div class="question-content">${data.content}</div>
+                        ${imageDisplay}
                     `;
                 } else {
                     questionContainer.innerHTML = '<h3 style="color:var(--danger); text-align:center;">Bài viết không tồn tại hoặc đã bị xóa.</h3>';
@@ -277,7 +315,6 @@
             }
         }
 
-        // HÀM XÂY DỰNG GIAO DIỆN MỘT BÌNH LUẬN
         function buildReplyHTML(reply, isSub, targetUser = '', topLevelId = '') {
             let dateStr = "Vừa xong";
             if (reply.createdAt && reply.createdAt.toDate) {
@@ -285,12 +322,13 @@
                 dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
             }
             
+            const rankDisplay = reply.authorRank ? `<span class="rank-badge">Cấp ${reply.authorRank}</span>` : `<span class="rank-badge">Cấp 1</span>`;
+
             if (isSub) {
-                // Thẻ Phản hồi con (có thêm tag tên người dùng)
                 return `
                     <div class="reply-card sub-reply-card">
                         <div class="reply-meta">
-                            <span class="reply-author">${reply.author}</span>
+                            <span class="reply-author">${reply.author} ${rankDisplay}</span>
                             <span style="color: var(--text-muted);">${dateStr}</span>
                         </div>
                         <div class="reply-content">
@@ -301,11 +339,10 @@
                     </div>
                 `;
             } else {
-                // Thẻ Bình luận gốc
                 return `
                     <div class="reply-card">
                         <div class="reply-meta">
-                            <span class="reply-author">${reply.author}</span>
+                            <span class="reply-author">${reply.author} ${rankDisplay}</span>
                             <span style="color: var(--text-muted);">${dateStr}</span>
                         </div>
                         <div class="reply-content">${reply.content}</div>
@@ -325,35 +362,28 @@
                     return;
                 }
 
-                // Tách riêng Bình luận gốc (topLevel) và Phản hồi (children)
                 let topLevel = [];
                 let children = {}; 
 
                 querySnapshot.forEach((docSnap) => {
                     const reply = { id: docSnap.id, ...docSnap.data() };
-                    if (reply.replyToId) { // Là phản hồi con
+                    if (reply.replyToId) { 
                         if (!children[reply.replyToId]) children[reply.replyToId] = [];
                         children[reply.replyToId].push(reply);
-                    } else { // Bình luận gốc
+                    } else { 
                         topLevel.push(reply);
                     }
                 });
 
-                // Lắp ráp HTML
                 let html = '';
                 topLevel.forEach(parent => {
                     html += buildReplyHTML(parent, false, '', parent.id);
-                    
-                    // Render tất cả các phản hồi bên trong Parent này
                     if (children[parent.id]) {
                         children[parent.id].forEach(child => {
-                            // Nếu child có targetUser thì tag người đó, nếu không mặc định tag Parent
                             let target = child.replyToUser || parent.author;
                             html += buildReplyHTML(child, true, target, parent.id);
                         });
                     }
-                    
-                    // Thẻ div chứa Form trả lời tạm thời
                     html += `<div id="sub-reply-container-${parent.id}"></div>`;
                 });
                 
@@ -368,8 +398,6 @@
         // SỰ KIỆN KHI BẤM NÚT "PHẢN HỒI" TRONG DANH SÁCH
         // ========================================================
         repliesList.addEventListener('click', async (e) => {
-            
-            // 1. Mở form Phản hồi ngay dưới bình luận gốc
             if (e.target.classList.contains('btn-reply-action')) {
                 const topLevelId = e.target.getAttribute('data-toplevel');
                 const targetAuthor = e.target.getAttribute('data-author');
@@ -390,13 +418,17 @@
                 document.getElementById('sub-reply-input').focus();
             }
 
-            // 2. Nút Hủy phản hồi
             if (e.target.classList.contains('btn-cancel-sub-reply')) {
                 document.getElementById('temp-sub-reply-form').remove();
             }
 
-            // 3. Nút Gửi phản hồi (Sub-reply)
             if (e.target.classList.contains('btn-submit-sub-reply')) {
+                if (!currentAuthorName) {
+                    alert("Vui lòng cập nhật 'Tên hiển thị' trong mục Thông tin cá nhân trước khi bình luận!");
+                    window.location.href = "thong_tin_ca_nhan.html";
+                    return;
+                }
+
                 const topLevelId = e.target.getAttribute('data-toplevel');
                 const targetUser = e.target.getAttribute('data-targetuser');
                 const inputEl = document.getElementById('sub-reply-input');
@@ -408,21 +440,24 @@
                 e.target.disabled = true;
 
                 try {
-                    const authorName = auth.currentUser.email;
-                    
-                    // Lưu lên Firestore
                     await addDoc(collection(db, "hoi_dap", questionId, "replies"), {
                         content: contentVal,
-                        author: authorName,
-                        replyToId: topLevelId,       // Gom nhóm vào top-level
-                        replyToUser: targetUser,     // Dùng để render @tag
+                        author: currentAuthorName,
+                        authorUid: auth.currentUser.uid,
+                        authorRank: currentAuthorRank,
+                        replyToId: topLevelId,
+                        replyToUser: targetUser,
                         createdAt: serverTimestamp()
                     });
 
+                    // Cập nhật số đếm ở bài gốc
                     await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(1) });
                     repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
                     
-                    loadRepliesData(); // Reload toàn bộ bình luận
+                    // Cập nhật số đếm bình luận của user
+                    await setDoc(doc(db, "users", auth.currentUser.uid), { replyCount: increment(1) }, { merge: true });
+
+                    loadRepliesData();
                 } catch (error) {
                     console.error("Lỗi gửi phản hồi:", error);
                     alert("Có lỗi xảy ra.");
@@ -434,6 +469,12 @@
         // GỬI BÌNH LUẬN GỐC (DƯỚI CÙNG TRANG)
         // ========================================================
         btnSubmitReply.addEventListener('click', async () => {
+            if (!currentAuthorName) {
+                alert("Vui lòng cập nhật 'Tên hiển thị' trong mục Thông tin cá nhân trước khi bình luận!");
+                window.location.href = "thong_tin_ca_nhan.html";
+                return;
+            }
+
             const contentVal = replyInput.value.trim();
             if (!contentVal) {
                 alert("Vui lòng nhập nội dung.");
@@ -444,17 +485,19 @@
             btnSubmitReply.disabled = true;
 
             try {
-                const authorName = auth.currentUser.email;
-
                 await addDoc(collection(db, "hoi_dap", questionId, "replies"), {
                     content: contentVal,
-                    author: authorName,
+                    author: currentAuthorName,
+                    authorUid: auth.currentUser.uid,
+                    authorRank: currentAuthorRank,
                     createdAt: serverTimestamp()
                 });
 
                 await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(1) });
                 repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
                 
+                await setDoc(doc(db, "users", auth.currentUser.uid), { replyCount: increment(1) }, { merge: true });
+
                 replyInput.value = '';
                 btnSubmitReply.textContent = "Gửi bình luận";
                 btnSubmitReply.disabled = false;
