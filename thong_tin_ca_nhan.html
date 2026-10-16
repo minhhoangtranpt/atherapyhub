@@ -6,46 +6,63 @@
     <title>Thông tin cá nhân - ATherapyHub</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .profile-wrapper { max-width: 600px; margin: 40px auto; background-color: var(--bg-card); padding: 40px; border-radius: 16px; border: 1px solid var(--border-color); }
-        .profile-header { text-align: center; margin-bottom: 30px; }
-        .profile-header h2 { color: var(--navy-primary); font-size: 24px; margin-bottom: 8px; }
-        .profile-header p { color: var(--text-muted); font-size: 14px; }
+        /* Tối ưu hóa không gian (Compact UI) */
+        .profile-wrapper { 
+            max-width: 500px; 
+            margin: 30px auto; 
+            background-color: var(--bg-card); 
+            padding: 25px 30px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-color); 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        
+        .profile-header { text-align: center; margin-bottom: 20px; }
+        .profile-header h2 { color: var(--navy-primary); font-size: 20px; margin-bottom: 4px; }
+        .profile-header p { color: var(--text-muted); font-size: 13px; margin: 0; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { font-size: 13px; margin-bottom: 6px; font-weight: 500; }
+        .form-group input { padding: 10px 12px; font-size: 14px; border-radius: 8px; }
+        
         input:disabled { background-color: #F1F5F9; color: var(--text-muted); cursor: not-allowed; border-color: #E2E8F0; }
-        .rank-field { font-weight: 700 !important; color: var(--accent-blue) !important; background-color: #EFF6FF !important; border-color: #BFDBFE !important; }
-        .rank-progress { font-size: 13px; color: var(--text-muted); margin-top: 6px; display: block; text-align: right; }
-        #profile-message { text-align: center; margin-top: 15px; font-size: 14px; font-weight: 500; }
-        @media (max-width: 768px) { .profile-wrapper { padding: 25px 20px; margin: 20px auto; } }
+        
+        .name-warning { font-size: 12px; margin-top: 6px; display: none; }
+        #profile-message { text-align: center; margin-top: 15px; font-size: 13px; font-weight: 500; height: 18px; }
+        
+        @media (max-width: 768px) { 
+            .profile-wrapper { padding: 20px; margin: 15px; } 
+        }
     </style>
 </head>
 <body>
 
     <main id="main-content">
         <div class="profile-wrapper">
-            <div id="auth-warning" style="display: none; text-align: center; padding: 20px 0;">
-                <h3 style="color: var(--danger); margin-bottom: 10px;">Yêu cầu Đăng nhập</h3>
-                <p style="color: var(--text-muted); margin-bottom: 20px;">Vui lòng đăng nhập để xem thông tin.</p>
-                <button class="btn-primary" style="max-width: 250px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
+            <div id="auth-warning" style="display: none; text-align: center; padding: 10px 0;">
+                <h3 style="color: var(--danger); margin-bottom: 10px; font-size: 18px;">Yêu cầu Đăng nhập</h3>
+                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 13px;">Vui lòng đăng nhập để xem thông tin.</p>
+                <button class="btn-primary" style="max-width: 200px; padding: 8px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
             </div>
 
             <div id="profile-form-section" style="display: none;">
                 <div class="profile-header">
                     <h2>Hồ sơ cá nhân</h2>
-                    <p>Quản lý thông tin hiển thị của bạn trên diễn đàn</p>
+                    <p>Quản lý thông tin tài khoản</p>
                 </div>
+                
                 <div class="form-group">
                     <label>Email (Không thể thay đổi)</label>
                     <input type="email" id="profile-email" disabled>
                 </div>
-                <div class="form-group">
-                    <label>Xếp hạng thành viên (Tự động thăng cấp)</label>
-                    <input type="text" id="profile-rank" class="rank-field" disabled value="Đang tính toán...">
-                    <span id="rank-progress-text" class="rank-progress">Đang lấy dữ liệu...</span>
-                </div>
+                
                 <div class="form-group">
                     <label>Tên hiển thị (Tên người dùng)</label>
-                    <input type="text" id="profile-name">
+                    <input type="text" id="profile-name" placeholder="Ví dụ: Trần Minh Hoàng">
+                    <div id="name-warning" class="name-warning"></div>
                 </div>
-                <button id="btn-save-profile" class="btn-primary" style="margin-top: 20px;">Lưu thay đổi</button>
+                
+                <button id="btn-save-profile" class="btn-primary" style="padding: 10px; font-size: 14px; margin-top: 10px;">Lưu thay đổi</button>
                 <div id="profile-message"></div>
             </div>
         </div>
@@ -56,7 +73,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
@@ -74,11 +91,13 @@
         const authWarning = document.getElementById('auth-warning');
         const profileFormSection = document.getElementById('profile-form-section');
         const emailInput = document.getElementById('profile-email');
-        const rankInput = document.getElementById('profile-rank');
-        const rankProgress = document.getElementById('rank-progress-text');
         const nameInput = document.getElementById('profile-name');
+        const nameWarning = document.getElementById('name-warning');
         const btnSave = document.getElementById('btn-save-profile');
         const messageBox = document.getElementById('profile-message');
+
+        let originalName = "";
+        let canChangeName = true;
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -97,45 +116,31 @@
                 const userDocRef = doc(db, "users", uid);
                 const userDocSnap = await getDoc(userDocRef);
 
-                let currentRank = 1;
-                let totalPosts = 0;
-                let totalReplies = 0;
-
                 if (userDocSnap.exists()) {
                     const userData = userDocSnap.data();
-                    nameInput.value = userData.displayName || "";
-                    currentRank = userData.rankLevel || 1;
-                    totalPosts = userData.postCount || 0;
-                    totalReplies = userData.replyCount || 0;
-                }
+                    originalName = userData.displayName || "";
+                    nameInput.value = originalName;
 
-                // Tính toán xếp hạng tự động
-                let calculatedRank = 1;
-                let nextMilestone = 10;
-
-                if (totalPosts >= 80 && totalReplies >= 80) {
-                    calculatedRank = 5;
-                    nextMilestone = "Tối đa";
-                } else if (totalPosts >= 40 && totalReplies >= 40) {
-                    calculatedRank = 4;
-                    nextMilestone = 80;
-                } else if (totalPosts >= 20 && totalReplies >= 20) {
-                    calculatedRank = 3;
-                    nextMilestone = 40;
-                } else if (totalPosts >= 10 && totalReplies >= 10) {
-                    calculatedRank = 2;
-                    nextMilestone = 20;
-                }
-
-                rankInput.value = `Cấp ${calculatedRank}`;
-                if (calculatedRank === 5) {
-                    rankProgress.textContent = `Thành tích: ${totalPosts} bài viết / ${totalReplies} bình luận (Đạt cấp tối đa)`;
-                } else {
-                    rankProgress.textContent = `Thành tích: ${totalPosts} bài / ${totalReplies} bình luận (Cần ${nextMilestone} bài & ${nextMilestone} bình luận để lên Cấp ${calculatedRank + 1})`;
-                }
-
-                if (calculatedRank > currentRank) {
-                    await setDoc(userDocRef, { rankLevel: calculatedRank }, { merge: true });
+                    // KIỂM TRA QUY ĐỊNH ĐỔI TÊN 60 NGÀY
+                    if (userData.lastNameChangeAt) {
+                        const lastChangeDate = userData.lastNameChangeAt.toDate();
+                        const now = new Date();
+                        const diffTime = now.getTime() - lastChangeDate.getTime();
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays < 60) {
+                            canChangeName = false;
+                            nameInput.disabled = true;
+                            const daysLeft = 60 - diffDays;
+                            nameWarning.textContent = `🔒 Đã đổi tên gần đây. Bạn được đổi tên lại sau ${daysLeft} ngày nữa.`;
+                            nameWarning.style.color = "var(--text-muted)";
+                            nameWarning.style.display = 'block';
+                        } else {
+                            canChangeName = true;
+                            nameInput.disabled = false;
+                            nameWarning.style.display = 'none';
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("Lỗi:", error);
@@ -146,8 +151,18 @@
             const user = auth.currentUser;
             if (!user) return;
             const newName = nameInput.value.trim();
+            
             if (!newName) {
                 showMessage("Vui lòng nhập tên hiển thị.", "var(--danger)");
+                return;
+            }
+
+            // Kiểm tra xem tên có thực sự thay đổi không
+            const isNameChanged = (newName !== originalName);
+
+            // Nếu người dùng cố tình đổi tên khi chưa đủ 60 ngày
+            if (isNameChanged && !canChangeName) {
+                showMessage("Bạn chưa thể đổi tên lúc này.", "var(--danger)");
                 return;
             }
 
@@ -155,27 +170,47 @@
             btnSave.disabled = true;
 
             try {
-                const q = query(collection(db, "users"), where("displayName", "==", newName));
-                const querySnapshot = await getDocs(q);
-                let isDuplicate = false;
-                querySnapshot.forEach((docSnap) => { if (docSnap.id !== user.uid) isDuplicate = true; });
+                // Kiểm tra trùng lặp nếu tên thay đổi
+                if (isNameChanged) {
+                    const q = query(collection(db, "users"), where("displayName", "==", newName));
+                    const querySnapshot = await getDocs(q);
+                    let isDuplicate = false;
+                    querySnapshot.forEach((docSnap) => { 
+                        if (docSnap.id !== user.uid) isDuplicate = true; 
+                    });
 
-                if (isDuplicate) {
-                    showMessage("Tên người dùng này đã bị trùng. Vui lòng chọn tên khác!", "var(--danger)");
-                    btnSave.textContent = "Lưu thay đổi";
-                    btnSave.disabled = false;
-                    return; 
+                    if (isDuplicate) {
+                        showMessage("Tên người dùng này đã bị trùng. Vui lòng chọn tên khác!", "var(--danger)");
+                        btnSave.textContent = "Lưu thay đổi";
+                        btnSave.disabled = false;
+                        return; 
+                    }
                 }
 
                 btnSave.textContent = "Đang lưu...";
-                await setDoc(doc(db, "users", user.uid), {
+                
+                const updateData = {
                     displayName: newName,
                     email: user.email,
                     uid: user.uid, 
-                    updatedAt: new Date()
-                }, { merge: true });
+                    updatedAt: serverTimestamp()
+                };
+
+                // Chỉ ghi nhận mốc thời gian khi tên thực sự bị đổi
+                if (isNameChanged && originalName !== "") {
+                    updateData.lastNameChangeAt = serverTimestamp();
+                } else if (isNameChanged && originalName === "") {
+                    // Cập nhật tên lần đầu tiên cũng bắt đầu đếm 60 ngày
+                    updateData.lastNameChangeAt = serverTimestamp();
+                }
+
+                await setDoc(doc(db, "users", user.uid), updateData, { merge: true });
 
                 showMessage("Cập nhật thông tin thành công!", "#03543F");
+                
+                if (isNameChanged) {
+                    await loadUserProfile(user.uid); // Tải lại để khóa form nếu vừa đổi tên
+                }
             } catch (error) {
                 showMessage("Có lỗi xảy ra.", "var(--danger)");
             } finally {
