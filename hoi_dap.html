@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hỏi & Đáp - ATherapyHub</title>
+    <!-- Nhúng CSS dùng chung -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS riêng cho trang Hỏi & Đáp */
+        .qa-header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .qa-header-section h2 {
+            margin: 0;
+            color: var(--navy-primary);
+        }
+
+        .btn-ask {
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-ask:hover {
+            background-color: var(--navy-secondary);
+        }
+
+        /* Danh sách bài viết */
+        .qa-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .qa-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-card);
+            padding: 20px 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .qa-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            border-color: var(--accent-blue);
+        }
+
+        .qa-main-info {
+            flex: 1;
+        }
+
+        .qa-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--navy-primary);
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .qa-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .qa-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .qa-stats {
+            text-align: center;
+            min-width: 80px;
+            padding-left: 20px;
+            border-left: 1px solid var(--border-color);
+            margin-left: 20px;
+        }
+
+        .qa-stats .count {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--navy-secondary);
+            line-height: 1;
+        }
+
+        .qa-stats .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .status-badge {
+            background-color: #DEF7EC;
+            color: #03543F;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 768px) {
+            .qa-header-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .qa-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px;
+            }
+            .qa-stats {
+                border-left: none;
+                border-top: 1px dashed var(--border-color);
+                margin-left: 0;
+                padding-left: 0;
+                margin-top: 15px;
+                padding-top: 10px;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                text-align: left;
+            }
+            .qa-stats .count {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main id="main-content">
+        
+        <div class="qa-header-section">
+            <h2>Khu vực Hỏi & Đáp (Q&A)</h2>
+            <a href="#" class="btn-ask" onclick="alert('Tính năng Tạo câu hỏi mới đang được cập nhật!')">+ Đặt câu hỏi</a>
+        </div>
+
+        <!-- Danh sách bài viết (Được tạo tự động bằng JS) -->
+        <div id="qa-list-container" class="qa-list">
+            <div style="text-align: center; color: var(--text-muted); padding: 40px;">Đang tải dữ liệu...</div>
+        </div>
+
+    </main>
+
+    <!-- Nhúng JS dạng module để tự động gắn Header/Footer -->
+    <script type="module" src="layout.js"></script>
+
+    <!-- Script tạo dữ liệu giả và render danh sách -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const qaContainer = document.getElementById('qa-list-container');
+
+            // MẢNG DỮ LIỆU GIẢ LẬP (MOCK DATA)
+            // Sau này bạn sẽ thay bằng dữ liệu lấy từ Firebase Firestore
+            const mockQuestions = [
+                {
+                    id: "qa123",
+                    title: "Hỏi về phác đồ tập phục hồi chức năng sau mổ tái tạo dây chằng chéo trước (ACL) tuần thứ 4?",
+                    author: "Trần Minh Hoàng",
+                    date: "16/10/2026 14:30",
+                    repliesCount: 12,
+                    isResolved: true
+                },
+                {
+                    id: "qa124",
+                    title: "Bệnh nhân đột quỵ nhồi máu não sau 3 tháng, tay bị co cứng (Spasticity) độ 3 theo Ashworth. Xin lời khuyên can thiệp.",
+                    author: "Nguyen Van A",
+                    date: "15/10/2026 09:15",
+                    repliesCount: 5,
+                    isResolved: false
+                },
+                {
+                    id: "qa125",
+                    title: "Dịch thuật thuật ngữ 'Proprioceptive Neuromuscular Facilitation' (PNF) sang tiếng Việt như thế nào cho chuẩn nhất?",
+                    author: "Le Thi B",
+                    date: "10/10/2026 21:00",
+                    repliesCount: 28,
+                    isResolved: true
+                },
+                {
+                    id: "qa126",
+                    title: "Góc xin tài liệu: Bác nào có Ebook sách 'Orthopedic Physical Assessment' của Magee ấn bản mới nhất cho em xin với ạ.",
+                    author: "Sinh viên PT",
+                    date: "01/10/2026 10:00",
+                    repliesCount: 0,
+                    isResolved: false
+                }
+            ];
+
+            // Hàm render danh sách ra HTML
+            function renderQAList(questions) {
+                qaContainer.innerHTML = ''; // Xóa chữ "Đang tải"
+
+                if (questions.length === 0) {
+                    qaContainer.innerHTML = '<p style="text-align:center; color:#64748B;">Chưa có câu hỏi nào được đăng tải.</p>';
+                    return;
+                }
+
+                questions.forEach(q => {
+                    // Trạng thái (Đã giải quyết hay chưa)
+                    const statusHtml = q.isResolved 
+                        ? `<span class="status-badge">✔ Đã giải quyết</span>` 
+                        : ``;
+
+                    // Tạo thẻ a bọc toàn bộ khung (giúp click vào đâu cũng sang trang chi tiết)
+                    const qaCard = document.createElement('a');
+                    qaCard.href = `chi_tiet_hoi_dap.html?id=${q.id}`;
+                    qaCard.className = 'qa-item';
+
+                    qaCard.innerHTML = `
+                        <div class="qa-main-info">
+                            <div class="qa-title">
+                                ${statusHtml} ${q.title}
+                            </div>
+                            <div class="qa-meta">
+                                <span>👤 ${q.author}</span>
+                                <span>•</span>
+                                <span>🕒 ${q.date}</span>
+                            </div>
+                        </div>
+                        <div class="qa-stats">
+                            <div class="count">${q.repliesCount}</div>
+                            <div class="label">Trả lời</div>
+                        </div>
+                    `;
+
+                    qaContainer.appendChild(qaCard);
+                });
+            }
+
+            // Giả lập thời gian tải mạng (500ms)
+            setTimeout(() => {
+                renderQAList(mockQuestions);
+            }, 500);
+        });
+    </script>
+</body>
+</html>
