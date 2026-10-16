@@ -106,10 +106,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
-            getFirestore, 
-            doc, 
-            getDoc, 
-            setDoc 
+            getFirestore, doc, getDoc, setDoc, 
+            collection, query, where, getDocs 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -165,7 +163,7 @@
             }
         }
 
-        // Xử lý lưu thông tin
+        // Xử lý lưu thông tin có check trùng lặp tên
         btnSave.addEventListener('click', async () => {
             const user = auth.currentUser;
             if (!user) return;
@@ -178,16 +176,41 @@
                 return;
             }
 
-            btnSave.textContent = "Đang lưu...";
+            btnSave.textContent = "Đang kiểm tra...";
             btnSave.disabled = true;
 
             try {
-                // Dùng setDoc với thuộc tính merge: true để tạo mới nếu chưa có, hoặc cập nhật nếu đã có
+                // 1. KIỂM TRA TRÙNG LẶP TÊN NGƯỜI DÙNG
+                // Quét qua collection 'users' xem có ai dùng tên này chưa
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("displayName", "==", newName));
+                const querySnapshot = await getDocs(q);
+
+                let isDuplicate = false;
+                querySnapshot.forEach((docSnap) => {
+                    // Nếu tìm thấy tên này nhưng ID không phải của user hiện tại -> Bị trùng
+                    if (docSnap.id !== user.uid) {
+                        isDuplicate = true;
+                    }
+                });
+
+                if (isDuplicate) {
+                    showMessage("Tên người dùng này đã được sử dụng. Vui lòng chọn tên khác!", "var(--danger)");
+                    btnSave.textContent = "Lưu thay đổi";
+                    btnSave.disabled = false;
+                    return; // Ngừng thực thi việc lưu
+                }
+
+                // 2. NẾU KHÔNG TRÙNG -> TIẾN HÀNH LƯU
+                btnSave.textContent = "Đang lưu...";
+                
+                // Vẫn lưu UID vào tài liệu (implicit/ngầm) để Admin quản lý dù không hiện trên UI
                 const userDocRef = doc(db, "users", user.uid);
                 await setDoc(userDocRef, {
                     displayName: newName,
                     phoneNumber: newPhone,
                     email: user.email,
+                    uid: user.uid, 
                     updatedAt: new Date()
                 }, { merge: true });
 
@@ -197,19 +220,4 @@
                 console.error("Lỗi khi lưu thông tin:", error);
                 showMessage("Có lỗi xảy ra. Vui lòng thử lại.", "var(--danger)");
             } finally {
-                btnSave.textContent = "Lưu thay đổi";
-                btnSave.disabled = false;
-            }
-        });
-
-        function showMessage(text, color) {
-            messageBox.textContent = text;
-            messageBox.style.color = color;
-            // Ẩn thông báo sau 3 giây
-            setTimeout(() => {
-                messageBox.textContent = "";
-            }, 3000);
-        }
-    </script>
-</body>
-</html>
+                btnSave.textContent = "Lưu
