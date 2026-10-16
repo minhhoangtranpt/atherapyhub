@@ -1,14 +1,18 @@
 [
   {
-    "title": "Lâm sàng",
-    "url": "lam_sang.html"
+    "title": "Lý thuyết",
+    "url": "ly_thuyet.html"
   },
   {
-    "title": "Học thuật",
-    "url": "hoc_thuat.html"
+    "title": "Thực hành",
+    "url": "thuc_hanh.html"
+  },
+   {
+    "title": "Chia sẻ",
+    "url": "chia_se.html"
   },
   {
-    "title": "Giới thiệu",
-    "url": "about.html"
+    "title": "Điều khoản",
+    "url": "dieu_khoan.html"
   }
 ]
