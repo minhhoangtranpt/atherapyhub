@@ -77,6 +77,51 @@ nav#main-nav a:hover {
     color: white; 
 }
 
+/* ================= THANH TÌM KIẾM CỐ ĐỊNH ================= */
+.header-search {
+    flex: 1; 
+    max-width: 400px;
+    margin: 0 20px;
+    position: relative;
+}
+
+.header-search input {
+    width: 100%;
+    padding: 10px 16px 10px 38px; 
+    border: none;
+    border-radius: 99px; 
+    font-size: 14px;
+    outline: none;
+    background-color: var(--navy-secondary); 
+    color: white;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.header-search input::placeholder {
+    color: #A0AEC0;
+}
+
+.header-search input:focus {
+    background-color: white;
+    color: var(--text-main);
+    box-shadow: 0 0 0 2px var(--accent-blue);
+}
+
+.header-search .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #A0AEC0;
+    pointer-events: none; 
+}
+
+.header-search input:focus ~ .search-icon {
+    color: var(--text-muted);
+}
+
+/* ================= NÚT BẤM & TÀI KHOẢN ================= */
 .user-controls { 
     display: flex; 
     align-items: center; 
@@ -125,56 +170,6 @@ button, .btn-link {
 
 .btn-login-nav:hover { 
     background-color: var(--navy-light); 
-}
-
-/* ================= ICON & THANH TÌM KIẾM TRÊN HEADER ================= */
-.search-icon-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: var(--navy-light);
-    cursor: pointer;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
-}
-
-.search-icon-btn:hover {
-    color: white;
-}
-
-.search-bar-container {
-    display: none; 
-    background-color: var(--navy-secondary);
-    padding: 10px 5%;
-    position: sticky;
-    top: 64px; 
-    z-index: 99;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    animation: slideDown 0.3s ease;
-}
-
-.search-bar-container.active {
-    display: block; 
-}
-
-.search-bar-container input {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    display: block;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    outline: none;
-}
-
-@keyframes slideDown {
-    from { transform: translateY(-10px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
 }
 
 /* ================= MODAL ĐĂNG NHẬP ================= */
@@ -351,8 +346,11 @@ footer {
         font-size: 13px;
     }
 
-    .search-bar-container {
-        top: 100px; /* Điều chỉnh vị trí trên mobile để không đè lên header dọc */
+    .header-search {
+        max-width: 100%;
+        margin: 0;
+        width: 100%;
+        order: 3; 
     }
 
     .modal-box {
