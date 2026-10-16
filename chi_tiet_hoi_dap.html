@@ -6,93 +6,79 @@
     <title>Chi tiết Hỏi & Đáp - ATherapyHub</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Khung hiển thị câu hỏi gốc */
+        /* Tối ưu khung hiển thị câu hỏi gốc */
         .question-box {
             background-color: var(--bg-card);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            margin-bottom: 20px;
             border: 1px solid var(--border-color);
         }
 
         .question-title {
-            font-size: 22px;
+            font-size: 20px;
             color: var(--navy-primary);
-            margin-bottom: 15px;
-            line-height: 1.4;
+            margin-bottom: 10px;
+            line-height: 1.3;
         }
 
         .post-meta {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-muted);
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
             border-bottom: 1px solid var(--border-color);
         }
 
         .question-content {
-            font-size: 16px;
-            line-height: 1.7;
+            font-size: 15px;
+            line-height: 1.6;
             text-align: justify;
             white-space: pre-wrap; 
         }
 
-        /* Định dạng hiển thị ảnh đính kèm */
         .attached-image {
             max-width: 100%;
-            max-height: 500px;
-            border-radius: 8px;
-            margin-top: 20px;
+            max-height: 400px;
+            border-radius: 6px;
+            margin-top: 15px;
             border: 1px solid var(--border-color);
             object-fit: contain;
         }
 
-        /* Badge Cấp bậc */
-        .rank-badge {
-            background-color: #EFF6FF;
-            color: var(--accent-blue);
-            border: 1px solid #BFDBFE;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-left: 6px;
-        }
-
         /* Khu vực Bình luận / Câu trả lời */
         .replies-section-title {
-            font-size: 18px;
+            font-size: 16px;
             color: var(--navy-secondary);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
+            padding-bottom: 8px;
             font-weight: 600;
         }
 
         .reply-card {
             background-color: white;
-            padding: 20px;
-            border-radius: 12px;
+            padding: 12px 15px;
+            border-radius: 8px;
             border: 1px solid var(--border-color);
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .sub-reply-card {
-            margin-left: 40px;
+            margin-left: 30px;
             background-color: #F8FAFC;
             border-left: 3px solid var(--accent-blue);
-            padding: 15px 20px;
         }
 
         .reply-meta {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 13px;
+            margin-bottom: 8px;
+            font-size: 12px;
             align-items: center;
         }
 
@@ -104,8 +90,8 @@
         }
 
         .reply-content {
-            font-size: 15px;
-            line-height: 1.6;
+            font-size: 14px;
+            line-height: 1.5;
             white-space: pre-wrap;
         }
 
@@ -113,11 +99,11 @@
             background: none;
             border: none;
             color: var(--text-muted);
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             padding: 0;
-            margin-top: 10px;
+            margin-top: 8px;
             transition: color 0.2s;
         }
 
@@ -128,23 +114,23 @@
 
         /* Form trả lời */
         .reply-form-container {
-            margin-top: 30px;
+            margin-top: 20px;
             background-color: var(--navy-light);
-            padding: 24px;
-            border-radius: 12px;
+            padding: 15px;
+            border-radius: 8px;
             border: 1px solid #BFDBFE;
         }
 
         .reply-textarea {
             width: 100%;
-            height: 120px;
-            padding: 15px;
+            height: 80px;
+            padding: 10px;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 6px;
             resize: vertical;
             font-family: inherit;
             font-size: 14px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .reply-textarea:focus {
@@ -154,11 +140,11 @@
 
         .btn-back {
             display: inline-block;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: var(--text-muted);
             text-decoration: none;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .btn-back:hover {
@@ -166,7 +152,8 @@
         }
 
         @media (max-width: 768px) {
-            .question-box { padding: 20px; }
+            #main-content { margin: 15px auto; padding: 0 10px; }
+            .question-box { padding: 15px; }
             .sub-reply-card { margin-left: 20px; }
         }
     </style>
@@ -177,18 +164,16 @@
         
         <a href="hoi_dap.html" class="btn-back">← Quay lại danh sách Hỏi & Đáp</a>
 
-        <!-- Cảnh báo chưa đăng nhập -->
-        <div id="auth-warning" style="display: none; text-align: center; padding: 60px 20px; background: white; border-radius: 12px; border: 1px solid var(--border-color);">
+        <div id="auth-warning" style="display: none; text-align: center; padding: 40px 20px; background: white; border-radius: 8px; border: 1px solid var(--border-color);">
             <h3 style="color: var(--danger); margin-bottom: 10px;">Yêu cầu Đăng nhập</h3>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">Bạn cần đăng nhập để xem chi tiết và thảo luận trong bài viết này.</p>
-            <button class="btn-primary" style="max-width: 250px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
+            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">Bạn cần đăng nhập để xem chi tiết và thảo luận trong bài viết này.</p>
+            <button class="btn-primary" style="max-width: 200px; padding: 8px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
         </div>
 
-        <!-- Nội dung chính -->
         <div id="qa-content-wrapper" style="display: none;">
             
             <div id="question-container" class="question-box">
-                <div style="text-align: center; color: var(--text-muted);">Đang tải nội dung câu hỏi...</div>
+                <div style="text-align: center; color: var(--text-muted); font-size: 14px;">Đang tải nội dung câu hỏi...</div>
             </div>
 
             <div id="replies-section">
@@ -199,9 +184,9 @@
                 <div id="replies-list"></div>
 
                 <div class="reply-form-container">
-                    <h4 style="margin-top: 0; margin-bottom: 15px; color: var(--navy-primary);">Viết câu trả lời của bạn</h4>
+                    <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: var(--navy-primary);">Viết câu trả lời của bạn</h4>
                     <textarea id="reply-input" class="reply-textarea" placeholder="Chia sẻ kiến thức hoặc kinh nghiệm của bạn..."></textarea>
-                    <button id="btn-submit-reply" class="btn-primary" style="width: auto; padding: 10px 25px;">Gửi bình luận</button>
+                    <button id="btn-submit-reply" class="btn-primary" style="width: auto; padding: 8px 20px; font-size: 13px;">Gửi bình luận</button>
                 </div>
             </div>
 
@@ -209,10 +194,8 @@
 
     </main>
 
-    <!-- Nạp Layout Header/Footer -->
     <script type="module" src="layout.js"></script>
 
-    <!-- Script Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -246,7 +229,6 @@
         const replyInput = document.getElementById('reply-input');
 
         let currentAuthorName = null; 
-        let currentAuthorRank = 1;
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -260,11 +242,8 @@
                 try {
                     const userDocRef = doc(db, "users", user.uid);
                     const userDocSnap = await getDoc(userDocRef);
-                    if (userDocSnap.exists()) {
-                        if (userDocSnap.data().displayName && userDocSnap.data().displayName.trim() !== '') {
-                            currentAuthorName = userDocSnap.data().displayName;
-                        }
-                        currentAuthorRank = userDocSnap.data().rankLevel || 1;
+                    if (userDocSnap.exists() && userDocSnap.data().displayName && userDocSnap.data().displayName.trim() !== '') {
+                        currentAuthorName = userDocSnap.data().displayName;
                     }
                 } catch (error) {
                     console.error("Lỗi lấy thông tin user:", error);
@@ -294,15 +273,14 @@
 
                     repliesCountDisplay.textContent = data.repliesCount || 0;
                     
-                    const rankDisplay = data.authorRank ? `<span class="rank-badge">Cấp ${data.authorRank}</span>` : `<span class="rank-badge">Cấp 1</span>`;
                     const imageDisplay = data.imageUrl ? `<img src="${data.imageUrl}" class="attached-image" alt="Ảnh đính kèm">` : ``;
 
                     questionContainer.innerHTML = `
                         <h1 class="question-title">${data.title}</h1>
                         <div class="post-meta">
-                            <span style="display:flex; align-items:center;">Tác giả: <strong style="color: var(--text-main); margin-left: 4px;">${data.author}</strong> ${rankDisplay}</span>
+                            <span style="display:flex; align-items:center;">Tác giả: <strong style="color: var(--text-main); margin-left: 4px;">${data.author}</strong></span>
                             <span>•</span>
-                            <span>Ngày đăng: ${dateStr}</span>
+                            <span>${dateStr}</span>
                         </div>
                         <div class="question-content">${data.content}</div>
                         ${imageDisplay}
@@ -322,13 +300,11 @@
                 dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
             }
             
-            const rankDisplay = reply.authorRank ? `<span class="rank-badge">Cấp ${reply.authorRank}</span>` : `<span class="rank-badge">Cấp 1</span>`;
-
             if (isSub) {
                 return `
                     <div class="reply-card sub-reply-card">
                         <div class="reply-meta">
-                            <span class="reply-author">${reply.author} ${rankDisplay}</span>
+                            <span class="reply-author">${reply.author}</span>
                             <span style="color: var(--text-muted);">${dateStr}</span>
                         </div>
                         <div class="reply-content">
@@ -342,7 +318,7 @@
                 return `
                     <div class="reply-card">
                         <div class="reply-meta">
-                            <span class="reply-author">${reply.author} ${rankDisplay}</span>
+                            <span class="reply-author">${reply.author}</span>
                             <span style="color: var(--text-muted);">${dateStr}</span>
                         </div>
                         <div class="reply-content">${reply.content}</div>
@@ -358,7 +334,7 @@
                 const querySnapshot = await getDocs(q);
                 
                 if (querySnapshot.empty) {
-                    repliesList.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 20px;">Chưa có câu trả lời nào. Hãy là người đầu tiên giúp đỡ đồng nghiệp nhé!</p>';
+                    repliesList.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 20px; font-size:14px;">Chưa có câu trả lời nào. Hãy là người đầu tiên giúp đỡ đồng nghiệp nhé!</p>';
                     return;
                 }
 
@@ -394,9 +370,6 @@
             }
         }
 
-        // ========================================================
-        // SỰ KIỆN KHI BẤM NÚT "PHẢN HỒI" TRONG DANH SÁCH
-        // ========================================================
         repliesList.addEventListener('click', async (e) => {
             if (e.target.classList.contains('btn-reply-action')) {
                 const topLevelId = e.target.getAttribute('data-toplevel');
@@ -406,11 +379,11 @@
                 if (existingForm) existingForm.remove();
 
                 const formHtml = `
-                    <div id="temp-sub-reply-form" class="reply-form-container" style="margin-left: 40px; margin-top: 0; margin-bottom: 15px; padding: 15px;">
-                        <textarea id="sub-reply-input" class="reply-textarea" placeholder="Phản hồi @${targetAuthor}..." style="height: 80px; margin-bottom: 10px;"></textarea>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-primary btn-submit-sub-reply" data-toplevel="${topLevelId}" data-targetuser="${targetAuthor}" style="width: auto; padding: 6px 15px; font-size: 13px;">Gửi phản hồi</button>
-                            <button class="btn-cancel-sub-reply" style="padding: 6px 15px; font-size: 13px; border: 1px solid var(--border-color); border-radius: 8px; background: white; cursor: pointer; color: var(--text-main);">Hủy</button>
+                    <div id="temp-sub-reply-form" class="reply-form-container" style="margin-left: 30px; margin-top: 0; margin-bottom: 10px; padding: 12px;">
+                        <textarea id="sub-reply-input" class="reply-textarea" placeholder="Phản hồi @${targetAuthor}..." style="height: 60px; margin-bottom: 8px;"></textarea>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-primary btn-submit-sub-reply" data-toplevel="${topLevelId}" data-targetuser="${targetAuthor}" style="width: auto; padding: 6px 12px; font-size: 12px;">Gửi phản hồi</button>
+                            <button class="btn-cancel-sub-reply" style="padding: 6px 12px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: white; cursor: pointer; color: var(--text-main);">Hủy</button>
                         </div>
                     </div>
                 `;
@@ -444,17 +417,14 @@
                         content: contentVal,
                         author: currentAuthorName,
                         authorUid: auth.currentUser.uid,
-                        authorRank: currentAuthorRank,
                         replyToId: topLevelId,
                         replyToUser: targetUser,
                         createdAt: serverTimestamp()
                     });
 
-                    // Cập nhật số đếm ở bài gốc
                     await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(1) });
                     repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
                     
-                    // Cập nhật số đếm bình luận của user
                     await setDoc(doc(db, "users", auth.currentUser.uid), { replyCount: increment(1) }, { merge: true });
 
                     loadRepliesData();
@@ -465,9 +435,6 @@
             }
         });
 
-        // ========================================================
-        // GỬI BÌNH LUẬN GỐC (DƯỚI CÙNG TRANG)
-        // ========================================================
         btnSubmitReply.addEventListener('click', async () => {
             if (!currentAuthorName) {
                 alert("Vui lòng cập nhật 'Tên hiển thị' trong mục Thông tin cá nhân trước khi bình luận!");
@@ -489,7 +456,6 @@
                     content: contentVal,
                     author: currentAuthorName,
                     authorUid: auth.currentUser.uid,
-                    authorRank: currentAuthorRank,
                     createdAt: serverTimestamp()
                 });
 
