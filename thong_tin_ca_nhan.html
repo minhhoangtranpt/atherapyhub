@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thông tin cá nhân - ATherapyHub</title>
-    <!-- Nhúng CSS dùng chung -->
     <link rel="stylesheet" href="style.css">
     <style>
-        /* CSS riêng cho trang Thông tin cá nhân */
         .profile-wrapper {
             max-width: 600px;
             margin: 40px auto;
@@ -34,12 +32,26 @@
             font-size: 14px;
         }
 
-        /* Tùy chỉnh input bị khóa (Readonly) */
         input:disabled {
             background-color: #F1F5F9;
             color: var(--text-muted);
             cursor: not-allowed;
             border-color: #E2E8F0;
+        }
+
+        .rank-field {
+            font-weight: 700 !important;
+            color: var(--accent-blue) !important;
+            background-color: #EFF6FF !important;
+            border-color: #BFDBFE !important;
+        }
+
+        .rank-progress {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: block;
+            text-align: right;
         }
 
         #profile-message {
@@ -63,14 +75,12 @@
         
         <div class="profile-wrapper">
             
-            <!-- Cảnh báo chưa đăng nhập -->
             <div id="auth-warning" style="display: none; text-align: center; padding: 20px 0;">
                 <h3 style="color: var(--danger); margin-bottom: 10px;">Yêu cầu Đăng nhập</h3>
                 <p style="color: var(--text-muted); margin-bottom: 20px;">Vui lòng đăng nhập để xem và cập nhật thông tin cá nhân.</p>
                 <button class="btn-primary" style="max-width: 250px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
             </div>
 
-            <!-- Form cập nhật thông tin -->
             <div id="profile-form-section" style="display: none;">
                 <div class="profile-header">
                     <h2>Hồ sơ cá nhân</h2>
@@ -81,13 +91,16 @@
                     <label>Email (Không thể thay đổi)</label>
                     <input type="email" id="profile-email" disabled>
                 </div>
+                
+                <div class="form-group">
+                    <label>Xếp hạng thành viên (Tự động cập nhật)</label>
+                    <input type="text" id="profile-rank" class="rank-field" disabled value="Đang tính toán...">
+                    <span id="rank-progress-text" class="rank-progress">Đang lấy dữ liệu bài viết...</span>
+                </div>
+
                 <div class="form-group">
                     <label>Tên hiển thị (Tên người dùng)</label>
-                    <input type="text" id="profile-name" placeholder="Ví dụ: Trần Minh Hoàng">
-                </div>
-                <div class="form-group">
-                    <label>Số điện thoại</label>
-                    <input type="tel" id="profile-phone" placeholder="Nhập số điện thoại liên hệ">
+                    <input type="text" id="profile-name">
                 </div>
                 
                 <button id="btn-save-profile" class="btn-primary" style="margin-top: 20px;">Lưu thay đổi</button>
@@ -98,16 +111,15 @@
 
     </main>
 
-    <!-- Nạp Layout Header/Footer -->
     <script type="module" src="layout.js"></script>
 
-    <!-- Script Firebase xử lý Hồ sơ -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
             getFirestore, doc, getDoc, setDoc, 
-            collection, query, where, getDocs 
+            collection, query, where, getDocs,
+            getCountFromServer, collectionGroup
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -126,12 +138,12 @@
         const authWarning = document.getElementById('auth-warning');
         const profileFormSection = document.getElementById('profile-form-section');
         const emailInput = document.getElementById('profile-email');
+        const rankInput = document.getElementById('profile-rank');
+        const rankProgress = document.getElementById('rank-progress-text');
         const nameInput = document.getElementById('profile-name');
-        const phoneInput = document.getElementById('profile-phone');
         const btnSave = document.getElementById('btn-save-profile');
         const messageBox = document.getElementById('profile-message');
 
-        // Theo dõi trạng thái đăng nhập
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 authWarning.style.display = 'block';
@@ -139,37 +151,76 @@
             } else {
                 authWarning.style.display = 'none';
                 profileFormSection.style.display = 'block';
-                
-                // Điền email từ Auth
                 emailInput.value = user.email;
-
-                // Lấy dữ liệu hồ sơ từ Firestore
-                await loadUserProfile(user.uid);
+                await loadAndCalculateProfile(user.uid);
             }
         });
 
-        async function loadUserProfile(uid) {
+        async function loadAndCalculateProfile(uid) {
             try {
+                // 1. Tải tên người dùng hiện tại
                 const userDocRef = doc(db, "users", uid);
                 const userDocSnap = await getDoc(userDocRef);
+                let currentRank = 1;
 
                 if (userDocSnap.exists()) {
                     const userData = userDocSnap.data();
                     nameInput.value = userData.displayName || "";
-                    phoneInput.value = userData.phoneNumber || "";
+                    currentRank = userData.rankLevel || 1;
                 }
+
+                // 2. Đếm tổng số bài viết (Câu hỏi)
+                const qPosts = query(collection(db, "hoi_dap"), where("authorUid", "==", uid));
+                const snapPosts = await getCountFromServer(qPosts);
+                const totalPosts = snapPosts.data().count;
+
+                // 3. Đếm tổng số bình luận (Collection Group)
+                const qReplies = query(collectionGroup(db, "replies"), where("authorUid", "==", uid));
+                const snapReplies = await getCountFromServer(qReplies);
+                const totalReplies = snapReplies.data().count;
+
+                // 4. Tính toán Cấp độ theo cấp số nhân (10, 20, 40, 80)
+                let calculatedRank = 1;
+                let nextMilestone = 10;
+
+                if (totalPosts >= 80 && totalReplies >= 80) {
+                    calculatedRank = 5;
+                    nextMilestone = "Tối đa";
+                } else if (totalPosts >= 40 && totalReplies >= 40) {
+                    calculatedRank = 4;
+                    nextMilestone = 80;
+                } else if (totalPosts >= 20 && totalReplies >= 20) {
+                    calculatedRank = 3;
+                    nextMilestone = 40;
+                } else if (totalPosts >= 10 && totalReplies >= 10) {
+                    calculatedRank = 2;
+                    nextMilestone = 20;
+                }
+
+                rankInput.value = `Cấp ${calculatedRank}`;
+                if (calculatedRank === 5) {
+                    rankProgress.textContent = `Thành tích: ${totalPosts} bài viết / ${totalReplies} bình luận (Đạt cấp tối đa)`;
+                } else {
+                    rankProgress.textContent = `Thành tích: ${totalPosts} bài viết / ${totalReplies} bình luận (Cần ${nextMilestone} bài & ${nextMilestone} bình luận để lên Cấp ${calculatedRank + 1})`;
+                }
+
+                // 5. Cập nhật cấp độ mới vào cơ sở dữ liệu nếu có sự thay đổi
+                if (calculatedRank > currentRank) {
+                    await setDoc(userDocRef, { rankLevel: calculatedRank }, { merge: true });
+                }
+
             } catch (error) {
                 console.error("Lỗi khi tải thông tin:", error);
+                rankInput.value = "Lỗi tải xếp hạng";
+                rankProgress.textContent = "Vui lòng kiểm tra Console (F12) để xem hướng dẫn cấu hình Index Firebase.";
             }
         }
 
-        // Xử lý lưu thông tin có check trùng lặp tên
         btnSave.addEventListener('click', async () => {
             const user = auth.currentUser;
             if (!user) return;
 
             const newName = nameInput.value.trim();
-            const newPhone = phoneInput.value.trim();
 
             if (!newName) {
                 showMessage("Vui lòng nhập tên hiển thị.", "var(--danger)");
@@ -180,15 +231,12 @@
             btnSave.disabled = true;
 
             try {
-                // 1. KIỂM TRA TRÙNG LẶP TÊN NGƯỜI DÙNG
-                // Quét qua collection 'users' xem có ai dùng tên này chưa
                 const usersRef = collection(db, "users");
                 const q = query(usersRef, where("displayName", "==", newName));
                 const querySnapshot = await getDocs(q);
 
                 let isDuplicate = false;
                 querySnapshot.forEach((docSnap) => {
-                    // Nếu tìm thấy tên này nhưng ID không phải của user hiện tại -> Bị trùng
                     if (docSnap.id !== user.uid) {
                         isDuplicate = true;
                     }
@@ -198,17 +246,14 @@
                     showMessage("Tên người dùng này đã được sử dụng. Vui lòng chọn tên khác!", "var(--danger)");
                     btnSave.textContent = "Lưu thay đổi";
                     btnSave.disabled = false;
-                    return; // Ngừng thực thi việc lưu
+                    return; 
                 }
 
-                // 2. NẾU KHÔNG TRÙNG -> TIẾN HÀNH LƯU
                 btnSave.textContent = "Đang lưu...";
                 
-                // Vẫn lưu UID vào tài liệu (implicit/ngầm) để Admin quản lý dù không hiện trên UI
                 const userDocRef = doc(db, "users", user.uid);
                 await setDoc(userDocRef, {
                     displayName: newName,
-                    phoneNumber: newPhone,
                     email: user.email,
                     uid: user.uid, 
                     updatedAt: new Date()
@@ -228,7 +273,6 @@
         function showMessage(text, color) {
             messageBox.textContent = text;
             messageBox.style.color = color;
-            // Ẩn thông báo sau 3 giây
             setTimeout(() => {
                 messageBox.textContent = "";
             }, 3000);
