@@ -148,7 +148,7 @@
                 padding: 20px;
             }
             .sub-reply-card {
-                margin-left: 20px; /* Thụt lề ít hơn trên điện thoại */
+                margin-left: 20px; 
             }
         }
     </style>
@@ -181,7 +181,7 @@
                 <!-- Nơi chứa tất cả bình luận và bình luận con -->
                 <div id="replies-list"></div>
 
-                <!-- Khung nhập câu trả lời TỔNG QUÁT (Trả lời cho câu hỏi chính) -->
+                <!-- Khung nhập câu trả lời TỔNG QUÁT -->
                 <div class="reply-form-container">
                     <h4 style="margin-top: 0; margin-bottom: 15px; color: var(--navy-primary);">Viết câu trả lời của bạn</h4>
                     <textarea id="reply-input" class="reply-textarea" placeholder="Chia sẻ kiến thức hoặc kinh nghiệm của bạn..."></textarea>
@@ -277,8 +277,8 @@
             }
         }
 
-        // HÀM XÂY DỰNG GIAO DIỆN MỘT BÌNH LUẬN (Gốc hoặc Phản hồi)
-        function buildReplyHTML(reply, isSub, parentAuthor = '') {
+        // HÀM XÂY DỰNG GIAO DIỆN MỘT BÌNH LUẬN
+        function buildReplyHTML(reply, isSub, targetUser = '', topLevelId = '') {
             let dateStr = "Vừa xong";
             if (reply.createdAt && reply.createdAt.toDate) {
                 const dateObj = reply.createdAt.toDate();
@@ -286,7 +286,7 @@
             }
             
             if (isSub) {
-                // Thẻ Phản hồi (thụt lề, có tag tên người được trả lời)
+                // Thẻ Phản hồi con (có thêm tag tên người dùng)
                 return `
                     <div class="reply-card sub-reply-card">
                         <div class="reply-meta">
@@ -294,13 +294,14 @@
                             <span style="color: var(--text-muted);">${dateStr}</span>
                         </div>
                         <div class="reply-content">
-                            <span style="color:var(--accent-blue); font-weight:600;">@${parentAuthor}</span> 
+                            <span style="color:var(--accent-blue); font-weight:600;">@${targetUser}</span> 
                             ${reply.content}
                         </div>
+                        <button class="btn-reply-action" data-toplevel="${topLevelId}" data-author="${reply.author}">Phản hồi</button>
                     </div>
                 `;
             } else {
-                // Thẻ Bình luận gốc (có nút Phản hồi)
+                // Thẻ Bình luận gốc
                 return `
                     <div class="reply-card">
                         <div class="reply-meta">
@@ -308,7 +309,7 @@
                             <span style="color: var(--text-muted);">${dateStr}</span>
                         </div>
                         <div class="reply-content">${reply.content}</div>
-                        <button class="btn-reply-action" data-id="${reply.id}" data-author="${reply.author}">Phản hồi</button>
+                        <button class="btn-reply-action" data-toplevel="${reply.id}" data-author="${reply.author}">Phản hồi</button>
                     </div>
                 `;
             }
@@ -330,7 +331,7 @@
 
                 querySnapshot.forEach((docSnap) => {
                     const reply = { id: docSnap.id, ...docSnap.data() };
-                    if (reply.replyToId) { // Nếu có ID gốc thì nó là phản hồi
+                    if (reply.replyToId) { // Là phản hồi con
                         if (!children[reply.replyToId]) children[reply.replyToId] = [];
                         children[reply.replyToId].push(reply);
                     } else { // Bình luận gốc
@@ -341,16 +342,18 @@
                 // Lắp ráp HTML
                 let html = '';
                 topLevel.forEach(parent => {
-                    html += buildReplyHTML(parent, false);
+                    html += buildReplyHTML(parent, false, '', parent.id);
                     
-                    // Nạp các phản hồi (nếu có) ngay dưới bình luận gốc
+                    // Render tất cả các phản hồi bên trong Parent này
                     if (children[parent.id]) {
                         children[parent.id].forEach(child => {
-                            html += buildReplyHTML(child, true, parent.author);
+                            // Nếu child có targetUser thì tag người đó, nếu không mặc định tag Parent
+                            let target = child.replyToUser || parent.author;
+                            html += buildReplyHTML(child, true, target, parent.id);
                         });
                     }
                     
-                    // Tạo một thẻ div rỗng để chứa Form phản hồi khi user bấm nút "Phản hồi"
+                    // Thẻ div chứa Form trả lời tạm thời
                     html += `<div id="sub-reply-container-${parent.id}"></div>`;
                 });
                 
@@ -362,30 +365,28 @@
         }
 
         // ========================================================
-        // SỰ KIỆN DELEGATION CHO KHU VỰC DANH SÁCH BÌNH LUẬN
+        // SỰ KIỆN KHI BẤM NÚT "PHẢN HỒI" TRONG DANH SÁCH
         // ========================================================
         repliesList.addEventListener('click', async (e) => {
             
-            // 1. Mở form Phản hồi con
+            // 1. Mở form Phản hồi ngay dưới bình luận gốc
             if (e.target.classList.contains('btn-reply-action')) {
-                const parentId = e.target.getAttribute('data-id');
-                const parentAuthor = e.target.getAttribute('data-author');
+                const topLevelId = e.target.getAttribute('data-toplevel');
+                const targetAuthor = e.target.getAttribute('data-author');
                 
-                // Xóa form tạm cũ (nếu đang mở ở chỗ khác)
                 const existingForm = document.getElementById('temp-sub-reply-form');
                 if (existingForm) existingForm.remove();
 
-                // Tạo form phản hồi
                 const formHtml = `
                     <div id="temp-sub-reply-form" class="reply-form-container" style="margin-left: 40px; margin-top: 0; margin-bottom: 15px; padding: 15px;">
-                        <textarea id="sub-reply-input" class="reply-textarea" placeholder="Phản hồi ${parentAuthor}..." style="height: 80px; margin-bottom: 10px;"></textarea>
+                        <textarea id="sub-reply-input" class="reply-textarea" placeholder="Phản hồi @${targetAuthor}..." style="height: 80px; margin-bottom: 10px;"></textarea>
                         <div style="display: flex; gap: 10px;">
-                            <button class="btn-primary btn-submit-sub-reply" data-parent="${parentId}" style="width: auto; padding: 6px 15px; font-size: 13px;">Gửi phản hồi</button>
-                            <button class="btn-cancel-sub-reply" style="padding: 6px 15px; font-size: 13px; border: 1px solid var(--border-color); border-radius: 8px; background: white; cursor: pointer;">Hủy</button>
+                            <button class="btn-primary btn-submit-sub-reply" data-toplevel="${topLevelId}" data-targetuser="${targetAuthor}" style="width: auto; padding: 6px 15px; font-size: 13px;">Gửi phản hồi</button>
+                            <button class="btn-cancel-sub-reply" style="padding: 6px 15px; font-size: 13px; border: 1px solid var(--border-color); border-radius: 8px; background: white; cursor: pointer; color: var(--text-main);">Hủy</button>
                         </div>
                     </div>
                 `;
-                document.getElementById(`sub-reply-container-${parentId}`).innerHTML = formHtml;
+                document.getElementById(`sub-reply-container-${topLevelId}`).innerHTML = formHtml;
                 document.getElementById('sub-reply-input').focus();
             }
 
@@ -394,9 +395,10 @@
                 document.getElementById('temp-sub-reply-form').remove();
             }
 
-            // 3. Nút Gửi phản hồi
+            // 3. Nút Gửi phản hồi (Sub-reply)
             if (e.target.classList.contains('btn-submit-sub-reply')) {
-                const parentId = e.target.getAttribute('data-parent');
+                const topLevelId = e.target.getAttribute('data-toplevel');
+                const targetUser = e.target.getAttribute('data-targetuser');
                 const inputEl = document.getElementById('sub-reply-input');
                 const contentVal = inputEl.value.trim();
                 
@@ -408,11 +410,12 @@
                 try {
                     const authorName = auth.currentUser.email;
                     
-                    // Lưu lên Firestore (Thêm trường replyToId để phân biệt là Sub-reply)
+                    // Lưu lên Firestore
                     await addDoc(collection(db, "hoi_dap", questionId, "replies"), {
                         content: contentVal,
                         author: authorName,
-                        replyToId: parentId, 
+                        replyToId: topLevelId,       // Gom nhóm vào top-level
+                        replyToUser: targetUser,     // Dùng để render @tag
                         createdAt: serverTimestamp()
                     });
 
@@ -421,7 +424,7 @@
                     
                     loadRepliesData(); // Reload toàn bộ bình luận
                 } catch (error) {
-                    console.error("Lỗi:", error);
+                    console.error("Lỗi gửi phản hồi:", error);
                     alert("Có lỗi xảy ra.");
                 }
             }
@@ -459,7 +462,7 @@
                 loadRepliesData();
 
             } catch (error) {
-                console.error("Lỗi gửi trả lời:", error);
+                console.error("Lỗi gửi bình luận gốc:", error);
                 alert("Có lỗi xảy ra, vui lòng thử lại.");
                 btnSubmitReply.textContent = "Gửi bình luận";
                 btnSubmitReply.disabled = false;
