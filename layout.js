@@ -37,22 +37,41 @@ const headerHTML = `
         .auth-links a { color: var(--accent-blue); cursor: pointer; margin: 0 8px; text-decoration: none; font-weight: 500; transition: color 0.2s; }
         .auth-links a:hover { text-decoration: underline; color: var(--navy-primary); }
 
+        .desktop-nav-group { display: flex; align-items: center; gap: 20px; }
+
         @media (max-width: 768px) {
             .hamburger-btn { display: block; }
-            header { position: relative; }
-            header .logo-container { flex-direction: row !important; align-items: center !important; justify-content: flex-start; }
+            header { flex-direction: row !important; flex-wrap: wrap !important; position: relative !important; align-items: center !important; }
+            header .logo-container { width: auto !important; flex: 1 !important; flex-direction: row !important; align-items: center !important; gap: 10px !important; }
+            .header-search { order: 3 !important; margin: 15px 0 0 0 !important; flex-basis: 100% !important; max-width: 100% !important; }
             
-            nav#main-nav {
+            /* Nhóm menu và xác thực thả xuống */
+            .desktop-nav-group {
                 display: none !important; 
-                flex-direction: column;
-                position: absolute;
-                top: 100%; left: 0; width: 100%;
-                background-color: var(--navy-primary);
-                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-                padding: 10px 0; z-index: 999;
+                flex-direction: column !important;
+                position: absolute !important;
+                top: 100% !important; left: 0 !important; width: 100% !important;
+                background-color: var(--navy-primary) !important;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+                padding: 0 !important; z-index: 999 !important;
+                align-items: stretch !important; gap: 0 !important;
             }
-            nav#main-nav.active { display: flex !important; }
-            nav#main-nav a { padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); white-space: normal !important; }
+            .desktop-nav-group.active { display: flex !important; }
+            
+            nav#main-nav { flex-direction: column !important; gap: 0 !important; overflow: visible !important; }
+            nav#main-nav a { padding: 15px 20px !important; border-bottom: 1px solid rgba(255,255,255,0.05) !important; white-space: normal !important; display: block !important; }
+            
+            /* Đưa user-controls vào bên trong menu thả xuống */
+            .user-controls { 
+                position: static !important; 
+                padding: 15px 20px !important; 
+                flex-direction: column !important; 
+                align-items: flex-start !important; 
+                gap: 15px !important; 
+                background: rgba(0,0,0,0.1) !important; 
+            }
+            .user-controls .btn-login-nav, .user-controls .btn-logout { width: 100% !important; justify-content: center !important; }
+            #user-email-display { display: block !important; max-width: 100% !important; white-space: normal !important; font-size: 14px !important; }
         }
     </style>
 
@@ -60,7 +79,6 @@ const headerHTML = `
         <div class="logo-container">
             <button id="mobile-menu-btn" class="hamburger-btn">☰</button>
             <h1 onclick="window.location.href='index.html'" style="cursor: pointer;" title="Về trang chủ">ATherapyHub</h1>
-            <nav id="main-nav"></nav>
         </div>
         
         <div class="header-search">
@@ -68,10 +86,13 @@ const headerHTML = `
             <input type="text" id="global-search-input" placeholder="Tìm kiếm bài viết...">
         </div>
 
-        <div class="user-controls">
-            <a href="thong_tin_ca_nhan.html" id="user-email-display" class="hidden" title="Quản lý thông tin cá nhân"></a>
-            <button id="logout-btn" class="btn-logout hidden">Đăng xuất</button>
-            <button id="open-login-modal" class="btn-login-nav">Đăng nhập</button>
+        <div id="desktop-nav-group" class="desktop-nav-group">
+            <nav id="main-nav"></nav>
+            <div class="user-controls">
+                <a href="thong_tin_ca_nhan.html" id="user-email-display" class="hidden" title="Quản lý thông tin cá nhân"></a>
+                <button id="logout-btn" class="btn-logout hidden">Đăng xuất</button>
+                <button id="open-login-modal" class="btn-login-nav">Đăng nhập</button>
+            </div>
         </div>
     </header>
 
@@ -88,7 +109,6 @@ const headerHTML = `
                 <label>Mật khẩu</label>
                 <input type="password" id="auth-password" placeholder="Nhập mật khẩu (từ 6 ký tự)" required>
             </div>
-            <!-- Bổ sung trường Xác nhận mật khẩu (ẩn mặc định) -->
             <div class="form-group" id="confirm-password-group" style="display: none;">
                 <label>Xác nhận mật khẩu</label>
                 <input type="password" id="auth-confirm-password" placeholder="Nhập lại mật khẩu" required>
@@ -142,10 +162,11 @@ fetch('./json/header.json')
 // 5. XỬ LÝ GIAO DIỆN VÀ LOGIC
 // =========================================================
 
-// Menu 3 gạch cho Mobile
+// Xử lý Menu 3 gạch trên Mobile
 const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+const desktopNavGroup = document.getElementById('desktop-nav-group');
 mobileMenuBtn.addEventListener('click', () => {
-    navContainer.classList.toggle('active');
+    desktopNavGroup.classList.toggle('active');
 });
 
 // Tìm kiếm
@@ -167,7 +188,6 @@ const logoutBtn = document.getElementById('logout-btn');
 const userEmailDisplay = document.getElementById('user-email-display');
 const errorMsg = document.getElementById('error-msg');
 
-// Các thành phần trong Modal
 let currentAuthMode = 'login'; 
 const modalTitle = document.getElementById('modal-title');
 const authEmail = document.getElementById('auth-email');
@@ -181,7 +201,6 @@ const linkForgot = document.getElementById('link-forgot');
 const linkBackLogin = document.getElementById('link-back-login');
 const authSeparator = document.getElementById('auth-separator');
 
-// Hàm chuyển đổi giao diện Modal
 function switchAuthMode(mode) {
     currentAuthMode = mode;
     errorMsg.textContent = '';
@@ -227,7 +246,7 @@ openLoginBtn.addEventListener('click', () => {
 });
 closeLoginBtn.addEventListener('click', () => loginModal.style.display = 'none');
 
-// Giữ trạng thái đăng nhập (chỉ khi đã xác thực email)
+// Giữ trạng thái đăng nhập
 onAuthStateChanged(auth, (user) => {
     if (user && user.emailVerified) {
         openLoginBtn.classList.add('hidden');
@@ -235,7 +254,6 @@ onAuthStateChanged(auth, (user) => {
         userEmailDisplay.textContent = user.email;
         userEmailDisplay.classList.remove('hidden');
     } else {
-        // Nếu user tồn tại nhưng chưa xác thực email, ép đăng xuất
         if (user && !user.emailVerified) {
             signOut(auth);
         }
@@ -246,7 +264,7 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Xử lý Gửi Form (Đăng nhập / Đăng ký / Quên mật khẩu)
+// Xử lý Form Xác thực
 authMainBtn.addEventListener('click', () => {
     const email = authEmail.value.trim();
     const password = authPassword.value;
@@ -287,9 +305,8 @@ authMainBtn.addEventListener('click', () => {
         createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
-                // Gửi email xác thực
                 sendEmailVerification(user).then(() => {
-                    signOut(auth); // Đăng xuất ngay lập tức để ép người dùng vào mail xác nhận
+                    signOut(auth); 
                     errorMsg.style.color = "#03543F";
                     errorMsg.textContent = "Đăng ký thành công! Vui lòng kiểm tra email (cả mục Spam) để xác thực tài khoản trước khi đăng nhập.";
                     authPassword.value = '';
