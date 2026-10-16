@@ -4,7 +4,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* --- Reset & Box Sizing (Quan trọng để chống tràn Layout) --- */
 * {
     margin: 0;
     padding: 0;
@@ -12,7 +11,6 @@
 }
 
 :root { 
-    /* --- Bảng màu (Color Palette) --- */
     --navy-primary: #0A2540; 
     --navy-secondary: #1A365D; 
     --navy-light: #EBF4FA; 
@@ -25,7 +23,6 @@
     --accent-blue: #3182CE;
 }
 
-/* --- Cấu hình Body và Bố cục Tổng thể --- */
 body { 
     font-family: 'Inter', system-ui, -apple-system, sans-serif; 
     background-color: var(--bg-body); 
@@ -33,7 +30,7 @@ body {
     line-height: 1.6; 
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Đẩy footer xuống đáy trang */
+    min-height: 100vh; 
 }
 
 /* ================= HEADER ================= */
@@ -80,7 +77,6 @@ nav#main-nav a:hover {
     color: white; 
 }
 
-/* --- Nút bấm và User Controls trên Header --- */
 .user-controls { 
     display: flex; 
     align-items: center; 
@@ -131,6 +127,56 @@ button, .btn-link {
     background-color: var(--navy-light); 
 }
 
+/* ================= ICON & THANH TÌM KIẾM TRÊN HEADER ================= */
+.search-icon-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--navy-light);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.search-icon-btn:hover {
+    color: white;
+}
+
+.search-bar-container {
+    display: none; 
+    background-color: var(--navy-secondary);
+    padding: 10px 5%;
+    position: sticky;
+    top: 64px; 
+    z-index: 99;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: slideDown 0.3s ease;
+}
+
+.search-bar-container.active {
+    display: block; 
+}
+
+.search-bar-container input {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: block;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
 /* ================= MODAL ĐĂNG NHẬP ================= */
 .modal-overlay { 
     display: none; 
@@ -150,8 +196,8 @@ button, .btn-link {
     border-radius: 24px; 
     width: 100%; 
     max-width: 380px; 
-    max-height: 90vh;      /* Tránh tràn màn hình dọc trên mobile */
-    overflow-y: auto;      /* Tạo thanh cuộn nếu form quá dài */
+    max-height: 90vh;      
+    overflow-y: auto;      
     position: relative; 
     box-sizing: border-box; 
     box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
@@ -183,7 +229,7 @@ button, .btn-link {
     border: 1px solid var(--border-color); 
     border-radius: 12px; 
     font-size: 15px; 
-    box-sizing: border-box; /* Ép input không tràn ra ngoài modal */
+    box-sizing: border-box; 
     background: #F9FAFB;
     transition: border 0.2s;
 }
@@ -234,7 +280,7 @@ button, .btn-link {
 
 /* ================= BỐ CỤC CHÍNH (MAIN CONTENT) ================= */
 #main-content { 
-    flex: 1; /* Chiếm toàn bộ khoảng trống còn lại để đẩy footer xuống đáy */
+    flex: 1; 
     max-width: 1200px; 
     margin: 40px auto; 
     padding: 0 5%; 
@@ -252,14 +298,12 @@ footer {
     margin-top: auto; 
 }
 
-/* Tiện ích ẩn phần tử */
 .hidden { 
     display: none !important; 
 }
 
 /* ================= TỐI ƯU ĐIỆN THOẠI (MOBILE RESPONSIVE) ================= */
 @media (max-width: 768px) {
-    /* 1. Sắp xếp lại Header: Xếp dọc thay vì xếp ngang */
     header {
         flex-direction: column;
         padding: 12px 15px;
@@ -274,7 +318,6 @@ footer {
         gap: 12px;
     }
 
-    /* 2. Biến Menu thành thanh cuộn ngang (vuốt để xem) */
     nav#main-nav {
         display: flex;
         width: 100%;
@@ -285,7 +328,6 @@ footer {
         gap: 16px;
     }
 
-    /* Ẩn thanh cuộn (scrollbar) để trông sạch sẽ hơn */
     nav#main-nav::-webkit-scrollbar {
         display: none; 
     }
@@ -294,14 +336,12 @@ footer {
         scrollbar-width: none;  
     }
 
-    /* 3. Neo nút Đăng nhập / Đăng xuất lên góc trên cùng bên phải */
     .user-controls {
         position: absolute;
         top: 14px;
         right: 15px;
     }
 
-    /* Đóng gói giao diện User (ẩn email trên mobile để gọn) */
     #user-email-display { 
         display: none; 
     }
@@ -311,13 +351,15 @@ footer {
         font-size: 13px;
     }
 
-    /* 4. Điều chỉnh Modal (Popup) cho điện thoại */
+    .search-bar-container {
+        top: 100px; /* Điều chỉnh vị trí trên mobile để không đè lên header dọc */
+    }
+
     .modal-box {
         padding: 24px 20px;
         border-radius: 20px;
     }
 
-    /* 5. Giảm khoảng trống (margin/padding) của nội dung chính */
     #main-content {
         margin: 20px auto;
         padding: 0 15px;
@@ -325,7 +367,6 @@ footer {
 }
 
 @media (max-width: 480px) {
-    /* Logo nhỏ lại một chút trên màn hình rất bé (VD: iPhone SE) */
     header h1 {
         font-size: 20px;
     }
