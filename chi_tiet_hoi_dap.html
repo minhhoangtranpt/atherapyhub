@@ -6,12 +6,12 @@
     <title>Chi tiết Hỏi & Đáp - ATherapyHub</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Tối ưu khung hiển thị câu hỏi gốc */
+        /* Giao diện Phẳng - Tối ưu diện tích */
         .question-box {
             background-color: var(--bg-card);
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            box-shadow: none; /* Bỏ đổ bóng */
             margin-bottom: 20px;
             border: 1px solid var(--border-color);
         }
@@ -50,7 +50,7 @@
             object-fit: contain;
         }
 
-        /* Khu vực Bình luận / Câu trả lời */
+        /* Khu vực Trả lời (Dạng phẳng, không thụt lề) */
         .replies-section-title {
             font-size: 16px;
             color: var(--navy-secondary);
@@ -62,22 +62,17 @@
 
         .reply-card {
             background-color: white;
-            padding: 12px 15px;
+            padding: 15px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
             margin-bottom: 10px;
-        }
-
-        .sub-reply-card {
-            margin-left: 30px;
-            background-color: #F8FAFC;
-            border-left: 3px solid var(--accent-blue);
+            transition: background-color 0.4s ease; /* Hiệu ứng khi được trỏ tới */
         }
 
         .reply-meta {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-size: 12px;
             align-items: center;
         }
@@ -85,14 +80,38 @@
         .reply-author {
             font-weight: 600;
             color: var(--navy-primary);
-            display: flex;
-            align-items: center;
         }
 
         .reply-content {
             font-size: 14px;
             line-height: 1.5;
             white-space: pre-wrap;
+            color: var(--text-main);
+        }
+
+        /* Hộp trích dẫn "Đang trả lời ai" */
+        .reply-reference {
+            background-color: var(--bg-body);
+            border-left: 3px solid var(--accent-blue);
+            padding: 8px 12px;
+            border-radius: 0 6px 6px 0;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: background-color 0.2s;
+        }
+
+        .reply-reference:hover {
+            background-color: #E2E8F0;
+        }
+
+        .reply-reference strong {
+            color: var(--navy-primary);
         }
 
         .btn-reply-action {
@@ -103,7 +122,7 @@
             font-weight: 600;
             cursor: pointer;
             padding: 0;
-            margin-top: 8px;
+            margin-top: 10px;
             transition: color 0.2s;
         }
 
@@ -112,7 +131,7 @@
             text-decoration: underline;
         }
 
-        /* Form trả lời */
+        /* Form nhập câu trả lời */
         .reply-form-container {
             margin-top: 20px;
             background-color: var(--navy-light);
@@ -154,7 +173,7 @@
         @media (max-width: 768px) {
             #main-content { margin: 15px auto; padding: 0 10px; }
             .question-box { padding: 15px; }
-            .sub-reply-card { margin-left: 20px; }
+            .reply-card { padding: 12px; }
         }
     </style>
 </head>
@@ -164,6 +183,7 @@
         
         <a href="hoi_dap.html" class="btn-back">← Quay lại danh sách Hỏi & Đáp</a>
 
+        <!-- Cảnh báo chưa đăng nhập -->
         <div id="auth-warning" style="display: none; text-align: center; padding: 40px 20px; background: white; border-radius: 8px; border: 1px solid var(--border-color);">
             <h3 style="color: var(--danger); margin-bottom: 10px;">Yêu cầu Đăng nhập</h3>
             <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">Bạn cần đăng nhập để xem chi tiết và thảo luận trong bài viết này.</p>
@@ -178,7 +198,7 @@
 
             <div id="replies-section">
                 <div class="replies-section-title">
-                    Câu trả lời (<span id="replies-count">0</span>)
+                    Các câu trả lời (<span id="replies-count">0</span>)
                 </div>
                 
                 <div id="replies-list"></div>
@@ -186,7 +206,7 @@
                 <div class="reply-form-container">
                     <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: var(--navy-primary);">Viết câu trả lời của bạn</h4>
                     <textarea id="reply-input" class="reply-textarea" placeholder="Chia sẻ kiến thức hoặc kinh nghiệm của bạn..."></textarea>
-                    <button id="btn-submit-reply" class="btn-primary" style="width: auto; padding: 8px 20px; font-size: 13px;">Gửi bình luận</button>
+                    <button id="btn-submit-reply" class="btn-primary" style="width: auto; padding: 8px 20px; font-size: 13px;">Gửi trả lời</button>
                 </div>
             </div>
 
@@ -272,7 +292,6 @@
                     }
 
                     repliesCountDisplay.textContent = data.repliesCount || 0;
-                    
                     const imageDisplay = data.imageUrl ? `<img src="${data.imageUrl}" class="attached-image" alt="Ảnh đính kèm">` : ``;
 
                     questionContainer.innerHTML = `
@@ -280,7 +299,7 @@
                         <div class="post-meta">
                             <span style="display:flex; align-items:center;">Tác giả: <strong style="color: var(--text-main); margin-left: 4px;">${data.author}</strong></span>
                             <span>•</span>
-                            <span>${dateStr}</span>
+                            <span>Ngày đăng: ${dateStr}</span>
                         </div>
                         <div class="question-content">${data.content}</div>
                         ${imageDisplay}
@@ -293,39 +312,47 @@
             }
         }
 
-        function buildReplyHTML(reply, isSub, targetUser = '', topLevelId = '') {
+        // HÀM XÂY DỰNG GIAO DIỆN MỘT CÂU TRẢ LỜI
+        function buildReplyHTML(reply, isSub, targetUser = '', topLevelId = '', parentContent = '', parentReplyId = '') {
             let dateStr = "Vừa xong";
             if (reply.createdAt && reply.createdAt.toDate) {
                 const dateObj = reply.createdAt.toDate();
                 dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
             }
             
+            // Xử lý text để nhét an toàn vào data-attribute
+            let cleanContent = reply.content.replace(/"/g, '&quot;').replace(/\n/g, ' ');
+            let mySnippet = cleanContent.length > 80 ? cleanContent.substring(0, 80) + "..." : cleanContent;
+
+            let referenceHtml = '';
+            // Nếu là phản hồi, hiện khung báo hiệu "Đang trả lời ai"
             if (isSub) {
-                return `
-                    <div class="reply-card sub-reply-card">
-                        <div class="reply-meta">
-                            <span class="reply-author">${reply.author}</span>
-                            <span style="color: var(--text-muted);">${dateStr}</span>
-                        </div>
-                        <div class="reply-content">
-                            <span style="color:var(--accent-blue); font-weight:600;">@${targetUser}</span> 
-                            ${reply.content}
-                        </div>
-                        <button class="btn-reply-action" data-toplevel="${topLevelId}" data-author="${reply.author}">Phản hồi</button>
-                    </div>
-                `;
-            } else {
-                return `
-                    <div class="reply-card">
-                        <div class="reply-meta">
-                            <span class="reply-author">${reply.author}</span>
-                            <span style="color: var(--text-muted);">${dateStr}</span>
-                        </div>
-                        <div class="reply-content">${reply.content}</div>
-                        <button class="btn-reply-action" data-toplevel="${reply.id}" data-author="${reply.author}">Phản hồi</button>
+                let targetSnippet = reply.targetSnippet || parentContent;
+                if(targetSnippet.length > 80) targetSnippet = targetSnippet.substring(0, 80) + "...";
+                
+                // Mã JavaScript inline để cuộn mượt và làm sáng câu trả lời gốc
+                const scrollScript = `let el = document.getElementById('reply-${parentReplyId}'); if(el){ el.scrollIntoView({behavior: 'smooth', block: 'center'}); el.style.backgroundColor = '#EFF6FF'; setTimeout(()=>el.style.backgroundColor='', 1500); }`;
+
+                referenceHtml = `
+                    <div class="reply-reference" onclick="${scrollScript}" title="Nhấp để cuộn đến câu gốc">
+                        <strong>↳ Đang trả lời @${targetUser}:</strong> <i>"${targetSnippet}"</i>
                     </div>
                 `;
             }
+
+            // Giao diện phẳng đồng nhất cho tất cả
+            return `
+                <div class="reply-card" id="reply-${reply.id}">
+                    <div class="reply-meta">
+                        <span class="reply-author">${reply.author}</span>
+                        <span style="color: var(--text-muted);">${dateStr}</span>
+                    </div>
+                    ${referenceHtml}
+                    <div class="reply-content">${reply.content}</div>
+                    
+                    <button class="btn-reply-action" data-toplevel="${isSub ? topLevelId : reply.id}" data-targetid="${reply.id}" data-author="${reply.author}" data-snippet="${mySnippet}">Phản hồi</button>
+                </div>
+            `;
         }
 
         async function loadRepliesData() {
@@ -334,7 +361,7 @@
                 const querySnapshot = await getDocs(q);
                 
                 if (querySnapshot.empty) {
-                    repliesList.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 20px; font-size:14px;">Chưa có câu trả lời nào. Hãy là người đầu tiên giúp đỡ đồng nghiệp nhé!</p>';
+                    repliesList.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 20px; font-size:14px;">Chưa có câu trả lời nào. Hãy là người đầu tiên trả lời nhé!</p>';
                     return;
                 }
 
@@ -353,11 +380,16 @@
 
                 let html = '';
                 topLevel.forEach(parent => {
-                    html += buildReplyHTML(parent, false, '', parent.id);
+                    // Xóa html ở parentContent vì truyền thẳng vào function để lấy snippet
+                    let parentSnippetStr = parent.content.replace(/"/g, '&quot;').replace(/\n/g, ' ');
+
+                    html += buildReplyHTML(parent, false, '', parent.id, parentSnippetStr, '');
+                    
                     if (children[parent.id]) {
                         children[parent.id].forEach(child => {
                             let target = child.replyToUser || parent.author;
-                            html += buildReplyHTML(child, true, target, parent.id);
+                            let targetId = child.targetReplyId || parent.id; // Nếu ko có target cụ thể thì nhắm vào parent
+                            html += buildReplyHTML(child, true, target, parent.id, parentSnippetStr, targetId);
                         });
                     }
                     html += `<div id="sub-reply-container-${parent.id}"></div>`;
@@ -366,23 +398,28 @@
                 repliesList.innerHTML = html;
 
             } catch (error) {
-                console.error("Lỗi tải bình luận:", error);
+                console.error("Lỗi tải dữ liệu trả lời:", error);
             }
         }
 
+        // ========================================================
+        // SỰ KIỆN KHI BẤM NÚT "PHẢN HỒI" TRONG DANH SÁCH
+        // ========================================================
         repliesList.addEventListener('click', async (e) => {
             if (e.target.classList.contains('btn-reply-action')) {
                 const topLevelId = e.target.getAttribute('data-toplevel');
                 const targetAuthor = e.target.getAttribute('data-author');
+                const targetId = e.target.getAttribute('data-targetid');
+                const targetSnippet = e.target.getAttribute('data-snippet');
                 
                 const existingForm = document.getElementById('temp-sub-reply-form');
                 if (existingForm) existingForm.remove();
 
                 const formHtml = `
-                    <div id="temp-sub-reply-form" class="reply-form-container" style="margin-left: 30px; margin-top: 0; margin-bottom: 10px; padding: 12px;">
+                    <div id="temp-sub-reply-form" class="reply-form-container" style="margin-top: 0; margin-bottom: 10px; padding: 12px;">
                         <textarea id="sub-reply-input" class="reply-textarea" placeholder="Phản hồi @${targetAuthor}..." style="height: 60px; margin-bottom: 8px;"></textarea>
                         <div style="display: flex; gap: 8px;">
-                            <button class="btn-primary btn-submit-sub-reply" data-toplevel="${topLevelId}" data-targetuser="${targetAuthor}" style="width: auto; padding: 6px 12px; font-size: 12px;">Gửi phản hồi</button>
+                            <button class="btn-primary btn-submit-sub-reply" data-toplevel="${topLevelId}" data-targetuser="${targetAuthor}" data-targetid="${targetId}" data-snippet="${targetSnippet}" style="width: auto; padding: 6px 12px; font-size: 12px;">Gửi phản hồi</button>
                             <button class="btn-cancel-sub-reply" style="padding: 6px 12px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: white; cursor: pointer; color: var(--text-main);">Hủy</button>
                         </div>
                     </div>
@@ -397,13 +434,15 @@
 
             if (e.target.classList.contains('btn-submit-sub-reply')) {
                 if (!currentAuthorName) {
-                    alert("Vui lòng cập nhật 'Tên hiển thị' trong mục Thông tin cá nhân trước khi bình luận!");
+                    alert("Vui lòng cập nhật 'Tên hiển thị' trong mục Thông tin cá nhân trước khi trả lời!");
                     window.location.href = "thong_tin_ca_nhan.html";
                     return;
                 }
 
                 const topLevelId = e.target.getAttribute('data-toplevel');
                 const targetUser = e.target.getAttribute('data-targetuser');
+                const targetId = e.target.getAttribute('data-targetid');
+                const targetSnippet = e.target.getAttribute('data-snippet');
                 const inputEl = document.getElementById('sub-reply-input');
                 const contentVal = inputEl.value.trim();
                 
@@ -417,8 +456,10 @@
                         content: contentVal,
                         author: currentAuthorName,
                         authorUid: auth.currentUser.uid,
-                        replyToId: topLevelId,
-                        replyToUser: targetUser,
+                        replyToId: topLevelId,       // Gom nhóm theo Parent cao nhất
+                        replyToUser: targetUser,     // Tên người bị phản hồi
+                        targetReplyId: targetId,     // ID của câu bị phản hồi (để cuộn tới)
+                        targetSnippet: targetSnippet, // Trích đoạn nội dung bị phản hồi
                         createdAt: serverTimestamp()
                     });
 
@@ -435,9 +476,12 @@
             }
         });
 
+        // ========================================================
+        // GỬI CÂU TRẢ LỜI GỐC (DƯỚI CÙNG TRANG)
+        // ========================================================
         btnSubmitReply.addEventListener('click', async () => {
             if (!currentAuthorName) {
-                alert("Vui lòng cập nhật 'Tên hiển thị' trong mục Thông tin cá nhân trước khi bình luận!");
+                alert("Vui lòng cập nhật 'Tên hiển thị' trong mục Thông tin cá nhân trước khi trả lời!");
                 window.location.href = "thong_tin_ca_nhan.html";
                 return;
             }
@@ -465,15 +509,15 @@
                 await setDoc(doc(db, "users", auth.currentUser.uid), { replyCount: increment(1) }, { merge: true });
 
                 replyInput.value = '';
-                btnSubmitReply.textContent = "Gửi bình luận";
+                btnSubmitReply.textContent = "Gửi trả lời";
                 btnSubmitReply.disabled = false;
                 
                 loadRepliesData();
 
             } catch (error) {
-                console.error("Lỗi gửi bình luận gốc:", error);
+                console.error("Lỗi gửi trả lời:", error);
                 alert("Có lỗi xảy ra, vui lòng thử lại.");
-                btnSubmitReply.textContent = "Gửi bình luận";
+                btnSubmitReply.textContent = "Gửi trả lời";
                 btnSubmitReply.disabled = false;
             }
         });
