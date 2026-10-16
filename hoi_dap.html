@@ -81,7 +81,7 @@
             .qa-main-content { padding-right: 0; width: 100%; }
             .qa-card-replies { border-left: none; padding-left: 0; text-align: left; display: flex; align-items: center; gap: 8px; }
             .qa-card-replies .label { margin-top: 0; }
-            .qa-card-thumb { display: none; } /* Ẩn ảnh thu nhỏ trên mobile cho gọn */
+            .qa-card-thumb { display: none; }
         }
     </style>
 </head>
@@ -127,7 +127,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
@@ -141,7 +140,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
 
         const qaContainer = document.getElementById('qa-list-container');
         const paginationContainer = document.getElementById('pagination-container');
@@ -155,7 +153,7 @@
         let currentAuthorRank = 1;
         let compressedImageBase64 = null;
 
-        // Xử lý nén ảnh tại client bằng HTML5 Canvas
+        // Nén ảnh ra chuỗi Base64
         imageInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -180,7 +178,8 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    compressedImageBase64 = canvas.toDataURL('image/jpeg', 0.7); // Nén 70% chất lượng
+                    // Nén ra base64 với chất lượng 70%
+                    compressedImageBase64 = canvas.toDataURL('image/jpeg', 0.7); 
                     imagePreview.src = compressedImageBase64;
                     imagePreview.style.display = 'block';
                 };
@@ -305,32 +304,21 @@
 
             try {
                 const user = auth.currentUser;
-                let uploadedImageUrl = null;
 
-                // Upload ảnh lên Storage nếu có
-                if (compressedImageBase64) {
-                    const imageName = `qa_images/${user.uid}_${Date.now()}.jpg`;
-                    const storageRef = ref(storage, imageName);
-                    await uploadString(storageRef, compressedImageBase64, 'data_url');
-                    uploadedImageUrl = await getDownloadURL(storageRef);
-                }
-
-                // Lưu dữ liệu vào Firestore
+                // Lưu dữ liệu vào Firestore (truyền thẳng chuỗi Base64 thay vì URL Storage)
                 await addDoc(collection(db, "hoi_dap"), {
                     title: titleVal,
                     content: contentVal,
                     author: currentAuthorName,
                     authorUid: user.uid,
                     authorRank: currentAuthorRank,
-                    imageUrl: uploadedImageUrl, // Lưu URL ảnh
+                    imageUrl: compressedImageBase64, 
                     repliesCount: 0,
                     createdAt: serverTimestamp() 
                 });
 
-                // Tự động cộng 1 bài viết cho hồ sơ user
                 await setDoc(doc(db, "users", user.uid), { postCount: increment(1) }, { merge: true });
 
-                // Reset form
                 askModal.style.display = 'none';
                 titleInput.value = ''; contentInput.value = ''; imageInput.value = '';
                 imagePreview.style.display = 'none'; compressedImageBase64 = null;
@@ -340,7 +328,7 @@
                 alert('Đăng câu hỏi thành công!');
 
             } catch (error) {
-                console.error("Lỗi:", error); alert("Có lỗi xảy ra. Hãy chắc chắn bạn đã cấp quyền Storage.");
+                console.error("Lỗi:", error); alert("Có lỗi xảy ra khi tải bài viết.");
                 btnSubmitAsk.textContent = "Đăng câu hỏi"; btnSubmitAsk.disabled = false;
             }
         });
