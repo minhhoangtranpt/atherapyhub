@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả tìm kiếm - ATherapyHub</title>
+    <!-- Nhúng CSS dùng chung -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS riêng cho trang tìm kiếm (có thể gộp vào style.css sau) */
+        .search-results-header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .search-keyword {
+            color: var(--accent-blue);
+            font-weight: 700;
+        }
+
+        .no-results {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 50px 0;
+            background-color: white;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nội dung chính -->
+    <main id="main-content">
+        <div class="search-results-header">
+            <h2>Kết quả tìm kiếm cho: "<span id="keyword-display" class="search-keyword">...</span>"</h2>
+            <p id="result-count" style="color: var(--text-muted); font-size: 14px;">Đang tìm kiếm...</p>
+        </div>
+
+        <!-- Vùng hiển thị kết quả -->
+        <div id="results-container">
+            <!-- JavaScript sẽ điền kết quả vào đây -->
+        </div>
+    </main>
+
+    <!-- Nhúng JS dạng module để tự động gắn Header/Footer -->
+    <script type="module" src="layout.js"></script>
+
+    <!-- Script xử lý kết quả tìm kiếm -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. Lấy từ khóa từ URL (ví dụ: search.html?q=đột+quỵ)
+            const urlParams = new URLSearchParams(window.location.search);
+            const keyword = urlParams.get('q');
+            
+            const keywordDisplay = document.getElementById('keyword-display');
+            const resultsContainer = document.getElementById('results-container');
+            const resultCount = document.getElementById('result-count');
+
+            if (keyword) {
+                // Hiển thị từ khóa lên giao diện
+                keywordDisplay.textContent = keyword;
+
+                /* 
+                  Ở ĐÂY LÀ NƠI BẠN SẼ GỌI API HOẶC FIREBASE FIRESTORE ĐỂ TÌM KIẾM
+                  Ví dụ (Mô phỏng):
+                */
+                setTimeout(() => {
+                    // Giả sử mảng này là kết quả trả về từ cơ sở dữ liệu
+                    const mockResults = []; // Đổi thành mảng có chứa dữ liệu để test giao diện có kết quả
+
+                    if (mockResults.length === 0) {
+                        resultCount.textContent = `Tìm thấy 0 kết quả phù hợp.`;
+                        resultsContainer.innerHTML = `
+                            <div class="no-results">
+                                <span style="font-size: 30px;">🔍</span>
+                                <h3>Không tìm thấy bài viết nào</h3>
+                                <p>Rất tiếc, chúng tôi không tìm thấy nội dung phù hợp với từ khóa "<strong>${keyword}</strong>".<br>Vui lòng thử lại bằng các từ khóa khác (ví dụ: lâm sàng, cơ xương khớp...).</p>
+                            </div>
+                        `;
+                    } else {
+                        // Render kết quả nếu có (bạn có thể copy class .card từ giao diện cũ sang đây)
+                        resultCount.textContent = `Tìm thấy ${mockResults.length} kết quả phù hợp.`;
+                        // ... code vòng lặp in HTML bài viết ...
+                    }
+                }, 800); // Giả lập thời gian chờ tải mạng
+
+            } else {
+                // Nếu người dùng vào thẳng trang search.html mà không gõ gì
+                keywordDisplay.textContent = "Trống";
+                resultCount.textContent = "";
+                resultsContainer.innerHTML = `
+                    <div class="no-results">
+                        <p>Vui lòng nhập từ khóa vào thanh tìm kiếm ở phía trên.</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
