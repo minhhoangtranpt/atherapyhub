@@ -1,5 +1,5 @@
 /* =========================================
-   ATHERAPYHUB - COMPLETE STYLESHEET
+   ATHERAPYHUB - COMPLETE STYLESHEET (LIGHT & MINIMAL)
    ========================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -11,20 +11,20 @@
 }
 
 :root { 
-    /* --- Bảng màu sáng, chuyên nghiệp --- */
-    --navy-primary: #1E40AF;       
-    --navy-secondary: #2563EB;     
-    --navy-light: #EFF6FF;         
+    /* --- Bảng màu nhạt, tối giản, thanh lịch --- */
+    --navy-primary: #316498;       /* Xanh dương dịu mắt, bớt sắc độ gắt */
+    --navy-secondary: #4299E1;     /* Xanh lam sáng làm điểm nhấn */
+    --navy-light: #F0F6FC;         /* Nền xanh xám vô cùng nhạt */
     
-    --bg-body: #F8FAFC;            
-    --bg-card: #FFFFFF;            
+    --bg-body: #F7FAFC;            /* Nền tổng thể sáng sủa, sạch sẽ */
+    --bg-card: #FFFFFF;            /* Nền thẻ trắng tinh để nổi bật nội dung */
     
-    --text-main: #1E293B;          
-    --text-muted: #64748B;         
+    --text-main: #2D3748;          /* Màu chữ chính mềm mại, chống mỏi mắt */
+    --text-muted: #718096;         /* Màu chữ phụ, ghi chú */
     
-    --border-color: #E2E8F0; 
-    --danger: #EF4444; 
-    --accent-blue: #3B82F6;        
+    --border-color: #EDF2F7;       /* Viền siêu nhạt, không gây phân tâm */
+    --danger: #F56565; 
+    --accent-blue: #4299E1;        
 }
 
 body { 
@@ -47,7 +47,8 @@ header {
     position: sticky; 
     top: 0; 
     z-index: 100; 
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
+    /* Bóng đổ nhẹ nhàng hơn */
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05); 
 }
 
 header .logo-container { 
@@ -70,7 +71,7 @@ nav#main-nav {
 }
 
 nav#main-nav a { 
-    color: var(--navy-light); 
+    color: rgba(255, 255, 255, 0.85); 
     text-decoration: none; 
     font-weight: 500; 
     font-size: 15px; 
@@ -102,7 +103,7 @@ nav#main-nav a:hover {
 }
 
 .header-search input::placeholder {
-    color: #BFDBFE; 
+    color: rgba(255, 255, 255, 0.6); 
 }
 
 .header-search input:focus {
@@ -117,7 +118,7 @@ nav#main-nav a:hover {
     top: 50%;
     transform: translateY(-50%);
     font-size: 14px;
-    color: #BFDBFE;
+    color: rgba(255, 255, 255, 0.6);
     pointer-events: none; 
 }
 
@@ -134,7 +135,7 @@ nav#main-nav a:hover {
 
 #user-email-display { 
     font-size: 14px; 
-    color: var(--navy-light); 
+    color: rgba(255, 255, 255, 0.9); 
     font-weight: 500; 
 }
 
@@ -153,15 +154,14 @@ button, .btn-link {
 
 .btn-logout { 
     background-color: transparent; 
-    color: var(--navy-light); 
+    color: white; 
     padding: 8px 16px; 
     font-size: 14px; 
-    border: 1px solid rgba(255, 255, 255, 0.4); 
+    border: 1px solid rgba(255, 255, 255, 0.3); 
 }
 
 .btn-logout:hover { 
     background-color: rgba(255,255,255,0.15); 
-    color: white; 
     border-color: white; 
 }
 
@@ -170,7 +170,7 @@ button, .btn-link {
     color: var(--navy-primary); 
     padding: 8px 20px; 
     font-size: 14px; 
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .btn-login-nav:hover { 
@@ -182,7 +182,7 @@ button, .btn-link {
     display: none; 
     position: fixed; 
     inset: 0; 
-    background: rgba(15, 23, 42, 0.5); 
+    background: rgba(45, 55, 72, 0.4); /* Nền mờ xám trong trẻo */
     backdrop-filter: blur(4px); 
     justify-content: center; 
     align-items: center; 
@@ -193,14 +193,14 @@ button, .btn-link {
 .modal-box { 
     background: var(--bg-card); 
     padding: 32px; 
-    border-radius: 24px; 
+    border-radius: 20px; 
     width: 100%; 
     max-width: 380px; 
     max-height: 90vh;      
     overflow-y: auto;      
     position: relative; 
     box-sizing: border-box; 
-    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
 }
 
 .modal-box h2 { 
@@ -219,22 +219,23 @@ button, .btn-link {
     display: block; 
     margin-bottom: 6px; 
     font-weight: 500; 
-    font-size: 14px; 
+    font-size: 13px; 
     color: var(--text-muted);
 }
 
-.form-group input { 
+.form-group input, .form-group textarea { 
     width: 100%; 
     padding: 12px 16px; 
     border: 1px solid var(--border-color); 
-    border-radius: 12px; 
-    font-size: 15px; 
+    border-radius: 10px; 
+    font-size: 14px; 
     box-sizing: border-box; 
-    background: #F8FAFC;
-    transition: border 0.2s;
+    background: var(--bg-body);
+    transition: border 0.2s, background 0.2s;
+    color: var(--text-main);
 }
 
-.form-group input:focus {
+.form-group input:focus, .form-group textarea:focus {
     outline: none;
     border-color: var(--navy-secondary);
     background: white;
@@ -242,11 +243,11 @@ button, .btn-link {
 
 .btn-primary { 
     width: 100%; 
-    padding: 14px; 
+    padding: 12px; 
     background-color: var(--navy-primary); 
     color: white; 
     font-size: 15px; 
-    border-radius: 12px; 
+    border-radius: 10px; 
     margin-top: 10px; 
     border: none; 
     cursor: pointer; 
@@ -260,7 +261,7 @@ button, .btn-link {
     position: absolute; 
     top: 16px; 
     right: 16px; 
-    background: #F1F5F9; 
+    background: var(--navy-light); 
     border: none; 
     width: 32px; 
     height: 32px; 
@@ -278,10 +279,10 @@ button, .btn-link {
     color: var(--text-main);
 }
 
-/* ================= BỐ CỤC CHÍNH (MAIN CONTENT) ================= */
+/* ================= BỐ CỤC CHÍNH ================= */
 #main-content { 
     flex: 1; 
-    max-width: 1200px; 
+    max-width: 1100px; 
     margin: 40px auto; 
     padding: 0 5%; 
     width: 100%; 
@@ -290,20 +291,20 @@ button, .btn-link {
 
 /* ================= FOOTER ================= */
 footer { 
-    background-color: var(--navy-primary); 
-    color: var(--navy-light); 
+    background-color: white; 
+    color: var(--text-muted); 
+    border-top: 1px solid var(--border-color);
     text-align: center; 
     padding: 24px 0; 
     font-size: 14px; 
     margin-top: auto; 
 }
 
-/* Ẩn các phần tử bằng JS */
 .hidden { 
     display: none !important; 
 }
 
-/* ================= TỐI ƯU ĐIỆN THOẠI (MOBILE RESPONSIVE) ================= */
+/* ================= TỐI ƯU ĐIỆN THOẠI ================= */
 @media (max-width: 768px) {
     header {
         flex-direction: column;
@@ -319,33 +320,6 @@ footer {
         gap: 12px;
     }
 
-    nav#main-nav {
-        display: flex;
-        width: 100%;
-        overflow-x: auto; 
-        -webkit-overflow-scrolling: touch; 
-        white-space: nowrap; 
-        padding-bottom: 5px; 
-        gap: 16px;
-    }
-
-    nav#main-nav::-webkit-scrollbar {
-        display: none; 
-    }
-    nav#main-nav {
-        -ms-overflow-style: none;  
-        scrollbar-width: none;  
-    }
-
-    /* Đưa thanh tìm kiếm xuống hàng cuối trên Mobile */
-    .header-search {
-        max-width: 100%;
-        margin: 0;
-        width: 100%;
-        order: 3; 
-    }
-
-    /* Điều chỉnh vị trí nút Đăng xuất / Login */
     .user-controls {
         position: absolute;
         top: 14px;
@@ -353,7 +327,6 @@ footer {
         gap: 8px; 
     }
 
-    /* Hiển thị email an toàn, giới hạn chiều dài */
     #user-email-display { 
         display: block; 
         font-size: 12px; 
@@ -363,15 +336,21 @@ footer {
         text-overflow: ellipsis; 
     }
 
-    /* Thu nhỏ nút bấm trên mobile */
     .btn-login-nav, .btn-logout {
         padding: 6px 12px;
         font-size: 13px; 
     }
 
+    .header-search {
+        max-width: 100%;
+        margin: 0;
+        width: 100%;
+        order: 3; 
+    }
+
     .modal-box {
         padding: 24px 20px;
-        border-radius: 20px;
+        border-radius: 16px;
     }
 
     #main-content {
