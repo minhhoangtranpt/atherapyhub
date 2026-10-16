@@ -7,6 +7,7 @@ import {
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     sendPasswordResetEmail, 
+    sendEmailVerification,
     onAuthStateChanged, 
     signOut 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -27,7 +28,6 @@ const auth = getAuth(app);
 // 1. TẠO CẤU TRÚC HTML CHO HEADER, TÌM KIẾM VÀ MODAL
 // =========================================================
 const headerHTML = `
-    <!-- Thêm CSS trực tiếp để xử lý Menu 3 gạch và Giao diện Modal -->
     <style>
         .hamburger-btn { display: none; background: none; border: none; font-size: 26px; color: white; cursor: pointer; margin-right: 15px; padding: 0; line-height: 1; }
         #user-email-display { text-decoration: underline; cursor: pointer; font-weight: 600; color: var(--navy-light); }
@@ -42,7 +42,6 @@ const headerHTML = `
             header { position: relative; }
             header .logo-container { flex-direction: row !important; align-items: center !important; justify-content: flex-start; }
             
-            /* Ghi đè menu cuộn ngang thành menu thả xuống */
             nav#main-nav {
                 display: none !important; 
                 flex-direction: column;
@@ -64,14 +63,12 @@ const headerHTML = `
             <nav id="main-nav"></nav>
         </div>
         
-        <!-- Thanh tìm kiếm -->
         <div class="header-search">
             <span class="search-icon">🔍</span>
             <input type="text" id="global-search-input" placeholder="Tìm kiếm bài viết...">
         </div>
 
         <div class="user-controls">
-            <!-- Đổi thành thẻ <a> để click chuyển sang trang Thông tin cá nhân -->
             <a href="thong_tin_ca_nhan.html" id="user-email-display" class="hidden" title="Quản lý thông tin cá nhân"></a>
             <button id="logout-btn" class="btn-logout hidden">Đăng xuất</button>
             <button id="open-login-modal" class="btn-login-nav">Đăng nhập</button>
@@ -90,6 +87,11 @@ const headerHTML = `
             <div class="form-group" id="password-group">
                 <label>Mật khẩu</label>
                 <input type="password" id="auth-password" placeholder="Nhập mật khẩu (từ 6 ký tự)" required>
+            </div>
+            <!-- Bổ sung trường Xác nhận mật khẩu (ẩn mặc định) -->
+            <div class="form-group" id="confirm-password-group" style="display: none;">
+                <label>Xác nhận mật khẩu</label>
+                <input type="password" id="auth-confirm-password" placeholder="Nhập lại mật khẩu" required>
             </div>
             
             <button id="auth-main-btn" class="btn-primary">Đăng nhập</button>
@@ -166,11 +168,13 @@ const userEmailDisplay = document.getElementById('user-email-display');
 const errorMsg = document.getElementById('error-msg');
 
 // Các thành phần trong Modal
-let currentAuthMode = 'login'; // 'login', 'register', 'forgot'
+let currentAuthMode = 'login'; 
 const modalTitle = document.getElementById('modal-title');
 const authEmail = document.getElementById('auth-email');
 const authPassword = document.getElementById('auth-password');
+const authConfirmPassword = document.getElementById('auth-confirm-password');
 const passGroup = document.getElementById('password-group');
+const confirmPassGroup = document.getElementById('confirm-password-group');
 const authMainBtn = document.getElementById('auth-main-btn');
 const linkRegister = document.getElementById('link-register');
 const linkForgot = document.getElementById('link-forgot');
@@ -186,6 +190,7 @@ function switchAuthMode(mode) {
     if (mode === 'login') {
         modalTitle.textContent = 'Đăng nhập';
         passGroup.style.display = 'block';
+        confirmPassGroup.style.display = 'none';
         authMainBtn.textContent = 'Đăng nhập';
         linkRegister.style.display = 'inline-block';
         linkForgot.style.display = 'inline-block';
@@ -194,6 +199,7 @@ function switchAuthMode(mode) {
     } else if (mode === 'register') {
         modalTitle.textContent = 'Đăng ký tài khoản';
         passGroup.style.display = 'block';
+        confirmPassGroup.style.display = 'block';
         authMainBtn.textContent = 'Đăng ký';
         linkRegister.style.display = 'none';
         linkForgot.style.display = 'none';
@@ -202,6 +208,7 @@ function switchAuthMode(mode) {
     } else if (mode === 'forgot') {
         modalTitle.textContent = 'Khôi phục mật khẩu';
         passGroup.style.display = 'none';
+        confirmPassGroup.style.display = 'none';
         authMainBtn.textContent = 'Gửi email khôi phục';
         linkRegister.style.display = 'none';
         linkForgot.style.display = 'none';
@@ -210,7 +217,6 @@ function switchAuthMode(mode) {
     }
 }
 
-// Bắt sự kiện chuyển đổi chế độ
 linkRegister.addEventListener('click', () => switchAuthMode('register'));
 linkForgot.addEventListener('click', () => switchAuthMode('forgot'));
 linkBackLogin.addEventListener('click', () => switchAuthMode('login'));
@@ -221,14 +227,18 @@ openLoginBtn.addEventListener('click', () => {
 });
 closeLoginBtn.addEventListener('click', () => loginModal.style.display = 'none');
 
-// Giữ trạng thái đăng nhập
+// Giữ trạng thái đăng nhập (chỉ khi đã xác thực email)
 onAuthStateChanged(auth, (user) => {
-    if (user) {
+    if (user && user.emailVerified) {
         openLoginBtn.classList.add('hidden');
         logoutBtn.classList.remove('hidden');
         userEmailDisplay.textContent = user.email;
         userEmailDisplay.classList.remove('hidden');
     } else {
+        // Nếu user tồn tại nhưng chưa xác thực email, ép đăng xuất
+        if (user && !user.emailVerified) {
+            signOut(auth);
+        }
         logoutBtn.classList.add('hidden');
         userEmailDisplay.classList.add('hidden');
         userEmailDisplay.textContent = '';
@@ -240,6 +250,7 @@ onAuthStateChanged(auth, (user) => {
 authMainBtn.addEventListener('click', () => {
     const email = authEmail.value.trim();
     const password = authPassword.value;
+    const confirmPassword = authConfirmPassword.value;
 
     if (!email) {
         errorMsg.textContent = "Vui lòng nhập Email!";
@@ -253,10 +264,16 @@ authMainBtn.addEventListener('click', () => {
         if (!password) return errorMsg.textContent = "Vui lòng nhập mật khẩu!";
         
         signInWithEmailAndPassword(auth, email, password)
-            .then(() => {
-                errorMsg.textContent = "";
-                loginModal.style.display = 'none';
-                authEmail.value = ''; authPassword.value = '';
+            .then((userCredential) => {
+                const user = userCredential.user;
+                if (!user.emailVerified) {
+                    signOut(auth);
+                    errorMsg.textContent = "Vui lòng xác thực email của bạn trước khi đăng nhập. Hãy kiểm tra hộp thư đến (hoặc mục Spam).";
+                } else {
+                    errorMsg.textContent = "";
+                    loginModal.style.display = 'none';
+                    authEmail.value = ''; authPassword.value = '';
+                }
             })
             .catch(() => {
                 errorMsg.textContent = "Sai email hoặc mật khẩu!";
@@ -265,14 +282,19 @@ authMainBtn.addEventListener('click', () => {
     } else if (currentAuthMode === 'register') {
         if (!password) return errorMsg.textContent = "Vui lòng nhập mật khẩu!";
         if (password.length < 6) return errorMsg.textContent = "Mật khẩu phải từ 6 ký tự!";
+        if (password !== confirmPassword) return errorMsg.textContent = "Mật khẩu xác nhận không khớp!";
         
         createUserWithEmailAndPassword(auth, email, password)
-            .then(() => {
-                errorMsg.textContent = "";
-                loginModal.style.display = 'none';
-                authEmail.value = ''; authPassword.value = '';
-                alert("Đăng ký thành công! Hãy vào Thông tin cá nhân để đặt Tên hiển thị.");
-                window.location.href = 'thong_tin_ca_nhan.html';
+            .then((userCredential) => {
+                const user = userCredential.user;
+                // Gửi email xác thực
+                sendEmailVerification(user).then(() => {
+                    signOut(auth); // Đăng xuất ngay lập tức để ép người dùng vào mail xác nhận
+                    errorMsg.style.color = "#03543F";
+                    errorMsg.textContent = "Đăng ký thành công! Vui lòng kiểm tra email (cả mục Spam) để xác thực tài khoản trước khi đăng nhập.";
+                    authPassword.value = '';
+                    authConfirmPassword.value = '';
+                });
             })
             .catch((err) => {
                 if (err.code === 'auth/email-already-in-use') {
@@ -295,13 +317,16 @@ authMainBtn.addEventListener('click', () => {
 });
 
 authPassword.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') authMainBtn.click();
+    if (e.key === 'Enter' && currentAuthMode === 'login') authMainBtn.click();
+});
+
+authConfirmPassword.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && currentAuthMode === 'register') authMainBtn.click();
 });
 
 logoutBtn.addEventListener('click', () => {
     if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
         signOut(auth);
-        // Tùy chọn: Chuyển về trang chủ nếu đang ở trang cá nhân
         if(window.location.pathname.includes('thong_tin_ca_nhan.html')) {
             window.location.href = 'index.html';
         }
