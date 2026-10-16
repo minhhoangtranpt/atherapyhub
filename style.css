@@ -1,5 +1,5 @@
 /* =========================================
-   ATHERAPYHUB - COMPLETE STYLESHEET (BRIGHTER)
+   ATHERAPYHUB - COMPLETE STYLESHEET
    ========================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -11,20 +11,20 @@
 }
 
 :root { 
-    /* --- Bảng màu đã được điều chỉnh sáng hơn --- */
-    --navy-primary: #1E40AF;       /* Xanh dương đậm tươi sáng hơn (thay cho #0A2540) */
-    --navy-secondary: #2563EB;     /* Xanh dương rực rỡ (thay cho #1A365D) */
-    --navy-light: #EFF6FF;         /* Xanh nền cực nhạt, trong trẻo hơn */
+    /* --- Bảng màu sáng, chuyên nghiệp --- */
+    --navy-primary: #1E40AF;       
+    --navy-secondary: #2563EB;     
+    --navy-light: #EFF6FF;         
     
-    --bg-body: #F8FAFC;            /* Nền trang chuyển sang dải xám sáng rực (Slate 50) */
+    --bg-body: #F8FAFC;            
     --bg-card: #FFFFFF;            
     
-    --text-main: #1E293B;          /* Màu chữ chính mềm mại hơn đen thuần */
-    --text-muted: #64748B;         /* Màu chữ phụ */
+    --text-main: #1E293B;          
+    --text-muted: #64748B;         
     
     --border-color: #E2E8F0; 
     --danger: #EF4444; 
-    --accent-blue: #3B82F6;        /* Xanh nhấn sáng */
+    --accent-blue: #3B82F6;        
 }
 
 body { 
@@ -96,13 +96,13 @@ nav#main-nav a:hover {
     border-radius: 99px; 
     font-size: 14px;
     outline: none;
-    background-color: rgba(255, 255, 255, 0.15); /* Nền ô tìm kiếm trong suốt nhẹ */
+    background-color: rgba(255, 255, 255, 0.15); 
     color: white;
     transition: background-color 0.2s, box-shadow 0.2s;
 }
 
 .header-search input::placeholder {
-    color: #BFDBFE; /* Màu placeholder sáng hơn để nổi trên nền xanh tươi */
+    color: #BFDBFE; 
 }
 
 .header-search input:focus {
@@ -182,7 +182,7 @@ button, .btn-link {
     display: none; 
     position: fixed; 
     inset: 0; 
-    background: rgba(15, 23, 42, 0.5); /* Nền mờ sáng hơn một chút */
+    background: rgba(15, 23, 42, 0.5); 
     backdrop-filter: blur(4px); 
     justify-content: center; 
     align-items: center; 
@@ -336,21 +336,31 @@ footer {
         scrollbar-width: none;  
     }
 
+    /* Điều chỉnh vị trí và khoảng cách các nút trên mobile */
     .user-controls {
         position: absolute;
         top: 14px;
         right: 15px;
+        gap: 6px; 
     }
 
+    /* Hiển thị email: Thu nhỏ cỡ chữ và tự động cắt bớt bằng dấu ... nếu quá dài */
     #user-email-display { 
-        display: none; 
+        display: inline-block !important; 
+        font-size: 11px; 
+        max-width: 110px; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        vertical-align: middle;
     }
 
     .btn-login-nav, .btn-logout {
-        padding: 6px 12px;
-        font-size: 13px;
+        padding: 6px 10px;
+        font-size: 12px; 
     }
 
+    /* Đưa thanh tìm kiếm xuống hàng cuối trên Mobile */
     .header-search {
         max-width: 100%;
         margin: 0;
