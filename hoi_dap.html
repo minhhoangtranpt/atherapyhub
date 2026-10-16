@@ -11,7 +11,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 15px;
         }
@@ -24,103 +24,93 @@
         .btn-ask {
             background-color: var(--accent-blue);
             color: white;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 6px;
             font-weight: 600;
             border: none;
             cursor: pointer;
-            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
         }
 
         .btn-ask:hover {
             background-color: var(--navy-secondary);
         }
 
-        /* Thiết kế dạng danh sách nén (Compact List) */
-        .qa-table {
-            width: 100%;
-            background-color: var(--bg-card);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
+        /* Giao diện Thẻ (Card Grid) */
+        .qa-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
         }
 
-        .qa-row {
+        .qa-card {
+            background-color: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
             display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border-color);
+            flex-direction: column;
             text-decoration: none;
             color: inherit;
-            transition: background-color 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
         }
 
-        .qa-row:last-child {
-            border-bottom: none;
+        .qa-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+            border-color: var(--navy-secondary);
         }
 
-        .qa-row:hover:not(.qa-header) {
-            background-color: var(--navy-light);
-        }
-
-        .qa-header {
-            background-color: #F1F5F9;
+        .qa-card-title {
+            font-size: 17px;
             font-weight: 600;
-            color: var(--text-muted);
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-
-        /* Phân chia các cột */
-        .col-title {
-            flex: 1;
-            padding-right: 15px;
-        }
-
-        .qa-title-text {
             color: var(--navy-primary);
-            font-weight: 500;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            /* Cắt text nếu quá 3 dòng */
             display: -webkit-box;
-            -webkit-line-clamp: 1;
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            flex-grow: 1; /* Đẩy phần info xuống đáy */
         }
 
-        .col-author {
-            width: 150px;
-            font-size: 13px;
-            color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .qa-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--border-color);
         }
 
-        .col-date {
-            width: 100px;
+        .qa-card-meta {
             font-size: 13px;
             color: var(--text-muted);
-            text-align: right;
-        }
-
-        .col-replies {
-            width: 80px;
-            font-size: 13px;
-            color: var(--navy-secondary);
-            font-weight: 600;
-            text-align: center;
         }
         
-        .col-status {
-            width: 100px;
-            text-align: right;
-            font-size: 12px;
+        .qa-card-author {
+            color: var(--text-main);
+            font-weight: 500;
+            margin-bottom: 4px;
         }
 
-        .status-resolved {
-            color: #03543F;
-            background-color: #DEF7EC;
-            padding: 2px 6px;
-            border-radius: 4px;
+        .qa-card-replies {
+            text-align: center;
+        }
+
+        .qa-card-replies .count {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .qa-card-replies .label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Phân trang (Pagination) */
@@ -128,17 +118,17 @@
             display: flex;
             justify-content: center;
             gap: 5px;
-            margin-top: 25px;
+            margin-top: 40px;
         }
 
         .page-btn {
-            padding: 6px 12px;
+            padding: 8px 14px;
             border: 1px solid var(--border-color);
             background-color: white;
             color: var(--text-main);
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-weight: 500;
         }
 
         .page-btn:hover {
@@ -154,7 +144,7 @@
         /* Modal đặt câu hỏi */
         .ask-textarea {
             width: 100%;
-            height: 120px;
+            height: 150px;
             padding: 12px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -162,17 +152,23 @@
             font-family: inherit;
             font-size: 14px;
             margin-bottom: 15px;
+            background: #F8FAFC;
+        }
+        
+        .ask-textarea:focus {
+            outline: none;
+            border-color: var(--navy-secondary);
+            background: white;
         }
 
         @media (max-width: 768px) {
-            .col-author, .col-date, .col-status {
-                display: none; /* Ẩn bớt cột trên điện thoại để tiết kiệm diện tích */
+            .qa-header-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
             }
-            .col-replies {
-                width: 60px;
-            }
-            .qa-title-text {
-                -webkit-line-clamp: 2; /* Cho phép rớt 2 dòng trên mobile */
+            .qa-grid {
+                grid-template-columns: 1fr; /* 1 cột trên mobile */
             }
         }
     </style>
@@ -186,19 +182,9 @@
             <button id="btn-open-ask" class="btn-ask">Đặt câu hỏi</button>
         </div>
 
-        <!-- Khung danh sách bài viết -->
-        <div class="qa-table">
-            <div class="qa-row qa-header">
-                <div class="col-title">Chủ đề</div>
-                <div class="col-status">Trạng thái</div>
-                <div class="col-author">Tác giả</div>
-                <div class="col-replies">Trả lời</div>
-                <div class="col-date">Ngày đăng</div>
-            </div>
-            
-            <div id="qa-list-container">
-                <div style="text-align: center; padding: 20px; color: var(--text-muted);">Đang tải dữ liệu...</div>
-            </div>
+        <!-- Khung danh sách bài viết dạng Lưới (Grid) -->
+        <div id="qa-list-container" class="qa-grid">
+            <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">Đang tải dữ liệu từ máy chủ...</div>
         </div>
 
         <!-- Khu vực phân trang -->
@@ -208,7 +194,7 @@
 
     <!-- Modal Đặt câu hỏi -->
     <div id="ask-modal" class="modal-overlay">
-        <div class="modal-box" style="max-width: 500px;">
+        <div class="modal-box" style="max-width: 600px;">
             <button id="btn-close-ask" class="btn-close-modal">&times;</button>
             <h2>Đặt câu hỏi mới</h2>
             <div class="form-group">
@@ -223,128 +209,205 @@
         </div>
     </div>
 
+    <!-- Nạp Layout Header/Footer -->
     <script type="module" src="layout.js"></script>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const qaContainer = document.getElementById('qa-list-container');
-            const paginationContainer = document.getElementById('pagination-container');
-            
-            // Khởi tạo mảng dữ liệu mô phỏng lớn để test phân trang
-            let mockQuestions = [];
-            for (let i = 1; i <= 75; i++) {
-                mockQuestions.push({
-                    id: "qa" + i,
-                    title: `Câu hỏi thảo luận lâm sàng số ${i} về các phương pháp phục hồi chức năng`,
-                    author: `Thành viên ${i}`,
-                    date: "16/10/2026",
-                    repliesCount: Math.floor(Math.random() * 20),
-                    isResolved: i % 5 === 0 // Cứ 5 bài thì 1 bài đánh dấu đã giải quyết
-                });
-            }
+    <!-- Script xử lý Firebase Firestore -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            getDocs, 
+            query, 
+            orderBy, 
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-            // Cấu hình phân trang
-            let currentPage = 1;
-            const itemsPerPage = 30;
+        // Cấu hình chung
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
+            authDomain: "datatherapy-52437.firebaseapp.com",
+            projectId: "datatherapy-52437",
+            storageBucket: "datatherapy-52437.firebasestorage.app",
+            messagingSenderId: "206559916642",
+            appId: "1:206559916642:web:d4e911752ef2bb3b58973b"
+        };
 
-            function renderQAList() {
-                qaContainer.innerHTML = '';
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const qaContainer = document.getElementById('qa-list-container');
+        const paginationContainer = document.getElementById('pagination-container');
+        
+        let allQuestions = [];
+        let currentPage = 1;
+        const itemsPerPage = 30; // Max 30 thẻ 1 trang
+
+        // 1. HÀM TẢI DỮ LIỆU TỪ FIREBASE
+        async function fetchQuestions() {
+            qaContainer.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); grid-column: 1 / -1;">Đang tải dữ liệu...</div>';
+            try {
+                // Lấy data từ collection 'hoi_dap', xếp bài mới nhất lên trên
+                const q = query(collection(db, "hoi_dap"), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
                 
-                if (mockQuestions.length === 0) {
-                    qaContainer.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">Chưa có câu hỏi nào.</div>';
-                    return;
-                }
+                allQuestions = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // Xử lý ngày tháng hiển thị an toàn
+                    let dateStr = "Vừa xong";
+                    if (data.createdAt && data.createdAt.toDate) {
+                        const dateObj = data.createdAt.toDate();
+                        dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                    }
 
-                // Tính toán vị trí cắt mảng dữ liệu
-                const startIndex = (currentPage - 1) * itemsPerPage;
-                const endIndex = startIndex + itemsPerPage;
-                const currentItems = mockQuestions.slice(startIndex, endIndex);
-
-                currentItems.forEach(q => {
-                    const statusHtml = q.isResolved 
-                        ? `<span class="status-resolved">Đã giải quyết</span>` 
-                        : `<span style="color:var(--text-muted);">-</span>`;
-
-                    const row = document.createElement('a');
-                    row.href = `chi_tiet_hoi_dap.html?id=${q.id}`;
-                    row.className = 'qa-row';
-
-                    row.innerHTML = `
-                        <div class="col-title">
-                            <div class="qa-title-text">${q.title}</div>
-                        </div>
-                        <div class="col-status">${statusHtml}</div>
-                        <div class="col-author">${q.author}</div>
-                        <div class="col-replies">${q.repliesCount}</div>
-                        <div class="col-date">${q.date}</div>
-                    `;
-                    qaContainer.appendChild(row);
-                });
-
-                renderPagination();
-            }
-
-            function renderPagination() {
-                paginationContainer.innerHTML = '';
-                const totalPages = Math.ceil(mockQuestions.length / itemsPerPage);
-
-                if (totalPages <= 1) return;
-
-                for (let i = 1; i <= totalPages; i++) {
-                    const btn = document.createElement('button');
-                    btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
-                    btn.textContent = i;
-                    btn.addEventListener('click', () => {
-                        currentPage = i;
-                        renderQAList();
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    allQuestions.push({
+                        id: doc.id,
+                        title: data.title,
+                        author: data.author || "Người dùng ẩn danh",
+                        date: dateStr,
+                        repliesCount: data.repliesCount || 0
                     });
-                    paginationContainer.appendChild(btn);
-                }
-            }
-
-            // Hiển thị dữ liệu lần đầu
-            renderQAList();
-
-            // Xử lý Modal Đặt câu hỏi
-            const askModal = document.getElementById('ask-modal');
-            document.getElementById('btn-open-ask').addEventListener('click', () => {
-                askModal.style.display = 'flex';
-            });
-            
-            document.getElementById('btn-close-ask').addEventListener('click', () => {
-                askModal.style.display = 'none';
-            });
-
-            document.getElementById('btn-submit-ask').addEventListener('click', () => {
-                const titleInput = document.getElementById('ask-title');
-                const contentInput = document.getElementById('ask-content');
-
-                if (titleInput.value.trim() === '' || contentInput.value.trim() === '') {
-                    alert('Vui lòng nhập đầy đủ tiêu đề và nội dung.');
-                    return;
-                }
-
-                // Thêm câu hỏi mới vào đầu mảng
-                const newId = "qa" + (mockQuestions.length + 1);
-                mockQuestions.unshift({
-                    id: newId,
-                    title: titleInput.value,
-                    author: "Người dùng (Bạn)",
-                    date: "Vừa xong",
-                    repliesCount: 0,
-                    isResolved: false
                 });
 
-                // Đóng modal, xóa form, quay về trang 1 và render lại
+                currentPage = 1;
+                renderQAGrid();
+
+            } catch (error) {
+                console.error("Lỗi lấy dữ liệu:", error);
+                qaContainer.innerHTML = `<div style="text-align:center; padding:40px; color:var(--danger); grid-column: 1 / -1;">Lỗi tải dữ liệu. Vui lòng thử lại.</div>`;
+            }
+        }
+
+        // 2. HÀM HIỂN THỊ LƯỚI THẺ (GRID CARDS) VÀ PHÂN TRANG
+        function renderQAGrid() {
+            qaContainer.innerHTML = '';
+            
+            if (allQuestions.length === 0) {
+                qaContainer.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); grid-column: 1 / -1;">Chưa có câu hỏi nào. Hãy là người đầu tiên đặt câu hỏi!</div>';
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentItems = allQuestions.slice(startIndex, endIndex);
+
+            currentItems.forEach(q => {
+                const card = document.createElement('a');
+                card.href = `chi_tiet_hoi_dap.html?id=${q.id}`;
+                card.className = 'qa-card';
+
+                card.innerHTML = `
+                    <div class="qa-card-title">${q.title}</div>
+                    <div class="qa-card-footer">
+                        <div class="qa-card-meta">
+                            <div class="qa-card-author">${q.author}</div>
+                            <div>${q.date}</div>
+                        </div>
+                        <div class="qa-card-replies">
+                            <div class="count">${q.repliesCount}</div>
+                            <div class="label">Trả lời</div>
+                        </div>
+                    </div>
+                `;
+                qaContainer.appendChild(card);
+            });
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            paginationContainer.innerHTML = '';
+            const totalPages = Math.ceil(allQuestions.length / itemsPerPage);
+
+            if (totalPages <= 1) return;
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.addEventListener('click', () => {
+                    currentPage = i;
+                    renderQAGrid();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+                paginationContainer.appendChild(btn);
+            }
+        }
+
+        // 3. XỬ LÝ ĐẶT CÂU HỎI MỚI
+        const askModal = document.getElementById('ask-modal');
+        const btnSubmitAsk = document.getElementById('btn-submit-ask');
+
+        document.getElementById('btn-open-ask').addEventListener('click', () => {
+            // Kiểm tra nếu muốn bắt buộc đăng nhập mới được hỏi:
+            /*
+            if (!auth.currentUser) {
+                alert("Vui lòng đăng nhập để đặt câu hỏi.");
+                return;
+            }
+            */
+            askModal.style.display = 'flex';
+        });
+        
+        document.getElementById('btn-close-ask').addEventListener('click', () => {
+            askModal.style.display = 'none';
+        });
+
+        btnSubmitAsk.addEventListener('click', async () => {
+            const titleInput = document.getElementById('ask-title');
+            const contentInput = document.getElementById('ask-content');
+            const titleVal = titleInput.value.trim();
+            const contentVal = contentInput.value.trim();
+
+            if (titleVal === '' || contentVal === '') {
+                alert('Vui lòng nhập đầy đủ tiêu đề và nội dung.');
+                return;
+            }
+
+            btnSubmitAsk.textContent = "Đang gửi...";
+            btnSubmitAsk.disabled = true;
+
+            try {
+                // Xác định tên tác giả (Nếu đã đăng nhập lấy email, chưa thì lấy Ẩn danh)
+                const authorName = auth.currentUser ? auth.currentUser.email : "Người dùng ẩn danh";
+
+                // Đẩy lên Firestore collection 'hoi_dap'
+                await addDoc(collection(db, "hoi_dap"), {
+                    title: titleVal,
+                    content: contentVal,
+                    author: authorName,
+                    repliesCount: 0,
+                    createdAt: serverTimestamp() // Giờ chuẩn của server Firebase
+                });
+
+                // Đóng modal & dọn dẹp form
                 askModal.style.display = 'none';
                 titleInput.value = '';
                 contentInput.value = '';
-                currentPage = 1;
-                renderQAList();
+                btnSubmitAsk.textContent = "Đăng câu hỏi";
+                btnSubmitAsk.disabled = false;
+
+                // Tải lại danh sách
+                fetchQuestions();
                 alert('Đăng câu hỏi thành công!');
-            });
+
+            } catch (error) {
+                console.error("Lỗi đăng bài: ", error);
+                alert("Có lỗi xảy ra khi đăng bài. Vui lòng thử lại.");
+                btnSubmitAsk.textContent = "Đăng câu hỏi";
+                btnSubmitAsk.disabled = false;
+            }
         });
+
+        // Khởi động trang: Lấy dữ liệu ngay khi vào
+        fetchQuestions();
     </script>
 </body>
 </html>
