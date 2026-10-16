@@ -1,5 +1,5 @@
 /* =========================================
-   ATHERAPYHUB - COMPLETE STYLESHEET
+   ATHERAPYHUB - COMPLETE STYLESHEET (BRIGHTER)
    ========================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -11,16 +11,20 @@
 }
 
 :root { 
-    --navy-primary: #0A2540; 
-    --navy-secondary: #1A365D; 
-    --navy-light: #EBF4FA; 
-    --bg-body: #F4F7F6; 
-    --bg-card: #FFFFFF; 
-    --text-main: #2D3748; 
-    --text-muted: #718096; 
+    /* --- Bảng màu đã được điều chỉnh sáng hơn --- */
+    --navy-primary: #1E40AF;       /* Xanh dương đậm tươi sáng hơn (thay cho #0A2540) */
+    --navy-secondary: #2563EB;     /* Xanh dương rực rỡ (thay cho #1A365D) */
+    --navy-light: #EFF6FF;         /* Xanh nền cực nhạt, trong trẻo hơn */
+    
+    --bg-body: #F8FAFC;            /* Nền trang chuyển sang dải xám sáng rực (Slate 50) */
+    --bg-card: #FFFFFF;            
+    
+    --text-main: #1E293B;          /* Màu chữ chính mềm mại hơn đen thuần */
+    --text-muted: #64748B;         /* Màu chữ phụ */
+    
     --border-color: #E2E8F0; 
     --danger: #EF4444; 
-    --accent-blue: #3182CE;
+    --accent-blue: #3B82F6;        /* Xanh nhấn sáng */
 }
 
 body { 
@@ -43,7 +47,7 @@ header {
     position: sticky; 
     top: 0; 
     z-index: 100; 
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
 }
 
 header .logo-container { 
@@ -92,13 +96,13 @@ nav#main-nav a:hover {
     border-radius: 99px; 
     font-size: 14px;
     outline: none;
-    background-color: var(--navy-secondary); 
+    background-color: rgba(255, 255, 255, 0.15); /* Nền ô tìm kiếm trong suốt nhẹ */
     color: white;
     transition: background-color 0.2s, box-shadow 0.2s;
 }
 
 .header-search input::placeholder {
-    color: #A0AEC0;
+    color: #BFDBFE; /* Màu placeholder sáng hơn để nổi trên nền xanh tươi */
 }
 
 .header-search input:focus {
@@ -113,7 +117,7 @@ nav#main-nav a:hover {
     top: 50%;
     transform: translateY(-50%);
     font-size: 14px;
-    color: #A0AEC0;
+    color: #BFDBFE;
     pointer-events: none; 
 }
 
@@ -152,11 +156,11 @@ button, .btn-link {
     color: var(--navy-light); 
     padding: 8px 16px; 
     font-size: 14px; 
-    border: 1px solid var(--navy-light); 
+    border: 1px solid rgba(255, 255, 255, 0.4); 
 }
 
 .btn-logout:hover { 
-    background-color: rgba(255,255,255,0.1); 
+    background-color: rgba(255,255,255,0.15); 
     color: white; 
     border-color: white; 
 }
@@ -166,6 +170,7 @@ button, .btn-link {
     color: var(--navy-primary); 
     padding: 8px 20px; 
     font-size: 14px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .btn-login-nav:hover { 
@@ -177,7 +182,7 @@ button, .btn-link {
     display: none; 
     position: fixed; 
     inset: 0; 
-    background: rgba(10, 37, 64, 0.6); 
+    background: rgba(15, 23, 42, 0.5); /* Nền mờ sáng hơn một chút */
     backdrop-filter: blur(4px); 
     justify-content: center; 
     align-items: center; 
@@ -225,13 +230,13 @@ button, .btn-link {
     border-radius: 12px; 
     font-size: 15px; 
     box-sizing: border-box; 
-    background: #F9FAFB;
+    background: #F8FAFC;
     transition: border 0.2s;
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: var(--navy-primary);
+    border-color: var(--navy-secondary);
     background: white;
 }
 
@@ -255,7 +260,7 @@ button, .btn-link {
     position: absolute; 
     top: 16px; 
     right: 16px; 
-    background: #F3F4F6; 
+    background: #F1F5F9; 
     border: none; 
     width: 32px; 
     height: 32px; 
@@ -269,7 +274,7 @@ button, .btn-link {
 }
 
 .btn-close-modal:hover {
-    background: #E5E7EB;
+    background: #E2E8F0;
     color: var(--text-main);
 }
 
