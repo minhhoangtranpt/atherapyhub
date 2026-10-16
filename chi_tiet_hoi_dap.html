@@ -278,6 +278,9 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // THÊM MÃ UID ADMIN VÀO ĐÂY
+        const ADMIN_UID = '4RRhZdR29FQ0S17tvKHY9ysCMpH3';
+
         const urlParams = new URLSearchParams(window.location.search);
         const questionId = urlParams.get('id');
 
@@ -338,8 +341,8 @@
                     repliesCountDisplay.textContent = data.repliesCount || 0;
                     const imageDisplay = data.imageUrl ? `<img src="${data.imageUrl}" class="attached-image" alt="Ảnh đính kèm">` : ``;
 
-                    // Kiểm tra UID để hiện nút Xóa Bài Viết
-                    const deleteBtnHtml = (data.authorUid === currentUserUid) 
+                    // ĐIỀU CHỈNH: Hiển thị nút xóa nếu là tác giả HOẶC là Admin
+                    const deleteBtnHtml = (data.authorUid === currentUserUid || currentUserUid === ADMIN_UID) 
                         ? `<span>•</span> <button id="btn-delete-question" class="btn-delete-action">Xóa bài</button>` 
                         : ``;
 
@@ -360,10 +363,10 @@
             }
         }
 
-        // Sự kiện: Bấm nút xóa bài viết gốc
+        // Sự kiện xóa bài viết gốc
         questionContainer.addEventListener('click', async (e) => {
             if (e.target.id === 'btn-delete-question') {
-                if(confirm("Bạn có chắc chắn muốn xóa bài viết này không? Toàn bộ trả lời bên trong cũng sẽ bị ẩn.")) {
+                if(confirm("Bạn có chắc chắn muốn xóa bài viết này không? Toàn bộ trả lời bên trong cũng sẽ bị xóa.")) {
                     try {
                         await deleteDoc(doc(db, "hoi_dap", questionId));
                         alert("Xóa bài viết thành công!");
@@ -400,8 +403,8 @@
                 `;
             }
 
-            // Nút xóa chỉ hiện nếu uid trùng với tác giả của bình luận
-            const deleteHtml = (reply.authorUid === currentUserUid) 
+            // ĐIỀU CHỈNH: Hiện nút xóa nếu là tác giả của reply HOẶC là Admin
+            const deleteHtml = (reply.authorUid === currentUserUid || currentUserUid === ADMIN_UID) 
                 ? `<button class="btn-reply-delete" data-replyid="${reply.id}">Xóa</button>` 
                 : ``;
 
@@ -470,9 +473,6 @@
             }
         }
 
-        // ========================================================
-        // SỰ KIỆN DELEGATION TRONG KHU VỰC CÂU TRẢ LỜI
-        // ========================================================
         repliesList.addEventListener('click', async (e) => {
             
             // 1. Nút Mở Form Phản hồi
@@ -510,7 +510,6 @@
                     try {
                         await deleteDoc(doc(db, "hoi_dap", questionId, "replies", replyId));
                         
-                        // Cập nhật lại biến đếm
                         await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(-1) });
                         repliesCountDisplay.textContent = Math.max(0, parseInt(repliesCountDisplay.textContent) - 1);
                         
@@ -565,9 +564,7 @@
             }
         });
 
-        // ========================================================
-        // GỬI CÂU TRẢ LỜI GỐC (DƯỚI CÙNG TRANG)
-        // ========================================================
+        // GỬI CÂU TRẢ LỜI GỐC
         btnSubmitReply.addEventListener('click', async () => {
             if (!currentAuthorName) {
                 alert("Vui lòng cập nhật 'Tên hiển thị' trong mục Thông tin cá nhân trước khi trả lời!");
