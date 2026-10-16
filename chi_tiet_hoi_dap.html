@@ -11,7 +11,7 @@
             background-color: var(--bg-card);
             padding: 20px;
             border-radius: 8px;
-            box-shadow: none; /* Bỏ đổ bóng */
+            box-shadow: none; 
             margin-bottom: 20px;
             border: 1px solid var(--border-color);
         }
@@ -32,6 +32,7 @@
             margin-bottom: 15px;
             padding-bottom: 12px;
             border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
         }
 
         .question-content {
@@ -50,7 +51,19 @@
             object-fit: contain;
         }
 
-        /* Khu vực Trả lời (Dạng phẳng, không thụt lề) */
+        /* Nút xóa bài viết gốc */
+        .btn-delete-action {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        /* Khu vực Trả lời */
         .replies-section-title {
             font-size: 16px;
             color: var(--navy-secondary);
@@ -66,7 +79,13 @@
             border-radius: 8px;
             border: 1px solid var(--border-color);
             margin-bottom: 10px;
-            transition: background-color 0.4s ease; /* Hiệu ứng khi được trỏ tới */
+            transition: background-color 0.4s ease; 
+        }
+
+        .sub-reply-card {
+            margin-left: 30px;
+            background-color: #F8FAFC;
+            border-left: 3px solid var(--accent-blue);
         }
 
         .reply-meta {
@@ -89,7 +108,6 @@
             color: var(--text-main);
         }
 
-        /* Hộp trích dẫn "Đang trả lời ai" */
         .reply-reference {
             background-color: var(--bg-body);
             border-left: 3px solid var(--accent-blue);
@@ -114,6 +132,13 @@
             color: var(--navy-primary);
         }
 
+        .reply-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
         .btn-reply-action {
             background: none;
             border: none;
@@ -122,12 +147,27 @@
             font-weight: 600;
             cursor: pointer;
             padding: 0;
-            margin-top: 10px;
             transition: color 0.2s;
         }
 
         .btn-reply-action:hover {
             color: var(--navy-primary);
+            text-decoration: underline;
+        }
+
+        /* Nút xóa câu trả lời */
+        .btn-reply-delete {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.2s;
+        }
+        
+        .btn-reply-delete:hover {
             text-decoration: underline;
         }
 
@@ -174,6 +214,7 @@
             #main-content { margin: 15px auto; padding: 0 10px; }
             .question-box { padding: 15px; }
             .reply-card { padding: 12px; }
+            .sub-reply-card { margin-left: 20px; }
         }
     </style>
 </head>
@@ -221,7 +262,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
             getFirestore, doc, getDoc, collection, addDoc, getDocs, 
-            query, orderBy, serverTimestamp, updateDoc, increment, setDoc
+            query, orderBy, serverTimestamp, updateDoc, increment, setDoc, deleteDoc
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -249,15 +290,18 @@
         const replyInput = document.getElementById('reply-input');
 
         let currentAuthorName = null; 
+        let currentUserUid = null;
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 authWarning.style.display = 'block';
                 qaContentWrapper.style.display = 'none';
                 currentAuthorName = null;
+                currentUserUid = null;
             } else {
                 authWarning.style.display = 'none';
                 qaContentWrapper.style.display = 'block';
+                currentUserUid = user.uid;
                 
                 try {
                     const userDocRef = doc(db, "users", user.uid);
@@ -294,15 +338,19 @@
                     repliesCountDisplay.textContent = data.repliesCount || 0;
                     const imageDisplay = data.imageUrl ? `<img src="${data.imageUrl}" class="attached-image" alt="Ảnh đính kèm">` : ``;
 
+                    // Kiểm tra UID để hiện nút Xóa Bài Viết
+                    const deleteBtnHtml = (data.authorUid === currentUserUid) 
+                        ? `<span>•</span> <button id="btn-delete-question" class="btn-delete-action">Xóa bài</button>` 
+                        : ``;
+
                     questionContainer.innerHTML = `
                         <h1 class="question-title">${data.title}</h1>
                         <div class="post-meta">
                             <span style="display:flex; align-items:center;">Tác giả: <strong style="color: var(--text-main); margin-left: 4px;">${data.author}</strong></span>
                             <span>•</span>
-                            <span>Ngày đăng: ${dateStr}</span>
+                            <span>${dateStr}</span>${deleteBtnHtml}
                         </div>
-                        <div class="question-content">${data.content}</div>
-                        ${imageDisplay}
+                        <div class="question-content">${data.content}</div>${imageDisplay}
                     `;
                 } else {
                     questionContainer.innerHTML = '<h3 style="color:var(--danger); text-align:center;">Bài viết không tồn tại hoặc đã bị xóa.</h3>';
@@ -312,7 +360,22 @@
             }
         }
 
-        // HÀM XÂY DỰNG GIAO DIỆN MỘT CÂU TRẢ LỜI
+        // Sự kiện: Bấm nút xóa bài viết gốc
+        questionContainer.addEventListener('click', async (e) => {
+            if (e.target.id === 'btn-delete-question') {
+                if(confirm("Bạn có chắc chắn muốn xóa bài viết này không? Toàn bộ trả lời bên trong cũng sẽ bị ẩn.")) {
+                    try {
+                        await deleteDoc(doc(db, "hoi_dap", questionId));
+                        alert("Xóa bài viết thành công!");
+                        window.location.href = "hoi_dap.html";
+                    } catch (error) {
+                        console.error("Lỗi xóa bài:", error);
+                        alert("Có lỗi xảy ra khi xóa bài.");
+                    }
+                }
+            }
+        });
+
         function buildReplyHTML(reply, isSub, targetUser = '', topLevelId = '', parentContent = '', parentReplyId = '') {
             let dateStr = "Vừa xong";
             if (reply.createdAt && reply.createdAt.toDate) {
@@ -320,17 +383,14 @@
                 dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
             }
             
-            // Xử lý text để nhét an toàn vào data-attribute
             let cleanContent = reply.content.replace(/"/g, '&quot;').replace(/\n/g, ' ');
             let mySnippet = cleanContent.length > 80 ? cleanContent.substring(0, 80) + "..." : cleanContent;
 
             let referenceHtml = '';
-            // Nếu là phản hồi, hiện khung báo hiệu "Đang trả lời ai"
             if (isSub) {
                 let targetSnippet = reply.targetSnippet || parentContent;
                 if(targetSnippet.length > 80) targetSnippet = targetSnippet.substring(0, 80) + "...";
                 
-                // Mã JavaScript inline để cuộn mượt và làm sáng câu trả lời gốc
                 const scrollScript = `let el = document.getElementById('reply-${parentReplyId}'); if(el){ el.scrollIntoView({behavior: 'smooth', block: 'center'}); el.style.backgroundColor = '#EFF6FF'; setTimeout(()=>el.style.backgroundColor='', 1500); }`;
 
                 referenceHtml = `
@@ -340,9 +400,15 @@
                 `;
             }
 
-            // Giao diện phẳng đồng nhất cho tất cả
+            // Nút xóa chỉ hiện nếu uid trùng với tác giả của bình luận
+            const deleteHtml = (reply.authorUid === currentUserUid) 
+                ? `<button class="btn-reply-delete" data-replyid="${reply.id}">Xóa</button>` 
+                : ``;
+
+            const cardClass = isSub ? "reply-card sub-reply-card" : "reply-card";
+
             return `
-                <div class="reply-card" id="reply-${reply.id}">
+                <div class="${cardClass}" id="reply-${reply.id}">
                     <div class="reply-meta">
                         <span class="reply-author">${reply.author}</span>
                         <span style="color: var(--text-muted);">${dateStr}</span>
@@ -350,7 +416,10 @@
                     ${referenceHtml}
                     <div class="reply-content">${reply.content}</div>
                     
-                    <button class="btn-reply-action" data-toplevel="${isSub ? topLevelId : reply.id}" data-targetid="${reply.id}" data-author="${reply.author}" data-snippet="${mySnippet}">Phản hồi</button>
+                    <div class="reply-actions-row">
+                        <button class="btn-reply-action" data-toplevel="${isSub ? topLevelId : reply.id}" data-targetid="${reply.id}" data-author="${reply.author}" data-snippet="${mySnippet}">Phản hồi</button>
+                        ${deleteHtml}
+                    </div>
                 </div>
             `;
         }
@@ -380,7 +449,6 @@
 
                 let html = '';
                 topLevel.forEach(parent => {
-                    // Xóa html ở parentContent vì truyền thẳng vào function để lấy snippet
                     let parentSnippetStr = parent.content.replace(/"/g, '&quot;').replace(/\n/g, ' ');
 
                     html += buildReplyHTML(parent, false, '', parent.id, parentSnippetStr, '');
@@ -388,7 +456,7 @@
                     if (children[parent.id]) {
                         children[parent.id].forEach(child => {
                             let target = child.replyToUser || parent.author;
-                            let targetId = child.targetReplyId || parent.id; // Nếu ko có target cụ thể thì nhắm vào parent
+                            let targetId = child.targetReplyId || parent.id; 
                             html += buildReplyHTML(child, true, target, parent.id, parentSnippetStr, targetId);
                         });
                     }
@@ -403,9 +471,11 @@
         }
 
         // ========================================================
-        // SỰ KIỆN KHI BẤM NÚT "PHẢN HỒI" TRONG DANH SÁCH
+        // SỰ KIỆN DELEGATION TRONG KHU VỰC CÂU TRẢ LỜI
         // ========================================================
         repliesList.addEventListener('click', async (e) => {
+            
+            // 1. Nút Mở Form Phản hồi
             if (e.target.classList.contains('btn-reply-action')) {
                 const topLevelId = e.target.getAttribute('data-toplevel');
                 const targetAuthor = e.target.getAttribute('data-author');
@@ -428,10 +498,31 @@
                 document.getElementById('sub-reply-input').focus();
             }
 
+            // 2. Nút Hủy phản hồi
             if (e.target.classList.contains('btn-cancel-sub-reply')) {
                 document.getElementById('temp-sub-reply-form').remove();
             }
 
+            // 3. Nút Xóa Câu Trả Lời
+            if (e.target.classList.contains('btn-reply-delete')) {
+                if(confirm("Bạn có chắc chắn muốn xóa câu trả lời này?")) {
+                    const replyId = e.target.getAttribute('data-replyid');
+                    try {
+                        await deleteDoc(doc(db, "hoi_dap", questionId, "replies", replyId));
+                        
+                        // Cập nhật lại biến đếm
+                        await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(-1) });
+                        repliesCountDisplay.textContent = Math.max(0, parseInt(repliesCountDisplay.textContent) - 1);
+                        
+                        loadRepliesData(); // Reload
+                    } catch(err) {
+                        console.error("Lỗi xóa trả lời:", err);
+                        alert("Không thể xóa lúc này.");
+                    }
+                }
+            }
+
+            // 4. Gửi Phản hồi
             if (e.target.classList.contains('btn-submit-sub-reply')) {
                 if (!currentAuthorName) {
                     alert("Vui lòng cập nhật 'Tên hiển thị' trong mục Thông tin cá nhân trước khi trả lời!");
@@ -456,18 +547,16 @@
                         content: contentVal,
                         author: currentAuthorName,
                         authorUid: auth.currentUser.uid,
-                        replyToId: topLevelId,       // Gom nhóm theo Parent cao nhất
-                        replyToUser: targetUser,     // Tên người bị phản hồi
-                        targetReplyId: targetId,     // ID của câu bị phản hồi (để cuộn tới)
-                        targetSnippet: targetSnippet, // Trích đoạn nội dung bị phản hồi
+                        replyToId: topLevelId,       
+                        replyToUser: targetUser,     
+                        targetReplyId: targetId,     
+                        targetSnippet: targetSnippet, 
                         createdAt: serverTimestamp()
                     });
 
                     await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(1) });
                     repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
                     
-                    await setDoc(doc(db, "users", auth.currentUser.uid), { replyCount: increment(1) }, { merge: true });
-
                     loadRepliesData();
                 } catch (error) {
                     console.error("Lỗi gửi phản hồi:", error);
@@ -506,8 +595,6 @@
                 await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(1) });
                 repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
                 
-                await setDoc(doc(db, "users", auth.currentUser.uid), { replyCount: increment(1) }, { merge: true });
-
                 replyInput.value = '';
                 btnSubmitReply.textContent = "Gửi trả lời";
                 btnSubmitReply.disabled = false;
