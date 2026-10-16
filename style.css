@@ -298,6 +298,7 @@ footer {
     margin-top: auto; 
 }
 
+/* Ẩn các phần tử bằng JS */
 .hidden { 
     display: none !important; 
 }
@@ -336,36 +337,36 @@ footer {
         scrollbar-width: none;  
     }
 
-    /* Điều chỉnh vị trí và khoảng cách các nút trên mobile */
-    .user-controls {
-        position: absolute;
-        top: 14px;
-        right: 15px;
-        gap: 6px; 
-    }
-
-    /* Hiển thị email: Thu nhỏ cỡ chữ và tự động cắt bớt bằng dấu ... nếu quá dài */
-    #user-email-display { 
-        display: inline-block !important; 
-        font-size: 11px; 
-        max-width: 110px; 
-        white-space: nowrap; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
-        vertical-align: middle;
-    }
-
-    .btn-login-nav, .btn-logout {
-        padding: 6px 10px;
-        font-size: 12px; 
-    }
-
     /* Đưa thanh tìm kiếm xuống hàng cuối trên Mobile */
     .header-search {
         max-width: 100%;
         margin: 0;
         width: 100%;
         order: 3; 
+    }
+
+    /* Điều chỉnh vị trí nút Đăng xuất / Login */
+    .user-controls {
+        position: absolute;
+        top: 14px;
+        right: 15px;
+        gap: 8px; 
+    }
+
+    /* Hiển thị email an toàn, giới hạn chiều dài */
+    #user-email-display { 
+        display: block; 
+        font-size: 12px; 
+        max-width: 130px; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+    }
+
+    /* Thu nhỏ nút bấm trên mobile */
+    .btn-login-nav, .btn-logout {
+        padding: 6px 12px;
+        font-size: 13px; 
     }
 
     .modal-box {
