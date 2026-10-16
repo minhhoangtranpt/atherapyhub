@@ -1,6 +1,18 @@
+/* =========================================
+   ATHERAPYHUB - COMPLETE STYLESHEET
+   ========================================= */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+/* --- Reset & Box Sizing (Quan trọng để chống tràn Layout) --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 :root { 
+    /* --- Bảng màu (Color Palette) --- */
     --navy-primary: #0A2540; 
     --navy-secondary: #1A365D; 
     --navy-light: #EBF4FA; 
@@ -10,49 +22,311 @@
     --text-muted: #718096; 
     --border-color: #E2E8F0; 
     --danger: #EF4444; 
+    --accent-blue: #3182CE;
 }
 
+/* --- Cấu hình Body và Bố cục Tổng thể --- */
 body { 
     font-family: 'Inter', system-ui, -apple-system, sans-serif; 
     background-color: var(--bg-body); 
     color: var(--text-main); 
-    margin: 0; 
-    padding: 0; 
     line-height: 1.6; 
     display: flex;
     flex-direction: column;
-    min-height: 100vh; 
+    min-height: 100vh; /* Đẩy footer xuống đáy trang */
 }
 
 /* ================= HEADER ================= */
-header { background-color: var(--navy-primary); padding: 16px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-header .logo-container { display: flex; align-items: center; gap: 30px; }
-header h1 { margin: 0; font-size: 24px; color: white; font-weight: 700; cursor: pointer; }
-nav#main-nav { display: flex; gap: 20px; }
-nav#main-nav a { color: var(--navy-light); text-decoration: none; font-weight: 500; font-size: 15px; transition: color 0.2s; }
-nav#main-nav a:hover { color: white; }
-@media (max-width: 768px) { nav#main-nav { display: none; } }
+header { 
+    background-color: var(--navy-primary); 
+    padding: 16px 5%; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    position: sticky; 
+    top: 0; 
+    z-index: 100; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+}
 
-.user-controls { display: flex; align-items: center; gap: 12px; }
-#user-email-display { font-size: 14px; color: var(--navy-light); font-weight: 500; }
-button, .btn-link { font-family: inherit; cursor: pointer; border: none; border-radius: 99px; font-weight: 600; transition: all 0.2s ease; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-.btn-logout { background-color: transparent; color: var(--navy-light); padding: 8px 16px; font-size: 14px; border: 1px solid var(--navy-light); }
-.btn-logout:hover { background-color: rgba(255,255,255,0.1); color: white; border-color: white; }
-.btn-login-nav { background-color: white; color: var(--navy-primary); padding: 8px 20px; font-size: 14px; }
-.btn-login-nav:hover { background-color: var(--navy-light); }
+header .logo-container { 
+    display: flex; 
+    align-items: center; 
+    gap: 30px; 
+}
 
-/* ================= MODAL ================= */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(10, 37, 64, 0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-.modal-box { background: var(--bg-card); padding: 32px; border-radius: 24px; width: 100%; max-width: 380px; position: relative; }
-.modal-box h2 { text-align: center; color: var(--navy-primary); margin-top: 0; margin-bottom: 24px; font-size: 20px; }
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
-.form-group input { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 15px; }
-.btn-primary { width: 100%; padding: 14px; background-color: var(--navy-primary); color: white; font-size: 15px; border-radius: 12px; margin-top: 10px; }
-.btn-primary:hover { background-color: var(--navy-secondary); }
-.btn-close-modal { position: absolute; top: 16px; right: 16px; background: #F3F4F6; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; }
+header h1 { 
+    margin: 0; 
+    font-size: 24px; 
+    color: white; 
+    font-weight: 700; 
+    cursor: pointer; 
+}
 
-/* ================= BỐ CỤC CHÍNH & FOOTER ================= */
-#main-content { flex: 1; max-width: 1200px; margin: 40px auto; padding: 0 5%; width: 100%; box-sizing: border-box; }
-footer { background-color: var(--navy-primary); color: var(--navy-light); text-align: center; padding: 24px 0; font-size: 14px; margin-top: auto; }
-.hidden { display: none !important; }
+nav#main-nav { 
+    display: flex; 
+    gap: 20px; 
+}
+
+nav#main-nav a { 
+    color: var(--navy-light); 
+    text-decoration: none; 
+    font-weight: 500; 
+    font-size: 15px; 
+    transition: color 0.2s; 
+}
+
+nav#main-nav a:hover { 
+    color: white; 
+}
+
+/* --- Nút bấm và User Controls trên Header --- */
+.user-controls { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+}
+
+#user-email-display { 
+    font-size: 14px; 
+    color: var(--navy-light); 
+    font-weight: 500; 
+}
+
+button, .btn-link { 
+    font-family: inherit; 
+    cursor: pointer; 
+    border: none; 
+    border-radius: 99px; 
+    font-weight: 600; 
+    transition: all 0.2s ease; 
+    text-decoration: none; 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+}
+
+.btn-logout { 
+    background-color: transparent; 
+    color: var(--navy-light); 
+    padding: 8px 16px; 
+    font-size: 14px; 
+    border: 1px solid var(--navy-light); 
+}
+
+.btn-logout:hover { 
+    background-color: rgba(255,255,255,0.1); 
+    color: white; 
+    border-color: white; 
+}
+
+.btn-login-nav { 
+    background-color: white; 
+    color: var(--navy-primary); 
+    padding: 8px 20px; 
+    font-size: 14px; 
+}
+
+.btn-login-nav:hover { 
+    background-color: var(--navy-light); 
+}
+
+/* ================= MODAL ĐĂNG NHẬP ================= */
+.modal-overlay { 
+    display: none; 
+    position: fixed; 
+    inset: 0; 
+    background: rgba(10, 37, 64, 0.6); 
+    backdrop-filter: blur(4px); 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1000; 
+    padding: 20px; 
+}
+
+.modal-box { 
+    background: var(--bg-card); 
+    padding: 32px; 
+    border-radius: 24px; 
+    width: 100%; 
+    max-width: 380px; 
+    max-height: 90vh;      /* Tránh tràn màn hình dọc trên mobile */
+    overflow-y: auto;      /* Tạo thanh cuộn nếu form quá dài */
+    position: relative; 
+    box-sizing: border-box; 
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+}
+
+.modal-box h2 { 
+    text-align: center; 
+    color: var(--navy-primary); 
+    margin-top: 0; 
+    margin-bottom: 24px; 
+    font-size: 20px; 
+}
+
+.form-group { 
+    margin-bottom: 16px; 
+}
+
+.form-group label { 
+    display: block; 
+    margin-bottom: 6px; 
+    font-weight: 500; 
+    font-size: 14px; 
+    color: var(--text-muted);
+}
+
+.form-group input { 
+    width: 100%; 
+    padding: 12px 16px; 
+    border: 1px solid var(--border-color); 
+    border-radius: 12px; 
+    font-size: 15px; 
+    box-sizing: border-box; /* Ép input không tràn ra ngoài modal */
+    background: #F9FAFB;
+    transition: border 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--navy-primary);
+    background: white;
+}
+
+.btn-primary { 
+    width: 100%; 
+    padding: 14px; 
+    background-color: var(--navy-primary); 
+    color: white; 
+    font-size: 15px; 
+    border-radius: 12px; 
+    margin-top: 10px; 
+    border: none; 
+    cursor: pointer; 
+}
+
+.btn-primary:hover { 
+    background-color: var(--navy-secondary); 
+}
+
+.btn-close-modal { 
+    position: absolute; 
+    top: 16px; 
+    right: 16px; 
+    background: #F3F4F6; 
+    border: none; 
+    width: 32px; 
+    height: 32px; 
+    border-radius: 50%; 
+    font-size: 16px; 
+    color: var(--text-muted);
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+}
+
+.btn-close-modal:hover {
+    background: #E5E7EB;
+    color: var(--text-main);
+}
+
+/* ================= BỐ CỤC CHÍNH (MAIN CONTENT) ================= */
+#main-content { 
+    flex: 1; /* Chiếm toàn bộ khoảng trống còn lại để đẩy footer xuống đáy */
+    max-width: 1200px; 
+    margin: 40px auto; 
+    padding: 0 5%; 
+    width: 100%; 
+    box-sizing: border-box; 
+}
+
+/* ================= FOOTER ================= */
+footer { 
+    background-color: var(--navy-primary); 
+    color: var(--navy-light); 
+    text-align: center; 
+    padding: 24px 0; 
+    font-size: 14px; 
+    margin-top: auto; 
+}
+
+/* Tiện ích ẩn phần tử */
+.hidden { 
+    display: none !important; 
+}
+
+/* ================= TỐI ƯU ĐIỆN THOẠI (MOBILE RESPONSIVE) ================= */
+@media (max-width: 768px) {
+    /* 1. Sắp xếp lại Header: Xếp dọc thay vì xếp ngang */
+    header {
+        flex-direction: column;
+        padding: 12px 15px;
+        gap: 12px; 
+    }
+
+    header .logo-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start; 
+        gap: 12px;
+    }
+
+    /* 2. Biến Menu thành thanh cuộn ngang (vuốt để xem) */
+    nav#main-nav {
+        display: flex;
+        width: 100%;
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch; 
+        white-space: nowrap; 
+        padding-bottom: 5px; 
+        gap: 16px;
+    }
+
+    /* Ẩn thanh cuộn (scrollbar) để trông sạch sẽ hơn */
+    nav#main-nav::-webkit-scrollbar {
+        display: none; 
+    }
+    nav#main-nav {
+        -ms-overflow-style: none;  
+        scrollbar-width: none;  
+    }
+
+    /* 3. Neo nút Đăng nhập / Đăng xuất lên góc trên cùng bên phải */
+    .user-controls {
+        position: absolute;
+        top: 14px;
+        right: 15px;
+    }
+
+    /* Đóng gói giao diện User (ẩn email trên mobile để gọn) */
+    #user-email-display { 
+        display: none; 
+    }
+
+    .btn-login-nav, .btn-logout {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    /* 4. Điều chỉnh Modal (Popup) cho điện thoại */
+    .modal-box {
+        padding: 24px 20px;
+        border-radius: 20px;
+    }
+
+    /* 5. Giảm khoảng trống (margin/padding) của nội dung chính */
+    #main-content {
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Logo nhỏ lại một chút trên màn hình rất bé (VD: iPhone SE) */
+    header h1 {
+        font-size: 20px;
+    }
+}
