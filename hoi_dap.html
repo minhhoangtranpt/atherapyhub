@@ -13,7 +13,9 @@
         }
         .qa-header-section h2 { margin: 0; color: var(--navy-primary); font-size: 20px; }
         
-        .header-actions { display: flex; align-items: center; gap: 15px; }
+        .header-actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
+        .filter-group { display: flex; gap: 8px; align-items: center; }
 
         .sort-select {
             padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color);
@@ -33,15 +35,22 @@
             display: flex; flex-direction: column; gap: 0; 
             background: var(--bg-card); border: 1px solid var(--border-color); 
             border-radius: 8px; overflow: hidden;
+            box-shadow: none;
         }
         
         .qa-card-horizontal {
             padding: 12px 15px; border-bottom: 1px solid var(--border-color);
             display: flex; align-items: center; justify-content: space-between; 
             text-decoration: none; color: inherit; gap: 15px; transition: background-color 0.2s;
+            box-shadow: none;
         }
         .qa-card-horizontal:last-child { border-bottom: none; }
-        .qa-card-horizontal:hover { background-color: var(--navy-light); }
+        
+        .qa-card-horizontal:hover { 
+            background-color: var(--navy-light); 
+            transform: none; 
+            box-shadow: none;
+        }
 
         .qa-main-content { flex: 1; min-width: 0; }
         .qa-card-title {
@@ -77,8 +86,6 @@
             margin-bottom: 10px; background: #F8FAFC;
         }
         .ask-textarea:focus { outline: none; border-color: var(--navy-secondary); background: white; }
-        
-        /* Giao diện vùng tải/dán ảnh */
         .file-upload-wrapper {
             margin-bottom: 15px; padding: 15px; text-align: center;
             border: 1px dashed var(--border-color); border-radius: 6px; 
@@ -86,14 +93,15 @@
         }
         .file-upload-wrapper:hover { border-color: var(--navy-secondary); }
         .file-upload-wrapper label { cursor: pointer; display: block; }
-        .file-upload-wrapper input[type="file"] { display: none; } /* Ẩn nút chọn file mặc định xấu xí */
+        .file-upload-wrapper input[type="file"] { display: none; }
         .paste-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-        #image-preview { max-width: 100%; max-height: 150px; margin-top: 10px; border-radius: 4px; display: none; object-fit: contain; border: 1px solid var(--border-color); }
+        #image-preview { max-width: 100%; max-height: 120px; margin-top: 10px; border-radius: 4px; display: none; object-fit: contain; border: 1px solid var(--border-color); }
 
         @media (max-width: 768px) {
             #main-content { margin: 15px auto; padding: 0 10px; }
-            .qa-header-section { margin-bottom: 10px; padding-bottom: 8px; }
+            .qa-header-section { margin-bottom: 10px; padding-bottom: 8px; flex-direction: column; align-items: flex-start; }
             .header-actions { width: 100%; justify-content: space-between; }
+            .filter-group { flex: 1; }
             .qa-card-horizontal { padding: 10px; gap: 10px; }
             .qa-card-thumb { display: none; }
             .qa-card-replies { border-left: none; padding-left: 0; min-width: 40px; }
@@ -106,11 +114,16 @@
         <div class="qa-header-section">
             <h2>Hỏi & Đáp</h2>
             <div class="header-actions">
-                <select id="sort-select" class="sort-select">
-                    <option value="newest">Mới đăng</option>
-                    <option value="replies">Nhiều lượt trả lời</option>
-                    <option value="active">Mới trả lời</option>
-                </select>
+                <div class="filter-group">
+                    <select id="sort-by" class="sort-select">
+                        <option value="date">Ngày đăng</option>
+                        <option value="replies">Lượt trả lời</option>
+                    </select>
+                    <select id="sort-order" class="sort-select">
+                        <option value="desc">Mới - Cũ</option>
+                        <option value="asc">Cũ - Mới</option>
+                    </select>
+                </div>
                 <button id="btn-open-ask" class="btn-ask">Đặt câu hỏi</button>
             </div>
         </div>
@@ -129,7 +142,7 @@
             <div class="form-group" style="margin-bottom: 10px;">
                 <input type="text" id="ask-title" placeholder="Nhập tiêu đề ngắn gọn..." required style="padding: 10px; font-weight: 500;">
             </div>
-            <div class="form-group" style="margin-bottom: 10px;">
+            <div class="form-group" style="margin-bottom: 0;">
                 <textarea id="ask-content" class="ask-textarea" placeholder="Mô tả chi tiết vấn đề lâm sàng, thắc mắc..." required></textarea>
             </div>
             
@@ -168,7 +181,8 @@
         const paginationContainer = document.getElementById('pagination-container');
         const imageInput = document.getElementById('ask-image');
         const imagePreview = document.getElementById('image-preview');
-        const sortSelect = document.getElementById('sort-select');
+        const sortBySelect = document.getElementById('sort-by');
+        const sortOrderSelect = document.getElementById('sort-order');
         const askModal = document.getElementById('ask-modal');
         
         let allQuestions = [];
@@ -177,7 +191,20 @@
         let currentAuthorName = null;
         let compressedImageBase64 = null;
 
-        // HÀM XỬ LÝ NÉN VÀ HIỂN THỊ ẢNH CHUNG
+        // Cập nhật text của ô Thứ Tự dựa theo Tiêu Chí
+        sortBySelect.addEventListener('change', () => {
+            if (sortBySelect.value === 'date') {
+                sortOrderSelect.options[0].text = 'Mới - Cũ';
+                sortOrderSelect.options[1].text = 'Cũ - Mới';
+            } else {
+                sortOrderSelect.options[0].text = 'Cao - Thấp';
+                sortOrderSelect.options[1].text = 'Thấp - Cao';
+            }
+            sortAndRenderQuestions();
+        });
+
+        sortOrderSelect.addEventListener('change', sortAndRenderQuestions);
+
         function processImageFile(file) {
             if (!file) return;
             if (!file.type.startsWith('image/')) {
@@ -212,12 +239,8 @@
             };
         }
 
-        // Xử lý khi chọn file qua nút
-        imageInput.addEventListener('change', (e) => {
-            processImageFile(e.target.files[0]);
-        });
+        imageInput.addEventListener('change', (e) => processImageFile(e.target.files[0]));
 
-        // XỬ LÝ SỰ KIỆN DÁN ẢNH (CTRL+V / CMD+V)
         askModal.addEventListener('paste', (e) => {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             for (let index in items) {
@@ -240,17 +263,11 @@
                     const data = docSnap.data();
                     let dateStr = "Vừa xong";
                     let createdTime = 0;
-                    let updatedTime = 0;
 
                     if (data.createdAt && data.createdAt.toDate) {
                         const dateObj = data.createdAt.toDate();
                         createdTime = dateObj.getTime();
-                        updatedTime = createdTime;
                         dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
-                    }
-
-                    if (data.updatedAt && data.updatedAt.toDate) {
-                        updatedTime = data.updatedAt.toDate().getTime(); 
                     }
 
                     allQuestions.push({ 
@@ -260,8 +277,7 @@
                         date: dateStr,
                         imageUrl: data.imageUrl || null,
                         repliesCount: data.repliesCount || 0,
-                        createdTime: createdTime,
-                        updatedTime: updatedTime
+                        createdTime: createdTime
                     });
                 });
                 
@@ -273,21 +289,20 @@
         }
 
         function sortAndRenderQuestions() {
-            const sortType = sortSelect.value;
+            const sortBy = sortBySelect.value;
+            const sortOrder = sortOrderSelect.value;
             
-            if (sortType === 'newest') {
-                allQuestions.sort((a, b) => b.createdTime - a.createdTime);
-            } else if (sortType === 'replies') {
-                allQuestions.sort((a, b) => b.repliesCount - a.repliesCount);
-            } else if (sortType === 'active') {
-                allQuestions.sort((a, b) => b.updatedTime - a.updatedTime);
-            }
+            allQuestions.sort((a, b) => {
+                if (sortBy === 'date') {
+                    return sortOrder === 'desc' ? b.createdTime - a.createdTime : a.createdTime - b.createdTime;
+                } else if (sortBy === 'replies') {
+                    return sortOrder === 'desc' ? b.repliesCount - a.repliesCount : a.repliesCount - b.repliesCount;
+                }
+            });
 
             currentPage = 1;
             renderQAList();
         }
-
-        sortSelect.addEventListener('change', sortAndRenderQuestions);
 
         function renderQAList() {
             qaContainer.innerHTML = '';
