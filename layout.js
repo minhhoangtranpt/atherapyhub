@@ -1,8 +1,11 @@
-// 1. Tạo HTML cho Header và Modal
+// =========================================================
+// 1. TẠO CẤU TRÚC HTML CHO HEADER VÀ MODAL ĐĂNG NHẬP
+// =========================================================
 const headerHTML = `
     <header>
         <div class="logo-container">
-            <h1 onclick="window.location.href='index.html'">ATherapyHub</h1>
+            <!-- Click vào logo sẽ chuyển về trang chủ (index.html) -->
+            <h1 onclick="window.location.href='index.html'" style="cursor: pointer;" title="Về trang chủ">ATherapyHub</h1>
             <nav id="main-nav"></nav>
         </div>
         <div class="user-controls">
@@ -29,43 +32,56 @@ const headerHTML = `
     </div>
 `;
 
-// 2. Tạo HTML cho Footer
+// =========================================================
+// 2. TẠO CẤU TRÚC HTML CHO FOOTER
+// =========================================================
 const footerHTML = `
     <footer>
         &copy; ATherapyHub 2026. Diễn đàn Học thuật & Lâm sàng cho Nhà trị liệu.
     </footer>
 `;
 
-// 3. Chèn Header vào đầu thẻ <body> và Footer vào cuối thẻ <body>
+// =========================================================
+// 3. CHÈN HEADER VÀ FOOTER VÀO TRANG (GẮN VÀO THẺ BODY)
+// =========================================================
+// Chèn Header lên sát đỉnh (đầu thẻ body)
 document.body.insertAdjacentHTML('afterbegin', headerHTML);
+// Chèn Footer xuống dưới cùng (cuối thẻ body)
 document.body.insertAdjacentHTML('beforeend', footerHTML);
 
-// 4. Render Menu từ JSON (Giả lập)
-const mockHeaderData = [
-    { "title": "Trang chủ", "url": "index.html" },
-    { "title": "Lâm sàng", "url": "clinical.html" },
-    { "title": "Học thuật", "url": "academic.html" }
-];
 
+// =========================================================
+// 4. LẤY DỮ LIỆU MENU TỪ FILE HEADER.JSON
+// =========================================================
 const navContainer = document.getElementById('main-nav');
-mockHeaderData.forEach(item => {
-    const a = document.createElement('a');
-    a.href = item.url;
-    a.textContent = item.title;
-    navContainer.appendChild(a);
-});
 
-/* Dùng cho sau này khi có file JSON thật trên server:
-fetch('./json/header.json').then(res => res.json()).then(data => {
-    data.forEach(item => {
-        const a = document.createElement('a');
-        a.href = item.url; a.textContent = item.title;
-        navContainer.appendChild(a);
+// Sử dụng fetch để gọi file JSON (Yêu cầu chạy qua Local Server hoặc GitHub Pages)
+fetch('./json/header.json')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Không tìm thấy file header.json hoặc lỗi mạng');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Duyệt qua từng mục trong json và tạo thẻ <a>
+        data.forEach(item => {
+            const a = document.createElement('a');
+            a.href = item.url;
+            a.textContent = item.title;
+            navContainer.appendChild(a);
+        });
+    })
+    .catch(error => {
+        console.error("Lỗi khi tải menu:", error);
+        // Fallback: Nếu lỗi (do mở file trực tiếp không qua server), hiển thị tạm 1 menu
+        navContainer.innerHTML = `<a href="index.html">Trang chủ (Fallback)</a>`;
     });
-});
-*/
 
-// 5. Logic Modal & Đăng nhập
+
+// =========================================================
+// 5. XỬ LÝ LOGIC ĐÓNG/MỞ MODAL VÀ ĐĂNG NHẬP/ĐĂNG XUẤT
+// =========================================================
 const loginModal = document.getElementById('login-modal');
 const openLoginBtn = document.getElementById('open-login-modal');
 const closeLoginBtn = document.getElementById('close-login-modal');
@@ -73,22 +89,48 @@ const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
 const userEmailDisplay = document.getElementById('user-email-display');
 
-openLoginBtn.addEventListener('click', () => loginModal.style.display = 'flex');
-closeLoginBtn.addEventListener('click', () => loginModal.style.display = 'none');
+// Nút mở modal đăng nhập
+openLoginBtn.addEventListener('click', () => {
+    loginModal.style.display = 'flex';
+});
 
+// Nút tắt modal (dấu X)
+closeLoginBtn.addEventListener('click', () => {
+    loginModal.style.display = 'none';
+});
+
+// Nút thực hiện Đăng nhập (Mô phỏng)
 loginBtn.addEventListener('click', () => {
     const email = document.getElementById('email').value;
-    if(email) {
+    const password = document.getElementById('password').value;
+
+    if(email && password) {
+        // Đóng modal
         loginModal.style.display = 'none';
+        
+        // Ẩn nút "Đăng nhập", hiện nút "Đăng xuất" và Email người dùng
         openLoginBtn.classList.add('hidden');
         logoutBtn.classList.remove('hidden');
         userEmailDisplay.textContent = email;
         userEmailDisplay.classList.remove('hidden');
+
+        // Xóa trắng form để lần sau mở lên không bị dính chữ cũ
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+    } else {
+        alert("Vui lòng nhập Email và Mật khẩu!");
     }
 });
 
+// Nút thực hiện Đăng xuất
 logoutBtn.addEventListener('click', () => {
-    logoutBtn.classList.add('hidden');
-    userEmailDisplay.classList.add('hidden');
-    openLoginBtn.classList.remove('hidden');
+    if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+        // Ẩn nút "Đăng xuất" và Email
+        logoutBtn.classList.add('hidden');
+        userEmailDisplay.classList.add('hidden');
+        userEmailDisplay.textContent = '';
+        
+        // Hiện lại nút "Đăng nhập"
+        openLoginBtn.classList.remove('hidden');
+    }
 });
