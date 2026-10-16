@@ -38,7 +38,7 @@
             font-size: 16px;
             line-height: 1.7;
             text-align: justify;
-            white-space: pre-wrap; /* Giữ lại các dấu xuống dòng */
+            white-space: pre-wrap; 
         }
 
         /* Khu vực Bình luận / Câu trả lời */
@@ -59,6 +59,14 @@
             margin-bottom: 15px;
         }
 
+        /* Thiết kế cho Câu Phản hồi (Sub-reply) */
+        .sub-reply-card {
+            margin-left: 40px;
+            background-color: #F8FAFC;
+            border-left: 3px solid var(--accent-blue);
+            padding: 15px 20px;
+        }
+
         .reply-meta {
             display: flex;
             justify-content: space-between;
@@ -77,14 +85,31 @@
             white-space: pre-wrap;
         }
 
-        /* Form trả lời */
+        /* Nút Phản hồi nhỏ dưới mỗi comment */
+        .btn-reply-action {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            margin-top: 10px;
+            transition: color 0.2s;
+        }
+
+        .btn-reply-action:hover {
+            color: var(--navy-primary);
+            text-decoration: underline;
+        }
+
+        /* Form trả lời gốc */
         .reply-form-container {
             margin-top: 30px;
             background-color: var(--navy-light);
             padding: 24px;
             border-radius: 12px;
-            border: 1px solid #DDBEFE;
-            border-color: #BFDBFE;
+            border: 1px solid #BFDBFE;
         }
 
         .reply-textarea {
@@ -122,6 +147,9 @@
             .question-box {
                 padding: 20px;
             }
+            .sub-reply-card {
+                margin-left: 20px; /* Thụt lề ít hơn trên điện thoại */
+            }
         }
     </style>
 </head>
@@ -138,7 +166,7 @@
             <button class="btn-primary" style="max-width: 250px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
         </div>
 
-        <!-- Nội dung chính (Sẽ hiện khi đã đăng nhập) -->
+        <!-- Nội dung chính -->
         <div id="qa-content-wrapper" style="display: none;">
             
             <div id="question-container" class="question-box">
@@ -150,15 +178,14 @@
                     Câu trả lời (<span id="replies-count">0</span>)
                 </div>
                 
-                <div id="replies-list">
-                    <!-- Danh sách trả lời -->
-                </div>
+                <!-- Nơi chứa tất cả bình luận và bình luận con -->
+                <div id="replies-list"></div>
 
-                <!-- Khung nhập câu trả lời -->
+                <!-- Khung nhập câu trả lời TỔNG QUÁT (Trả lời cho câu hỏi chính) -->
                 <div class="reply-form-container">
                     <h4 style="margin-top: 0; margin-bottom: 15px; color: var(--navy-primary);">Viết câu trả lời của bạn</h4>
                     <textarea id="reply-input" class="reply-textarea" placeholder="Chia sẻ kiến thức hoặc kinh nghiệm của bạn..."></textarea>
-                    <button id="btn-submit-reply" class="btn-primary" style="width: auto; padding: 10px 25px;">Gửi trả lời</button>
+                    <button id="btn-submit-reply" class="btn-primary" style="width: auto; padding: 10px 25px;">Gửi bình luận</button>
                 </div>
             </div>
 
@@ -174,17 +201,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
-            getFirestore, 
-            doc,
-            getDoc,
-            collection, 
-            addDoc, 
-            getDocs, 
-            query, 
-            orderBy, 
-            serverTimestamp,
-            updateDoc,
-            increment
+            getFirestore, doc, getDoc, collection, addDoc, getDocs, 
+            query, orderBy, serverTimestamp, updateDoc, increment
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -200,7 +218,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Lấy ID bài viết từ URL
         const urlParams = new URLSearchParams(window.location.search);
         const questionId = urlParams.get('id');
 
@@ -212,17 +229,13 @@
         const btnSubmitReply = document.getElementById('btn-submit-reply');
         const replyInput = document.getElementById('reply-input');
 
-        // Theo dõi trạng thái đăng nhập
         onAuthStateChanged(auth, (user) => {
             if (!user) {
-                // Chưa đăng nhập -> Hiện cảnh báo, ẩn nội dung
                 authWarning.style.display = 'block';
                 qaContentWrapper.style.display = 'none';
             } else {
-                // Đã đăng nhập -> Ẩn cảnh báo, hiện nội dung và tải dữ liệu
                 authWarning.style.display = 'none';
                 qaContentWrapper.style.display = 'block';
-                
                 if (questionId) {
                     loadQuestionData();
                     loadRepliesData();
@@ -232,7 +245,6 @@
             }
         });
 
-        // Tải chi tiết câu hỏi
         async function loadQuestionData() {
             try {
                 const docRef = doc(db, "hoi_dap", questionId);
@@ -240,7 +252,6 @@
 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    
                     let dateStr = "";
                     if (data.createdAt && data.createdAt.toDate) {
                         const dateObj = data.createdAt.toDate();
@@ -263,17 +274,49 @@
                 }
             } catch (error) {
                 console.error("Lỗi tải câu hỏi:", error);
-                questionContainer.innerHTML = '<h3 style="color:var(--danger); text-align:center;">Lỗi tải dữ liệu.</h3>';
             }
         }
 
-        // Tải danh sách câu trả lời
+        // HÀM XÂY DỰNG GIAO DIỆN MỘT BÌNH LUẬN (Gốc hoặc Phản hồi)
+        function buildReplyHTML(reply, isSub, parentAuthor = '') {
+            let dateStr = "Vừa xong";
+            if (reply.createdAt && reply.createdAt.toDate) {
+                const dateObj = reply.createdAt.toDate();
+                dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+            }
+            
+            if (isSub) {
+                // Thẻ Phản hồi (thụt lề, có tag tên người được trả lời)
+                return `
+                    <div class="reply-card sub-reply-card">
+                        <div class="reply-meta">
+                            <span class="reply-author">${reply.author}</span>
+                            <span style="color: var(--text-muted);">${dateStr}</span>
+                        </div>
+                        <div class="reply-content">
+                            <span style="color:var(--accent-blue); font-weight:600;">@${parentAuthor}</span> 
+                            ${reply.content}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Thẻ Bình luận gốc (có nút Phản hồi)
+                return `
+                    <div class="reply-card">
+                        <div class="reply-meta">
+                            <span class="reply-author">${reply.author}</span>
+                            <span style="color: var(--text-muted);">${dateStr}</span>
+                        </div>
+                        <div class="reply-content">${reply.content}</div>
+                        <button class="btn-reply-action" data-id="${reply.id}" data-author="${reply.author}">Phản hồi</button>
+                    </div>
+                `;
+            }
+        }
+
         async function loadRepliesData() {
             try {
-                const q = query(
-                    collection(db, "hoi_dap", questionId, "replies"), 
-                    orderBy("createdAt", "asc")
-                );
+                const q = query(collection(db, "hoi_dap", questionId, "replies"), orderBy("createdAt", "asc"));
                 const querySnapshot = await getDocs(q);
                 
                 if (querySnapshot.empty) {
@@ -281,40 +324,116 @@
                     return;
                 }
 
-                let html = '';
-                querySnapshot.forEach((docSnap) => {
-                    const reply = docSnap.data();
-                    let dateStr = "Vừa xong";
-                    if (reply.createdAt && reply.createdAt.toDate) {
-                        const dateObj = reply.createdAt.toDate();
-                        dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
-                    }
+                // Tách riêng Bình luận gốc (topLevel) và Phản hồi (children)
+                let topLevel = [];
+                let children = {}; 
 
-                    html += `
-                        <div class="reply-card">
-                            <div class="reply-meta">
-                                <span class="reply-author">${reply.author}</span>
-                                <span style="color: var(--text-muted);">${dateStr}</span>
-                            </div>
-                            <div class="reply-content">${reply.content}</div>
-                        </div>
-                    `;
+                querySnapshot.forEach((docSnap) => {
+                    const reply = { id: docSnap.id, ...docSnap.data() };
+                    if (reply.replyToId) { // Nếu có ID gốc thì nó là phản hồi
+                        if (!children[reply.replyToId]) children[reply.replyToId] = [];
+                        children[reply.replyToId].push(reply);
+                    } else { // Bình luận gốc
+                        topLevel.push(reply);
+                    }
+                });
+
+                // Lắp ráp HTML
+                let html = '';
+                topLevel.forEach(parent => {
+                    html += buildReplyHTML(parent, false);
+                    
+                    // Nạp các phản hồi (nếu có) ngay dưới bình luận gốc
+                    if (children[parent.id]) {
+                        children[parent.id].forEach(child => {
+                            html += buildReplyHTML(child, true, parent.author);
+                        });
+                    }
+                    
+                    // Tạo một thẻ div rỗng để chứa Form phản hồi khi user bấm nút "Phản hồi"
+                    html += `<div id="sub-reply-container-${parent.id}"></div>`;
                 });
                 
                 repliesList.innerHTML = html;
 
             } catch (error) {
                 console.error("Lỗi tải bình luận:", error);
-                repliesList.innerHTML = '<p style="color:var(--danger); text-align:center;">Lỗi tải danh sách câu trả lời.</p>';
             }
         }
 
-        // Gửi câu trả lời
+        // ========================================================
+        // SỰ KIỆN DELEGATION CHO KHU VỰC DANH SÁCH BÌNH LUẬN
+        // ========================================================
+        repliesList.addEventListener('click', async (e) => {
+            
+            // 1. Mở form Phản hồi con
+            if (e.target.classList.contains('btn-reply-action')) {
+                const parentId = e.target.getAttribute('data-id');
+                const parentAuthor = e.target.getAttribute('data-author');
+                
+                // Xóa form tạm cũ (nếu đang mở ở chỗ khác)
+                const existingForm = document.getElementById('temp-sub-reply-form');
+                if (existingForm) existingForm.remove();
+
+                // Tạo form phản hồi
+                const formHtml = `
+                    <div id="temp-sub-reply-form" class="reply-form-container" style="margin-left: 40px; margin-top: 0; margin-bottom: 15px; padding: 15px;">
+                        <textarea id="sub-reply-input" class="reply-textarea" placeholder="Phản hồi ${parentAuthor}..." style="height: 80px; margin-bottom: 10px;"></textarea>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-primary btn-submit-sub-reply" data-parent="${parentId}" style="width: auto; padding: 6px 15px; font-size: 13px;">Gửi phản hồi</button>
+                            <button class="btn-cancel-sub-reply" style="padding: 6px 15px; font-size: 13px; border: 1px solid var(--border-color); border-radius: 8px; background: white; cursor: pointer;">Hủy</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById(`sub-reply-container-${parentId}`).innerHTML = formHtml;
+                document.getElementById('sub-reply-input').focus();
+            }
+
+            // 2. Nút Hủy phản hồi
+            if (e.target.classList.contains('btn-cancel-sub-reply')) {
+                document.getElementById('temp-sub-reply-form').remove();
+            }
+
+            // 3. Nút Gửi phản hồi
+            if (e.target.classList.contains('btn-submit-sub-reply')) {
+                const parentId = e.target.getAttribute('data-parent');
+                const inputEl = document.getElementById('sub-reply-input');
+                const contentVal = inputEl.value.trim();
+                
+                if (!contentVal) return alert("Vui lòng nhập nội dung.");
+
+                e.target.textContent = "Đang gửi...";
+                e.target.disabled = true;
+
+                try {
+                    const authorName = auth.currentUser.email;
+                    
+                    // Lưu lên Firestore (Thêm trường replyToId để phân biệt là Sub-reply)
+                    await addDoc(collection(db, "hoi_dap", questionId, "replies"), {
+                        content: contentVal,
+                        author: authorName,
+                        replyToId: parentId, 
+                        createdAt: serverTimestamp()
+                    });
+
+                    await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(1) });
+                    repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
+                    
+                    loadRepliesData(); // Reload toàn bộ bình luận
+                } catch (error) {
+                    console.error("Lỗi:", error);
+                    alert("Có lỗi xảy ra.");
+                }
+            }
+        });
+
+        // ========================================================
+        // GỬI BÌNH LUẬN GỐC (DƯỚI CÙNG TRANG)
+        // ========================================================
         btnSubmitReply.addEventListener('click', async () => {
             const contentVal = replyInput.value.trim();
-
             if (!contentVal) {
-                alert("Vui lòng nhập nội dung câu trả lời.");
+                alert("Vui lòng nhập nội dung.");
                 return;
             }
 
@@ -324,32 +443,25 @@
             try {
                 const authorName = auth.currentUser.email;
 
-                // Thêm reply vào sub-collection
                 await addDoc(collection(db, "hoi_dap", questionId, "replies"), {
                     content: contentVal,
                     author: authorName,
                     createdAt: serverTimestamp()
                 });
 
-                // Cập nhật số đếm ở Document câu hỏi gốc
-                const docRef = doc(db, "hoi_dap", questionId);
-                await updateDoc(docRef, {
-                    repliesCount: increment(1)
-                });
-
-                // Reset form và tải lại dữ liệu
+                await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(1) });
+                repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
+                
                 replyInput.value = '';
-                btnSubmitReply.textContent = "Gửi trả lời";
+                btnSubmitReply.textContent = "Gửi bình luận";
                 btnSubmitReply.disabled = false;
                 
-                // Cộng số trên UI trực tiếp để đỡ phải getDoc lại toàn bộ câu hỏi
-                repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
                 loadRepliesData();
 
             } catch (error) {
                 console.error("Lỗi gửi trả lời:", error);
                 alert("Có lỗi xảy ra, vui lòng thử lại.");
-                btnSubmitReply.textContent = "Gửi trả lời";
+                btnSubmitReply.textContent = "Gửi bình luận";
                 btnSubmitReply.disabled = false;
             }
         });
