@@ -6,7 +6,6 @@
     <title>Hỏi & Đáp - ATherapyHub</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Tối ưu Header Section */
         .qa-header-section {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;
@@ -17,22 +16,32 @@
             border-radius: 6px; font-weight: 600; border: none; cursor: pointer;
             font-size: 14px; transition: background-color 0.2s;
         }
-        .btn-ask:hover { background-color: var(--navy-secondary); }
+        .btn-ask:hover { background-color: var(--navy-primary); }
 
-        /* Giao diện Danh sách nén chặt (Compact List View) */
+        /* Giao diện Danh sách Phẳng (Flat List View) - Không đổ bóng */
         .qa-list-vertical { 
             display: flex; flex-direction: column; gap: 0; 
-            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px;
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px;
             overflow: hidden;
+            box-shadow: none; /* Bỏ đổ bóng */
         }
         
         .qa-card-horizontal {
-            padding: 10px 15px; border-bottom: 1px solid var(--border-color);
+            padding: 12px 15px; border-bottom: 1px solid var(--border-color);
             display: flex; align-items: center; justify-content: space-between; 
             text-decoration: none; color: inherit; gap: 15px; transition: background-color 0.2s;
+            box-shadow: none; /* Đảm bảo không có bóng */
         }
         .qa-card-horizontal:last-child { border-bottom: none; }
-        .qa-card-horizontal:hover { background-color: var(--navy-light); }
+        
+        /* Hiệu ứng hover phẳng (chỉ đổi màu nền, không nổi khối) */
+        .qa-card-horizontal:hover { 
+            background-color: var(--navy-light); 
+            transform: none; 
+            box-shadow: none;
+        }
 
         .qa-main-content { flex: 1; min-width: 0; }
         .qa-card-title {
@@ -44,7 +53,7 @@
         .qa-card-author { color: var(--text-main); font-weight: 500; }
 
         .qa-card-thumb {
-            width: 45px; height: 45px; border-radius: 6px; object-fit: cover;
+            width: 45px; height: 45px; border-radius: 4px; object-fit: cover;
             border: 1px solid var(--border-color); flex-shrink: 0;
         }
 
@@ -60,8 +69,8 @@
         .page-btn:hover { background-color: var(--navy-light); }
         .page-btn.active { background-color: var(--navy-primary); color: white; border-color: var(--navy-primary); }
 
-        /* Modal Đặt Câu Hỏi (Tối ưu không gian) */
-        .modal-box { padding: 24px !important; }
+        /* Modal Đặt Câu Hỏi */
+        .modal-box { padding: 24px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .ask-textarea {
             width: 100%; height: 100px; padding: 10px; border: 1px solid var(--border-color);
             border-radius: 6px; resize: vertical; font-family: inherit; font-size: 14px;
@@ -73,7 +82,7 @@
             display: block; width: 100%; padding: 6px; font-size: 12px;
             border: 1px dashed var(--border-color); border-radius: 6px; background: white; cursor: pointer;
         }
-        #image-preview { max-width: 100%; max-height: 120px; margin-top: 8px; border-radius: 6px; display: none; object-fit: contain; border: 1px solid var(--border-color); }
+        #image-preview { max-width: 100%; max-height: 120px; margin-top: 8px; border-radius: 4px; display: none; object-fit: contain; border: 1px solid var(--border-color); }
 
         @media (max-width: 768px) {
             #main-content { margin: 15px auto; padding: 0 10px; }
@@ -92,7 +101,7 @@
             <button id="btn-open-ask" class="btn-ask">Đặt câu hỏi</button>
         </div>
 
-        <!-- Khung danh sách bài viết nén -->
+        <!-- Khung danh sách bài viết phẳng -->
         <div id="qa-list-container" class="qa-list-vertical">
             <div style="text-align: center; padding: 30px; color: var(--text-muted); font-size: 14px;">Đang tải dữ liệu...</div>
         </div>
@@ -111,7 +120,9 @@
                 <textarea id="ask-content" class="ask-textarea" placeholder="Mô tả chi tiết vấn đề lâm sàng, thắc mắc..." required></textarea>
             </div>
             <div class="form-group file-upload-wrapper">
-                <input type="file" id="ask-image" accept="image/*">
+                <label style="font-size: 12px; margin-bottom: 4px; color: var(--text-main); font-weight: 600;">Đính kèm ảnh minh họa (Không chọn tệp PDF, Word...)</label>
+                <!-- Chỉ cho phép chọn file ảnh -->
+                <input type="file" id="ask-image" accept="image/png, image/jpeg, image/jpg, image/gif, image/webp">
                 <img id="image-preview" alt="Preview">
             </div>
             <button id="btn-submit-ask" class="btn-primary" style="padding: 10px; font-size: 14px; border-radius: 6px; margin-top: 0;">Đăng câu hỏi</button>
@@ -145,7 +156,7 @@
         
         let allQuestions = [];
         let currentPage = 1;
-        const itemsPerPage = 30; // 30 bài viết / trang
+        const itemsPerPage = 30; 
         let currentAuthorName = null;
         let compressedImageBase64 = null;
 
@@ -153,6 +164,13 @@
         imageInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
+
+            // Kiểm tra định dạng file một lần nữa bằng JS để chống việc upload file lạ
+            if (!file.type.startsWith('image/')) {
+                alert('Vui lòng chỉ chọn các tệp hình ảnh (JPG, PNG, GIF...).');
+                imageInput.value = '';
+                return;
+            }
 
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -274,7 +292,7 @@
 
             try {
                 const userDocSnap = await getDoc(doc(db, "users", user.uid));
-                if (userDocSnap.exists() && userDocSnap.data().displayName) {
+                if (userDocSnap.exists() && userDocSnap.data().displayName && userDocSnap.data().displayName.trim() !== '') {
                     currentAuthorName = userDocSnap.data().displayName;
                     askModal.style.display = 'flex';
                 } else {
@@ -298,7 +316,6 @@
             try {
                 const user = auth.currentUser;
 
-                // Lưu dữ liệu vào Firestore (truyền Base64)
                 await addDoc(collection(db, "hoi_dap"), {
                     title: titleVal,
                     content: contentVal,
@@ -309,10 +326,8 @@
                     createdAt: serverTimestamp() 
                 });
 
-                // Tự động cộng điểm bài viết cho Hồ sơ
                 await setDoc(doc(db, "users", user.uid), { postCount: increment(1) }, { merge: true });
 
-                // Reset form
                 askModal.style.display = 'none';
                 titleInput.value = ''; contentInput.value = ''; imageInput.value = '';
                 imagePreview.style.display = 'none'; compressedImageBase64 = null;
