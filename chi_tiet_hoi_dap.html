@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết Hỏi & Đáp - ATherapyHub</title>
-    <!-- Nhúng CSS dùng chung -->
     <link rel="stylesheet" href="style.css">
     <style>
-        /* CSS riêng cho trang Chi Tiết */
-        
         /* Khung hiển thị câu hỏi gốc */
         .question-box {
             background-color: var(--bg-card);
@@ -41,6 +38,7 @@
             font-size: 16px;
             line-height: 1.7;
             text-align: justify;
+            white-space: pre-wrap; /* Giữ lại các dấu xuống dòng */
         }
 
         /* Khu vực Bình luận / Câu trả lời */
@@ -48,9 +46,9 @@
             font-size: 18px;
             color: var(--navy-secondary);
             margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            font-weight: 600;
         }
 
         .reply-card {
@@ -76,6 +74,34 @@
         .reply-content {
             font-size: 15px;
             line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* Form trả lời */
+        .reply-form-container {
+            margin-top: 30px;
+            background-color: var(--navy-light);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #DDBEFE;
+            border-color: #BFDBFE;
+        }
+
+        .reply-textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .reply-textarea:focus {
+            outline: none;
+            border-color: var(--navy-secondary);
         }
 
         /* Nút quay lại */
@@ -105,125 +131,227 @@
         
         <a href="hoi_dap.html" class="btn-back">← Quay lại danh sách Hỏi & Đáp</a>
 
-        <!-- Khung hiển thị câu hỏi (Sẽ được JS ghi đè dữ liệu vào) -->
-        <div id="question-container" class="question-box">
-            <div style="text-align: center; color: var(--text-muted);">Đang tải nội dung câu hỏi...</div>
+        <!-- Cảnh báo chưa đăng nhập -->
+        <div id="auth-warning" style="display: none; text-align: center; padding: 60px 20px; background: white; border-radius: 12px; border: 1px solid var(--border-color);">
+            <h3 style="color: var(--danger); margin-bottom: 10px;">Yêu cầu Đăng nhập</h3>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Bạn cần đăng nhập để xem chi tiết và thảo luận trong bài viết này.</p>
+            <button class="btn-primary" style="max-width: 250px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
         </div>
 
-        <!-- Khung hiển thị các câu trả lời -->
-        <div id="replies-section" style="display: none;">
-            <div class="replies-section-title">
-                <span>Câu trả lời (<span id="replies-count">0</span>)</span>
-                <button class="btn-login-nav" style="box-shadow:none;" onclick="alert('Tính năng bình luận đang phát triển!')">Viết trả lời</button>
-            </div>
+        <!-- Nội dung chính (Sẽ hiện khi đã đăng nhập) -->
+        <div id="qa-content-wrapper" style="display: none;">
             
-            <div id="replies-list">
-                <!-- Các bình luận sẽ được JS chèn vào đây -->
+            <div id="question-container" class="question-box">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải nội dung câu hỏi...</div>
             </div>
+
+            <div id="replies-section">
+                <div class="replies-section-title">
+                    Câu trả lời (<span id="replies-count">0</span>)
+                </div>
+                
+                <div id="replies-list">
+                    <!-- Danh sách trả lời -->
+                </div>
+
+                <!-- Khung nhập câu trả lời -->
+                <div class="reply-form-container">
+                    <h4 style="margin-top: 0; margin-bottom: 15px; color: var(--navy-primary);">Viết câu trả lời của bạn</h4>
+                    <textarea id="reply-input" class="reply-textarea" placeholder="Chia sẻ kiến thức hoặc kinh nghiệm của bạn..."></textarea>
+                    <button id="btn-submit-reply" class="btn-primary" style="width: auto; padding: 10px 25px;">Gửi trả lời</button>
+                </div>
+            </div>
+
         </div>
 
     </main>
 
-    <!-- Nhúng JS dạng module để tự động gắn Header/Footer -->
+    <!-- Nạp Layout Header/Footer -->
     <script type="module" src="layout.js"></script>
 
-    <!-- Script xử lý hiển thị chi tiết câu hỏi -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // 1. Lấy ID bài viết từ thanh URL (Ví dụ: chi_tiet_hoi_dap.html?id=qa123)
-            const urlParams = new URLSearchParams(window.location.search);
-            const questionId = urlParams.get('id');
+    <!-- Script Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc,
+            getDoc,
+            collection, 
+            addDoc, 
+            getDocs, 
+            query, 
+            orderBy, 
+            serverTimestamp,
+            updateDoc,
+            increment
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-            const questionContainer = document.getElementById('question-container');
-            const repliesSection = document.getElementById('replies-section');
-            const repliesList = document.getElementById('replies-list');
-            const repliesCountDisplay = document.getElementById('replies-count');
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
+            authDomain: "datatherapy-52437.firebaseapp.com",
+            projectId: "datatherapy-52437",
+            storageBucket: "datatherapy-52437.firebasestorage.app",
+            messagingSenderId: "206559916642",
+            appId: "1:206559916642:web:d4e911752ef2bb3b58973b"
+        };
 
-            if (!questionId) {
-                questionContainer.innerHTML = '<h3 style="color:var(--danger); text-align:center;">Lỗi: Không tìm thấy bài viết.</h3>';
-                return;
-            }
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-            // 2. MẢNG DỮ LIỆU GIẢ LẬP (MOCK DATA)
-            // (Trong thực tế bạn sẽ fetch từ Firebase db dựa trên questionId)
-            const mockDatabase = {
-                "qa123": {
-                    title: "Hỏi về phác đồ tập phục hồi chức năng sau mổ tái tạo dây chằng chéo trước (ACL) tuần thứ 4?",
-                    author: "Trần Minh Hoàng",
-                    date: "16/10/2026 14:30",
-                    content: "Chào các anh chị đồng nghiệp. Em đang có một bệnh nhân nam 25 tuổi, tiền sử đứt bán phần ACL do đá bóng. Bệnh nhân đã được phẫu thuật tái tạo bằng gân bánh chè (BTB). Hiện tại bệnh nhân đang ở tuần thứ 4 sau phẫu thuật.<br><br>ROM khớp gối hiện tại: Gập 90 độ, duỗi 0 độ (hơi khó khăn khi duỗi chủ động hoàn toàn). Bệnh nhân đã bỏ nạng đi lại nhẹ nhàng nhưng dáng đi vẫn còn khập khiễng.<br><br>Xin hỏi các anh chị giai đoạn này nên tập trung vào các bài tập nào để cải thiện sức mạnh cơ tứ đầu mà không làm giãn mảnh ghép? Có nên cho đạp xe đạp lực cản nhẹ chưa ạ? Em xin cảm ơn.",
-                    replies: [
-                        {
-                            author: "BS. Nguyễn Thành Nam",
-                            date: "16/10/2026 16:45",
-                            content: "Ở tuần thứ 4 với mảnh ghép BTB thì mảnh ghép đang ở giai đoạn hoại tử vô mạch (Necrosis phase) và bắt đầu tái phân bổ mạch máu, nên mảnh ghép lúc này yếu nhất. Không nên cố ép ROM gập quá mạnh. Về cơ tứ đầu, em có thể cho tập SLR (Straight Leg Raise) nhưng phải mang nẹp duỗi thẳng, tập co cơ tĩnh (Isometric). Đạp xe không lực cản có thể bắt đầu để duy trì biên độ khớp."
-                        },
-                        {
-                            author: "PT. Lê Mai Hương",
-                            date: "16/10/2026 20:10",
-                            content: "Đồng ý với bác Nam. Chú ý dáng đi khập khiễng có thể do bệnh nhân chưa lấy lại được độ duỗi hoàn toàn (Terminal extension) hoặc do ức chế cơ tứ đầu. Cần hướng dẫn tập lại dáng đi trước gương (Gait training) và tăng cường kiểm soát phần cơ mông."
-                        }
-                    ]
-                },
-                "qa124": {
-                    title: "Bệnh nhân đột quỵ nhồi máu não sau 3 tháng, tay bị co cứng (Spasticity) độ 3 theo Ashworth. Xin lời khuyên can thiệp.",
-                    author: "Nguyen Van A",
-                    date: "15/10/2026 09:15",
-                    content: "Như tiêu đề, bệnh nhân nam 60 tuổi bị co cứng mẫu gập tay P rất nặng. Em đã thử kéo giãn tĩnh và tập vận động thụ động nhưng cơ vẫn kháng lại rất mạnh. Bệnh nhân có chỉ định chích Botox nhưng gia đình chưa đồng ý vì lý do kinh tế. Có phương pháp nào hiệu quả để giảm co cứng tạm thời trước khi tập vận động không ạ?",
-                    replies: []
+        // Lấy ID bài viết từ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const questionId = urlParams.get('id');
+
+        const authWarning = document.getElementById('auth-warning');
+        const qaContentWrapper = document.getElementById('qa-content-wrapper');
+        const questionContainer = document.getElementById('question-container');
+        const repliesList = document.getElementById('replies-list');
+        const repliesCountDisplay = document.getElementById('replies-count');
+        const btnSubmitReply = document.getElementById('btn-submit-reply');
+        const replyInput = document.getElementById('reply-input');
+
+        // Theo dõi trạng thái đăng nhập
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // Chưa đăng nhập -> Hiện cảnh báo, ẩn nội dung
+                authWarning.style.display = 'block';
+                qaContentWrapper.style.display = 'none';
+            } else {
+                // Đã đăng nhập -> Ẩn cảnh báo, hiện nội dung và tải dữ liệu
+                authWarning.style.display = 'none';
+                qaContentWrapper.style.display = 'block';
+                
+                if (questionId) {
+                    loadQuestionData();
+                    loadRepliesData();
+                } else {
+                    questionContainer.innerHTML = '<h3 style="color:var(--danger); text-align:center;">Lỗi: Không tìm thấy ID bài viết.</h3>';
                 }
-            };
+            }
+        });
 
-            // 3. HÀM HIỂN THỊ DỮ LIỆU LÊN GIAO DIỆN
-            function renderPostDetails() {
-                const data = mockDatabase[questionId];
+        // Tải chi tiết câu hỏi
+        async function loadQuestionData() {
+            try {
+                const docRef = doc(db, "hoi_dap", questionId);
+                const docSnap = await getDoc(docRef);
 
-                if (!data) {
-                    questionContainer.innerHTML = '<h3 style="color:var(--danger); text-align:center;">Bài viết này không tồn tại hoặc đã bị xóa.</h3>';
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    let dateStr = "";
+                    if (data.createdAt && data.createdAt.toDate) {
+                        const dateObj = data.createdAt.toDate();
+                        dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                    }
+
+                    repliesCountDisplay.textContent = data.repliesCount || 0;
+
+                    questionContainer.innerHTML = `
+                        <h1 class="question-title">${data.title}</h1>
+                        <div class="post-meta">
+                            <span>Tác giả: <strong style="color: var(--text-main);">${data.author}</strong></span>
+                            <span>•</span>
+                            <span>Ngày đăng: ${dateStr}</span>
+                        </div>
+                        <div class="question-content">${data.content}</div>
+                    `;
+                } else {
+                    questionContainer.innerHTML = '<h3 style="color:var(--danger); text-align:center;">Bài viết không tồn tại hoặc đã bị xóa.</h3>';
+                }
+            } catch (error) {
+                console.error("Lỗi tải câu hỏi:", error);
+                questionContainer.innerHTML = '<h3 style="color:var(--danger); text-align:center;">Lỗi tải dữ liệu.</h3>';
+            }
+        }
+
+        // Tải danh sách câu trả lời
+        async function loadRepliesData() {
+            try {
+                const q = query(
+                    collection(db, "hoi_dap", questionId, "replies"), 
+                    orderBy("createdAt", "asc")
+                );
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    repliesList.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 20px;">Chưa có câu trả lời nào. Hãy là người đầu tiên giúp đỡ đồng nghiệp nhé!</p>';
                     return;
                 }
 
-                // In câu hỏi
-                questionContainer.innerHTML = `
-                    <h1 class="question-title">${data.title}</h1>
-                    <div class="post-meta">
-                        <span>👤 Tác giả: <strong>${data.author}</strong></span>
-                        <span>🕒 Ngày đăng: ${data.date}</span>
-                    </div>
-                    <div class="question-content">
-                        ${data.content}
-                    </div>
-                `;
+                let html = '';
+                querySnapshot.forEach((docSnap) => {
+                    const reply = docSnap.data();
+                    let dateStr = "Vừa xong";
+                    if (reply.createdAt && reply.createdAt.toDate) {
+                        const dateObj = reply.createdAt.toDate();
+                        dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                    }
 
-                // In danh sách câu trả lời
-                repliesSection.style.display = 'block';
-                repliesCountDisplay.textContent = data.replies.length;
-
-                if (data.replies.length === 0) {
-                    repliesList.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 20px;">Chưa có câu trả lời nào. Hãy là người đầu tiên giúp đỡ đồng nghiệp nhé!</p>';
-                } else {
-                    let repliesHtml = '';
-                    data.replies.forEach(reply => {
-                        repliesHtml += `
-                            <div class="reply-card">
-                                <div class="reply-meta">
-                                    <span class="reply-author">👤 ${reply.author}</span>
-                                    <span style="color: var(--text-muted);">🕒 ${reply.date}</span>
-                                </div>
-                                <div class="reply-content">
-                                    ${reply.content}
-                                </div>
+                    html += `
+                        <div class="reply-card">
+                            <div class="reply-meta">
+                                <span class="reply-author">${reply.author}</span>
+                                <span style="color: var(--text-muted);">${dateStr}</span>
                             </div>
-                        `;
-                    });
-                    repliesList.innerHTML = repliesHtml;
-                }
+                            <div class="reply-content">${reply.content}</div>
+                        </div>
+                    `;
+                });
+                
+                repliesList.innerHTML = html;
+
+            } catch (error) {
+                console.error("Lỗi tải bình luận:", error);
+                repliesList.innerHTML = '<p style="color:var(--danger); text-align:center;">Lỗi tải danh sách câu trả lời.</p>';
+            }
+        }
+
+        // Gửi câu trả lời
+        btnSubmitReply.addEventListener('click', async () => {
+            const contentVal = replyInput.value.trim();
+
+            if (!contentVal) {
+                alert("Vui lòng nhập nội dung câu trả lời.");
+                return;
             }
 
-            // Giả lập thời gian lấy dữ liệu mạng
-            setTimeout(() => {
-                renderPostDetails();
-            }, 400);
+            btnSubmitReply.textContent = "Đang gửi...";
+            btnSubmitReply.disabled = true;
+
+            try {
+                const authorName = auth.currentUser.email;
+
+                // Thêm reply vào sub-collection
+                await addDoc(collection(db, "hoi_dap", questionId, "replies"), {
+                    content: contentVal,
+                    author: authorName,
+                    createdAt: serverTimestamp()
+                });
+
+                // Cập nhật số đếm ở Document câu hỏi gốc
+                const docRef = doc(db, "hoi_dap", questionId);
+                await updateDoc(docRef, {
+                    repliesCount: increment(1)
+                });
+
+                // Reset form và tải lại dữ liệu
+                replyInput.value = '';
+                btnSubmitReply.textContent = "Gửi trả lời";
+                btnSubmitReply.disabled = false;
+                
+                // Cộng số trên UI trực tiếp để đỡ phải getDoc lại toàn bộ câu hỏi
+                repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
+                loadRepliesData();
+
+            } catch (error) {
+                console.error("Lỗi gửi trả lời:", error);
+                alert("Có lỗi xảy ra, vui lòng thử lại.");
+                btnSubmitReply.textContent = "Gửi trả lời";
+                btnSubmitReply.disabled = false;
+            }
         });
     </script>
 </body>
