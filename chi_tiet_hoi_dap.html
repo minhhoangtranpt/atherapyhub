@@ -6,7 +6,6 @@
     <title>Chi tiết Hỏi & Đáp - ATherapyHub</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Giao diện Phẳng - Tối ưu diện tích */
         .question-box {
             background-color: var(--bg-card);
             padding: 20px;
@@ -51,7 +50,6 @@
             object-fit: contain;
         }
 
-        /* Nút xóa bài viết gốc */
         .btn-delete-action {
             background: none;
             border: none;
@@ -63,7 +61,6 @@
             padding: 0;
         }
 
-        /* Khu vực Trả lời */
         .replies-section-title {
             font-size: 16px;
             color: var(--navy-secondary);
@@ -155,7 +152,6 @@
             text-decoration: underline;
         }
 
-        /* Nút xóa câu trả lời */
         .btn-reply-delete {
             background: none;
             border: none;
@@ -171,7 +167,6 @@
             text-decoration: underline;
         }
 
-        /* Form nhập câu trả lời */
         .reply-form-container {
             margin-top: 20px;
             background-color: var(--navy-light);
@@ -224,7 +219,6 @@
         
         <a href="hoi_dap.html" class="btn-back">← Quay lại danh sách Hỏi & Đáp</a>
 
-        <!-- Cảnh báo chưa đăng nhập -->
         <div id="auth-warning" style="display: none; text-align: center; padding: 40px 20px; background: white; border-radius: 8px; border: 1px solid var(--border-color);">
             <h3 style="color: var(--danger); margin-bottom: 10px;">Yêu cầu Đăng nhập</h3>
             <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">Bạn cần đăng nhập để xem chi tiết và thảo luận trong bài viết này.</p>
@@ -278,7 +272,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // THÊM MÃ UID ADMIN VÀO ĐÂY
         const ADMIN_UID = '4RRhZdR29FQ0S17tvKHY9ysCMpH3';
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -341,7 +334,6 @@
                     repliesCountDisplay.textContent = data.repliesCount || 0;
                     const imageDisplay = data.imageUrl ? `<img src="${data.imageUrl}" class="attached-image" alt="Ảnh đính kèm">` : ``;
 
-                    // ĐIỀU CHỈNH: Hiển thị nút xóa nếu là tác giả HOẶC là Admin
                     const deleteBtnHtml = (data.authorUid === currentUserUid || currentUserUid === ADMIN_UID) 
                         ? `<span>•</span> <button id="btn-delete-question" class="btn-delete-action">Xóa bài</button>` 
                         : ``;
@@ -363,12 +355,27 @@
             }
         }
 
-        // Sự kiện xóa bài viết gốc
+        // Sự kiện: Bấm nút Xóa bài viết gốc (Lưu Thùng Rác)
         questionContainer.addEventListener('click', async (e) => {
             if (e.target.id === 'btn-delete-question') {
-                if(confirm("Bạn có chắc chắn muốn xóa bài viết này không? Toàn bộ trả lời bên trong cũng sẽ bị xóa.")) {
+                if(confirm("Bạn có chắc chắn muốn xóa bài viết này không? Bài viết sẽ được chuyển vào thùng rác.")) {
                     try {
+                        const docSnap = await getDoc(doc(db, "hoi_dap", questionId));
+                        if (docSnap.exists()) {
+                            // 1. Sao chép sang thùng rác
+                            await setDoc(doc(db, "trash_hoi_dap", questionId), {
+                                ...docSnap.data(),
+                                deletedAt: serverTimestamp(),
+                                deletedByUid: currentUserUid
+                            });
+                        }
+                        
+                        // 2. Xóa khỏi collection chính
                         await deleteDoc(doc(db, "hoi_dap", questionId));
+                        
+                        // Cập nhật lại bộ đếm của user
+                        await setDoc(doc(db, "users", currentUserUid), { postCount: increment(-1) }, { merge: true });
+
                         alert("Xóa bài viết thành công!");
                         window.location.href = "hoi_dap.html";
                     } catch (error) {
@@ -403,7 +410,6 @@
                 `;
             }
 
-            // ĐIỀU CHỈNH: Hiện nút xóa nếu là tác giả của reply HOẶC là Admin
             const deleteHtml = (reply.authorUid === currentUserUid || currentUserUid === ADMIN_UID) 
                 ? `<button class="btn-reply-delete" data-replyid="${reply.id}">Xóa</button>` 
                 : ``;
@@ -475,7 +481,6 @@
 
         repliesList.addEventListener('click', async (e) => {
             
-            // 1. Nút Mở Form Phản hồi
             if (e.target.classList.contains('btn-reply-action')) {
                 const topLevelId = e.target.getAttribute('data-toplevel');
                 const targetAuthor = e.target.getAttribute('data-author');
@@ -498,22 +503,35 @@
                 document.getElementById('sub-reply-input').focus();
             }
 
-            // 2. Nút Hủy phản hồi
             if (e.target.classList.contains('btn-cancel-sub-reply')) {
                 document.getElementById('temp-sub-reply-form').remove();
             }
 
-            // 3. Nút Xóa Câu Trả Lời
+            // Xóa Câu Trả Lời (Lưu Thùng Rác)
             if (e.target.classList.contains('btn-reply-delete')) {
                 if(confirm("Bạn có chắc chắn muốn xóa câu trả lời này?")) {
                     const replyId = e.target.getAttribute('data-replyid');
                     try {
+                        const replySnap = await getDoc(doc(db, "hoi_dap", questionId, "replies", replyId));
+                        if (replySnap.exists()) {
+                            // 1. Lưu vào thùng rác
+                            await setDoc(doc(db, "trash_replies", replyId), {
+                                ...replySnap.data(),
+                                parentQuestionId: questionId,
+                                deletedAt: serverTimestamp(),
+                                deletedByUid: currentUserUid
+                            });
+                        }
+
+                        // 2. Xóa gốc
                         await deleteDoc(doc(db, "hoi_dap", questionId, "replies", replyId));
                         
                         await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(-1) });
                         repliesCountDisplay.textContent = Math.max(0, parseInt(repliesCountDisplay.textContent) - 1);
                         
-                        loadRepliesData(); // Reload
+                        await setDoc(doc(db, "users", currentUserUid), { replyCount: increment(-1) }, { merge: true });
+
+                        loadRepliesData(); 
                     } catch(err) {
                         console.error("Lỗi xóa trả lời:", err);
                         alert("Không thể xóa lúc này.");
@@ -521,7 +539,6 @@
                 }
             }
 
-            // 4. Gửi Phản hồi
             if (e.target.classList.contains('btn-submit-sub-reply')) {
                 if (!currentAuthorName) {
                     alert("Vui lòng cập nhật 'Tên hiển thị' trong mục Thông tin cá nhân trước khi trả lời!");
@@ -556,6 +573,8 @@
                     await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(1) });
                     repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
                     
+                    await setDoc(doc(db, "users", auth.currentUser.uid), { replyCount: increment(1) }, { merge: true });
+
                     loadRepliesData();
                 } catch (error) {
                     console.error("Lỗi gửi phản hồi:", error);
@@ -592,6 +611,8 @@
                 await updateDoc(doc(db, "hoi_dap", questionId), { repliesCount: increment(1) });
                 repliesCountDisplay.textContent = parseInt(repliesCountDisplay.textContent) + 1;
                 
+                await setDoc(doc(db, "users", auth.currentUser.uid), { replyCount: increment(1) }, { merge: true });
+
                 replyInput.value = '';
                 btnSubmitReply.textContent = "Gửi trả lời";
                 btnSubmitReply.disabled = false;
