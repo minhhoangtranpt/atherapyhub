@@ -220,4 +220,19 @@
                 console.error("Lỗi khi lưu thông tin:", error);
                 showMessage("Có lỗi xảy ra. Vui lòng thử lại.", "var(--danger)");
             } finally {
-                btnSave.textContent = "Lưu
+                btnSave.textContent = "Lưu thay đổi";
+                btnSave.disabled = false;
+            }
+        });
+
+        function showMessage(text, color) {
+            messageBox.textContent = text;
+            messageBox.style.color = color;
+            // Ẩn thông báo sau 3 giây
+            setTimeout(() => {
+                messageBox.textContent = "";
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
