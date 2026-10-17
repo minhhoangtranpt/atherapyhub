@@ -1,3 +1,9 @@
+// Tự động chèn Logo lên thanh trình duyệt cho mọi trang
+const favicon = document.createElement('link');
+favicon.rel = 'icon';
+favicon.type = 'image/jpeg';
+favicon.href = 'logo.jpg';
+document.head.appendChild(favicon);
 // =========================================================
 // 0. KHỞI TẠO FIREBASE VÀ IMPORT CÁC HÀM CẦN THIẾT
 // =========================================================
