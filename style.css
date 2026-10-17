@@ -25,6 +25,12 @@
     --border-color: #EDF2F7;       /* Viền siêu nhạt, không gây phân tâm */
     --danger: #F56565; 
     --accent-color: #0097b2;       /* Màu nhấn (tương tự màu chủ đạo) */
+
+    /* --- BIẾN KẾ THỪA: Đảm bảo tương thích với các tệp HTML cũ --- */
+    --navy-primary: var(--theme-primary);
+    --navy-secondary: var(--theme-secondary);
+    --navy-light: var(--theme-light);
+    --accent-blue: var(--accent-color);
 }
 
 body { 
@@ -47,7 +53,8 @@ header {
     position: sticky; 
     top: 0; 
     z-index: 100; 
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05); 
+    /* Viền mỏng thay cho bóng đổ đậm để thiết kế phẳng hơn */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 header .logo-container { 
@@ -108,7 +115,7 @@ nav#main-nav a:hover {
 .header-search input:focus {
     background-color: white;
     color: var(--text-main);
-    box-shadow: 0 0 0 2px var(--accent-color);
+    box-shadow: 0 0 0 2px var(--theme-light);
 }
 
 .header-search .search-icon {
@@ -169,7 +176,8 @@ button, .btn-link {
     color: var(--theme-primary); 
     padding: 8px 20px; 
     font-size: 14px; 
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    /* Xóa bóng đổ của nút trên header để giao diện phẳng hơn */
+    box-shadow: none; 
 }
 
 .btn-login-nav:hover { 
@@ -199,7 +207,8 @@ button, .btn-link {
     overflow-y: auto;      
     position: relative; 
     box-sizing: border-box; 
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
+    /* Bóng đổ nhẹ hơn cho modal */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
 }
 
 .modal-box h2 { 
