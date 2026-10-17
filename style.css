@@ -1,5 +1,5 @@
 /* =========================================
-   ATHERAPYHUB - COMPLETE STYLESHEET (LIGHT & MINIMAL)
+   ATHERAPYHUB - COMPLETE STYLESHEET (TEAL THEME)
    ========================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -11,10 +11,10 @@
 }
 
 :root { 
-    /* --- Bảng màu nhạt, tối giản, thanh lịch --- */
-    --navy-primary: #316498;       /* Xanh dương dịu mắt, bớt sắc độ gắt */
-    --navy-secondary: #4299E1;     /* Xanh lam sáng làm điểm nhấn */
-    --navy-light: #F0F6FC;         /* Nền xanh xám vô cùng nhạt */
+    /* --- Bảng màu chủ đạo: Teal / Cyan --- */
+    --theme-primary: #0097b2;      /* Màu chủ đạo gốc */
+    --theme-secondary: #007c93;    /* Màu đậm hơn dùng cho hiệu ứng trỏ chuột (hover) */
+    --theme-light: #e5f6f8;        /* Xanh siêu nhạt dùng làm màu nền phụ */
     
     --bg-body: #F7FAFC;            /* Nền tổng thể sáng sủa, sạch sẽ */
     --bg-card: #FFFFFF;            /* Nền thẻ trắng tinh để nổi bật nội dung */
@@ -24,7 +24,7 @@
     
     --border-color: #EDF2F7;       /* Viền siêu nhạt, không gây phân tâm */
     --danger: #F56565; 
-    --accent-blue: #4299E1;        
+    --accent-color: #0097b2;       /* Màu nhấn (tương tự màu chủ đạo) */
 }
 
 body { 
@@ -39,7 +39,7 @@ body {
 
 /* ================= HEADER ================= */
 header { 
-    background-color: var(--navy-primary); 
+    background-color: var(--theme-primary); 
     padding: 16px 5%; 
     display: flex; 
     justify-content: space-between; 
@@ -47,7 +47,6 @@ header {
     position: sticky; 
     top: 0; 
     z-index: 100; 
-    /* Bóng đổ nhẹ nhàng hơn */
     box-shadow: 0 1px 4px rgba(0,0,0,0.05); 
 }
 
@@ -109,7 +108,7 @@ nav#main-nav a:hover {
 .header-search input:focus {
     background-color: white;
     color: var(--text-main);
-    box-shadow: 0 0 0 2px var(--accent-blue);
+    box-shadow: 0 0 0 2px var(--accent-color);
 }
 
 .header-search .search-icon {
@@ -167,14 +166,14 @@ button, .btn-link {
 
 .btn-login-nav { 
     background-color: white; 
-    color: var(--navy-primary); 
+    color: var(--theme-primary); 
     padding: 8px 20px; 
     font-size: 14px; 
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .btn-login-nav:hover { 
-    background-color: var(--navy-light); 
+    background-color: var(--theme-light); 
 }
 
 /* ================= MODAL ĐĂNG NHẬP ================= */
@@ -182,7 +181,7 @@ button, .btn-link {
     display: none; 
     position: fixed; 
     inset: 0; 
-    background: rgba(45, 55, 72, 0.4); /* Nền mờ xám trong trẻo */
+    background: rgba(45, 55, 72, 0.4); 
     backdrop-filter: blur(4px); 
     justify-content: center; 
     align-items: center; 
@@ -205,7 +204,7 @@ button, .btn-link {
 
 .modal-box h2 { 
     text-align: center; 
-    color: var(--navy-primary); 
+    color: var(--theme-primary); 
     margin-top: 0; 
     margin-bottom: 24px; 
     font-size: 20px; 
@@ -237,14 +236,14 @@ button, .btn-link {
 
 .form-group input:focus, .form-group textarea:focus {
     outline: none;
-    border-color: var(--navy-secondary);
+    border-color: var(--theme-secondary);
     background: white;
 }
 
 .btn-primary { 
     width: 100%; 
     padding: 12px; 
-    background-color: var(--navy-primary); 
+    background-color: var(--theme-primary); 
     color: white; 
     font-size: 15px; 
     border-radius: 10px; 
@@ -254,14 +253,14 @@ button, .btn-link {
 }
 
 .btn-primary:hover { 
-    background-color: var(--navy-secondary); 
+    background-color: var(--theme-secondary); 
 }
 
 .btn-close-modal { 
     position: absolute; 
     top: 16px; 
     right: 16px; 
-    background: var(--navy-light); 
+    background: var(--theme-light); 
     border: none; 
     width: 32px; 
     height: 32px; 
@@ -278,6 +277,9 @@ button, .btn-link {
     background: #E2E8F0;
     color: var(--text-main);
 }
+
+.auth-links a { color: var(--accent-color); }
+.auth-links a:hover { color: var(--theme-primary); }
 
 /* ================= BỐ CỤC CHÍNH ================= */
 #main-content { 
