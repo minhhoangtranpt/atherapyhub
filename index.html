@@ -188,7 +188,7 @@
 
         async function fetchArticles() {
             try {
-                const q = query(collection(db, "articles"));
+                const q = query(collection(db, "article_snippets"));
                 const querySnapshot = await getDocs(q);
                 
                 allArticles = [];
