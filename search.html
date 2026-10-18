@@ -28,7 +28,7 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Tái sử dụng lại CSS của dạng danh sách phẳng (Flat List) */
+        /* Giao diện Danh sách Phẳng (Flat List View) */
         .article-list-vertical { 
             display: flex; flex-direction: column; gap: 0; 
             background: var(--bg-card); border: 1px solid var(--border-color); 
@@ -90,7 +90,7 @@
         </div>
     </main>
 
-    <!-- Nhúng JS dạng module để tự động gắn Header/Footer -->
+    <!-- Nhúng JS dạng module -->
     <script type="module" src="layout.js"></script>
 
     <!-- Script xử lý tìm kiếm với Firebase -->
@@ -110,7 +110,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Hàm tiện ích: Loại bỏ thẻ HTML để tạo chuỗi xem trước (snippet)
+        // Loại bỏ thẻ HTML thừa nếu có
         function stripHTML(html) {
             let tmp = document.createElement("DIV");
             tmp.innerHTML = html;
@@ -137,7 +137,6 @@
         }
 
         document.addEventListener("DOMContentLoaded", async () => {
-            // Lấy từ khóa từ URL
             const urlParams = new URLSearchParams(window.location.search);
             const keywordRaw = urlParams.get('q');
             
@@ -163,16 +162,16 @@
             keywordDisplay.textContent = keywordStr;
 
             try {
-                // Tải tất cả bài viết từ Firebase (Bảng articles)
+                // Tải danh sách bài viết từ bảng xem trước (an toàn không cần đăng nhập)
                 const querySnapshot = await getDocs(collection(db, "article_snippets"));
                 const matchedArticles = [];
 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     const title = data.title || "";
-                    const content = data.content || "";
+                    const snippetData = data.snippet || "";
 
-                    const textToSearch = removeVietnameseTones(title + " " + content);
+                    const textToSearch = removeVietnameseTones(title + " " + snippetData);
 
                     // Kiểm tra xem từ khóa có nằm trong bài viết không
                     if (textToSearch.includes(keywordNormalized)) {
@@ -181,7 +180,7 @@
                             dateStr = data.createdAt.toDate().toLocaleDateString('vi-VN');
                         }
 
-                        let snippet = stripHTML(content);
+                        let snippet = stripHTML(snippetData);
                         if (snippet.length > 150) snippet = snippet.substring(0, 150) + "...";
 
                         matchedArticles.push({
