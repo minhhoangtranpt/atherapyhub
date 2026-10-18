@@ -60,6 +60,12 @@
             background-color: white;
         }
 
+        /* Khung textarea cho Xem trước */
+        .snippet-textarea {
+            height: 90px;
+            resize: vertical;
+        }
+
         .ql-toolbar {
             background-color: #F8FAFC;
             border-top-left-radius: 8px;
@@ -74,11 +80,10 @@
             border-color: var(--border-color) !important;
             font-family: inherit;
             font-size: 15px;
-            height: 400px; 
+            height: 500px; 
             background-color: white;
         }
 
-        /* Khu vực nút bấm */
         .action-buttons {
             display: flex;
             gap: 15px;
@@ -121,7 +126,7 @@
 
         @media (max-width: 768px) {
             .admin-wrapper { padding: 20px; margin: 15px; }
-            .ql-container { height: 300px; }
+            .ql-container { height: 400px; }
             .action-buttons { flex-direction: column; gap: 10px; }
             .action-buttons button { width: 100%; }
         }
@@ -148,8 +153,15 @@
                 <input type="text" id="post-title" class="form-control" placeholder="Nhập tiêu đề bài viết...">
             </div>
 
+            <!-- BẢNG 1: NỘI DUNG XEM TRƯỚC -->
             <div class="form-group">
-                <label>Nội dung chi tiết</label>
+                <label style="color: var(--theme-secondary);">Nội dung xem trước (Hiển thị ngoài Trang chủ & cho người chưa đăng nhập)</label>
+                <textarea id="post-snippet" class="form-control snippet-textarea" placeholder="Nhập một đoạn ngắn tóm tắt bài viết (khoảng 2-3 câu)..."></textarea>
+            </div>
+
+            <!-- BẢNG 2: NỘI DUNG ĐẦY ĐỦ -->
+            <div class="form-group">
+                <label style="color: var(--navy-primary);">Nội dung chính thức đầy đủ (Chỉ người dùng đã đăng nhập mới xem được)</label>
                 <div id="editor"></div>
             </div>
 
@@ -189,6 +201,7 @@
         const authWarning = document.getElementById('auth-warning');
         const adminSection = document.getElementById('admin-post-section');
         const titleInput = document.getElementById('post-title');
+        const snippetInput = document.getElementById('post-snippet');
         const btnSubmitPost = document.getElementById('btn-submit-post');
         const btnDeletePost = document.getElementById('btn-delete-post');
         const pageTitle = document.getElementById('page-title');
@@ -198,7 +211,7 @@
 
         var quill = new Quill('#editor', {
             theme: 'snow',
-            placeholder: 'Nhập nội dung bài viết. Bạn có thể chèn ảnh, tạo danh sách, bôi đậm...',
+            placeholder: 'Soạn thảo nội dung chi tiết. Chèn ảnh, danh sách...',
             modules: {
                 toolbar: [
                     [{ 'header': [1, 2, 3, false] }],
@@ -223,7 +236,7 @@
                 if (postId) {
                     pageTitle.textContent = "Sửa bài viết (Dành cho Admin)";
                     btnSubmitPost.textContent = "Cập nhật bài viết";
-                    btnDeletePost.style.display = 'inline-block'; // Hiện nút xóa khi ở chế độ sửa
+                    btnDeletePost.style.display = 'inline-block'; 
                     
                     try {
                         const docRef = doc(db, "articles", postId);
@@ -231,6 +244,7 @@
                         if (docSnap.exists()) {
                             const data = docSnap.data();
                             titleInput.value = data.title || '';
+                            snippetInput.value = data.snippet || ''; // Đổ dữ liệu vào ô xem trước
                             quill.root.innerHTML = data.content || '';
                         } else {
                             alert("Bài viết không tồn tại hoặc đã bị xóa!");
@@ -248,11 +262,13 @@
         // XỬ LÝ LƯU HOẶC SỬA BÀI VIẾT
         btnSubmitPost.addEventListener('click', async () => {
             const title = titleInput.value.trim();
+            const snippet = snippetInput.value.trim();
             const content = quill.root.innerHTML; 
 
             if (!title) return alert("Vui lòng nhập tiêu đề bài viết.");
+            if (!snippet) return alert("Vui lòng nhập nội dung xem trước.");
             if (quill.getText().trim() === '' && !content.includes('<img')) {
-                return alert("Nội dung bài viết không được để trống.");
+                return alert("Nội dung chính thức không được để trống.");
             }
 
             btnSubmitPost.textContent = "Đang xử lý...";
@@ -262,6 +278,7 @@
                 if (postId) {
                     await updateDoc(doc(db, "articles", postId), {
                         title: title,
+                        snippet: snippet,
                         content: content,
                         updatedAt: serverTimestamp()
                     });
@@ -270,6 +287,7 @@
                 } else {
                     await addDoc(collection(db, "articles"), {
                         title: title,
+                        snippet: snippet,
                         content: content,
                         author: "Ban Quản Trị",
                         authorUid: auth.currentUser.uid,
@@ -278,6 +296,7 @@
                     });
                     alert('Xuất bản bài viết thành công!');
                     titleInput.value = '';
+                    snippetInput.value = '';
                     quill.setContents([]); 
                     btnSubmitPost.textContent = "Xuất bản bài viết";
                 }
@@ -299,7 +318,7 @@
                 try {
                     await deleteDoc(doc(db, "articles", postId));
                     alert("Đã xóa bài viết thành công!");
-                    window.location.href = "index.html"; // Chuyển về trang chủ sau khi xóa
+                    window.location.href = "index.html"; 
                 } catch (error) {
                     console.error("Lỗi xóa bài:", error);
                     alert("Đã xảy ra lỗi khi xóa bài viết. Vui lòng thử lại.");
