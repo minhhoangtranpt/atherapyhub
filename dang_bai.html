@@ -264,7 +264,7 @@
                     const newId = newDocRef.id;
 
                     await setDoc(newDocRef, {
-                        title: title, snippet: snippet, author: "Ban Quản Trị", authorUid: auth.currentUser.uid, createdAt: serverTimestamp(), viewCount: 0 
+                        title: title, snippet: snippet, author: "ATherapyHub", authorUid: auth.currentUser.uid, createdAt: serverTimestamp(), viewCount: 0 
                     });
                     await setDoc(doc(db, "article_contents", newId), { content: content });
                     
