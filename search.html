@@ -28,7 +28,7 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Tái sử dụng lại CSS của dạng danh sách phẳng (Flat List) từ trang chủ */
+        /* Tái sử dụng lại CSS của dạng danh sách phẳng (Flat List) */
         .article-list-vertical { 
             display: flex; flex-direction: column; gap: 0; 
             background: var(--bg-card); border: 1px solid var(--border-color); 
@@ -64,11 +64,6 @@
         }
         
         .article-card-author { color: var(--text-main); font-weight: 500; }
-        
-        .category-badge {
-            background-color: #F1F5F9; color: var(--text-muted); padding: 2px 8px;
-            border-radius: 4px; font-size: 11px; font-weight: 600; border: 1px solid var(--border-color);
-        }
 
         .article-card-stats { text-align: center; min-width: 70px; padding-left: 15px; border-left: 1px solid var(--border-color); }
         .article-card-stats .count { font-size: 18px; font-weight: 700; color: var(--accent-color); }
@@ -168,7 +163,7 @@
             keywordDisplay.textContent = keywordStr;
 
             try {
-                // Tải tất cả bài viết từ Firebase
+                // Tải tất cả bài viết từ Firebase (Bảng articles)
                 const querySnapshot = await getDocs(collection(db, "articles"));
                 const matchedArticles = [];
 
@@ -176,9 +171,8 @@
                     const data = doc.data();
                     const title = data.title || "";
                     const content = data.content || "";
-                    const category = data.category || "";
 
-                    const textToSearch = removeVietnameseTones(title + " " + content + " " + category);
+                    const textToSearch = removeVietnameseTones(title + " " + content);
 
                     // Kiểm tra xem từ khóa có nằm trong bài viết không
                     if (textToSearch.includes(keywordNormalized)) {
@@ -190,14 +184,10 @@
                         let snippet = stripHTML(content);
                         if (snippet.length > 150) snippet = snippet.substring(0, 150) + "...";
 
-                        // Highlight (bôi đậm) từ khóa trong tiêu đề
-                        // (Chỉ highlight đơn giản, nếu gõ không dấu thì không highlight được chính xác tiếng Việt có dấu)
-                        
                         matchedArticles.push({
                             id: doc.id,
                             title: title,
                             author: data.author || "Ban Quản Trị",
-                            category: category || "Chưa phân loại",
                             date: dateStr,
                             snippet: snippet,
                             viewCount: data.viewCount || 0
@@ -226,8 +216,6 @@
                                     <div class="article-card-title">${article.title}</div>
                                     <div class="article-snippet">${article.snippet}</div>
                                     <div class="article-card-meta">
-                                        <span class="category-badge">${article.category}</span>
-                                        <span>•</span>
                                         <span class="article-card-author">${article.author}</span>
                                         <span>•</span>
                                         <span>${article.date}</span>
