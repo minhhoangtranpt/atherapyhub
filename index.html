@@ -7,115 +7,109 @@
     <!-- Nhúng CSS dùng chung -->
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Tùy chỉnh CSS riêng cho Trang Chủ */
+        /* Banner chào mừng */
         .welcome-banner {
             text-align: center;
-            padding: 40px 20px;
+            padding: 35px 20px;
             background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
             color: white;
-            border-radius: 12px;
-            margin-bottom: 40px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin-bottom: 30px;
         }
 
         .welcome-banner h2 {
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 26px;
+            margin-bottom: 8px;
             color: white;
         }
 
         .welcome-banner p {
-            font-size: 15px;
+            font-size: 14.5px;
             opacity: 0.9;
             max-width: 600px;
             margin: 0 auto;
         }
 
-        /* Khu vực hiển thị theo Chuyên mục */
-        .category-section {
-            margin-bottom: 40px;
+        /* Phần Header của danh sách */
+        .list-header-section {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;
+            flex-wrap: wrap; gap: 10px;
         }
+        
+        .list-header-section h3 { margin: 0; color: var(--theme-primary); font-size: 18px; }
+        
+        .header-actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .filter-group { display: flex; gap: 8px; align-items: center; }
 
-        .category-title {
-            font-size: 20px;
-            color: var(--theme-primary);
-            border-bottom: 2px solid var(--theme-primary);
-            padding-bottom: 8px;
-            margin-bottom: 20px;
-            display: inline-block;
+        .sort-select {
+            padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color);
+            background-color: var(--bg-body); color: var(--text-main); font-size: 13px;
+            font-family: inherit; outline: none; cursor: pointer;
         }
+        .sort-select:focus { border-color: var(--theme-secondary); }
 
-        /* Lưới thẻ bài viết */
-        .articles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+        /* Giao diện Danh sách Phẳng (Flat List View) */
+        .article-list-vertical { 
+            display: flex; flex-direction: column; gap: 0; 
+            background: var(--bg-card); border: 1px solid var(--border-color); 
+            border-radius: 8px; overflow: hidden;
         }
-
-        .article-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            text-decoration: none;
-            color: inherit;
-            transition: background-color 0.2s, border-color 0.2s;
+        
+        .article-card-horizontal {
+            padding: 15px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between; 
+            text-decoration: none; color: inherit; gap: 15px; transition: background-color 0.2s;
         }
+        .article-card-horizontal:last-child { border-bottom: none; }
+        .article-card-horizontal:hover { background-color: var(--theme-light); }
 
-        .article-card:hover {
-            background-color: var(--theme-light);
-            border-color: var(--theme-secondary);
-        }
-
-        .article-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--theme-primary);
-            margin-bottom: 10px;
-            line-height: 1.4;
-            /* Cắt text quá 2 dòng */
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .article-meta {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .article-main-content { flex: 1; min-width: 0; }
+        
+        .article-card-title {
+            font-size: 16px; font-weight: 600; color: var(--theme-primary); line-height: 1.4;
+            margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
         }
 
         .article-snippet {
-            font-size: 14px;
-            color: var(--text-main);
-            line-height: 1.5;
-            /* Cắt text quá 3 dòng */
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            flex: 1; /* Đẩy nội dung chiếm hết khoảng trống */
-        }
-        
-        .empty-message {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted);
-            background: white;
-            border: 1px dashed var(--border-color);
-            border-radius: 8px;
+            font-size: 13.5px; color: var(--text-main); line-height: 1.5;
+            margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
         }
 
+        .article-card-meta { 
+            font-size: 12px; color: var(--text-muted); display: flex; 
+            align-items: center; gap: 8px; flex-wrap: wrap; 
+        }
+        
+        .article-card-author { color: var(--text-main); font-weight: 500; }
+
+        /* Thống kê lượt xem bên phải */
+        .article-card-stats { text-align: center; min-width: 70px; padding-left: 15px; border-left: 1px solid var(--border-color); }
+        .article-card-stats .count { font-size: 18px; font-weight: 700; color: var(--accent-color); }
+        .article-card-stats .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+
+        /* Phân trang */
+        .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 25px; }
+        .page-btn {
+            padding: 6px 12px; border: 1px solid var(--border-color); background-color: white;
+            color: var(--text-main); border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500;
+        }
+        .page-btn:hover { background-color: var(--theme-light); }
+        .page-btn.active { background-color: var(--theme-primary); color: white; border-color: var(--theme-primary); }
+
+        .empty-message { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; }
+
         @media (max-width: 768px) {
-            .welcome-banner { padding: 30px 15px; border-radius: 8px; margin-bottom: 25px; }
+            #main-content { margin: 15px auto; padding: 0 10px; }
+            .welcome-banner { padding: 25px 15px; margin-bottom: 20px; }
             .welcome-banner h2 { font-size: 22px; }
-            .articles-grid { grid-template-columns: 1fr; }
+            .list-header-section { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .header-actions { width: 100%; justify-content: space-between; }
+            .filter-group { flex: 1; }
+            .article-card-horizontal { padding: 12px; gap: 10px; }
+            .article-card-stats { border-left: none; padding-left: 0; min-width: 45px; }
         }
     </style>
 </head>
@@ -129,20 +123,38 @@
             <p>Diễn đàn chia sẻ kiến thức lâm sàng, học thuật và nghiên cứu khoa học dành riêng cho cộng đồng nhà trị liệu.</p>
         </div>
 
-        <!-- Khung chứa toàn bộ bài viết sẽ được JS render vào đây -->
-        <div id="articles-container">
-            <div style="text-align: center; color: var(--text-muted); padding: 40px;">Đang tải dữ liệu bài viết...</div>
+        <div class="list-header-section">
+            <h3>Bài viết mới nhất</h3>
+            <div class="header-actions">
+                <div class="filter-group">
+                    <select id="sort-by" class="sort-select">
+                        <option value="date">Ngày đăng</option>
+                        <option value="views">Lượt xem</option>
+                    </select>
+                    <select id="sort-order" class="sort-select">
+                        <option value="desc">Mới - Cũ</option>
+                        <option value="asc">Cũ - Mới</option>
+                    </select>
+                </div>
+            </div>
         </div>
+
+        <!-- Khung chứa danh sách bài viết -->
+        <div id="articles-list-container" class="article-list-vertical">
+            <div class="empty-message">Đang tải dữ liệu bài viết...</div>
+        </div>
+
+        <div id="pagination-container" class="pagination"></div>
 
     </main>
 
-    <!-- Nhúng JS dạng module để tự động gắn Header/Footer -->
+    <!-- Nhúng JS dạng module -->
     <script type="module" src="layout.js"></script>
 
-    <!-- Script tải và gom nhóm bài viết từ Firebase -->
+    <!-- Script tải dữ liệu Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
@@ -156,7 +168,14 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const articlesContainer = document.getElementById('articles-container');
+        const articlesContainer = document.getElementById('articles-list-container');
+        const paginationContainer = document.getElementById('pagination-container');
+        const sortBySelect = document.getElementById('sort-by');
+        const sortOrderSelect = document.getElementById('sort-order');
+
+        let allArticles = [];
+        let currentPage = 1;
+        const itemsPerPage = 15; // 15 bài/trang
 
         // Hàm tiện ích: Loại bỏ thẻ HTML để tạo chuỗi xem trước (snippet)
         function stripHTML(html) {
@@ -165,83 +184,53 @@
             return tmp.textContent || tmp.innerText || "";
         }
 
-        async function fetchAndGroupArticles() {
+        // Cập nhật text của ô Thứ Tự dựa theo Tiêu Chí
+        sortBySelect.addEventListener('change', () => {
+            if (sortBySelect.value === 'date') {
+                sortOrderSelect.options[0].text = 'Mới - Cũ';
+                sortOrderSelect.options[1].text = 'Cũ - Mới';
+            } else {
+                sortOrderSelect.options[0].text = 'Cao - Thấp';
+                sortOrderSelect.options[1].text = 'Thấp - Cao';
+            }
+            sortAndRenderArticles();
+        });
+
+        sortOrderSelect.addEventListener('change', sortAndRenderArticles);
+
+        async function fetchArticles() {
             try {
-                // Lấy tất cả bài viết, sắp xếp mới nhất lên đầu
-                const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
+                const q = query(collection(db, "articles"));
                 const querySnapshot = await getDocs(q);
                 
-                if (querySnapshot.empty) {
-                    articlesContainer.innerHTML = '<div class="empty-message">Hiện tại chưa có bài viết nào trên hệ thống.</div>';
-                    return;
-                }
-
-                // Object để gom nhóm bài viết theo chuyên mục
-                // Ví dụ: { "Lâm sàng": [...], "Học thuật": [...] }
-                const groupedArticles = {};
-
+                allArticles = [];
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    const category = data.category || "Chưa phân loại";
-                    
-                    if (!groupedArticles[category]) {
-                        groupedArticles[category] = [];
-                    }
+                    let dateStr = "Vừa xong";
+                    let createdTime = 0;
 
-                    // Format ngày đăng
-                    let dateStr = "";
                     if (data.createdAt && data.createdAt.toDate) {
                         const dateObj = data.createdAt.toDate();
-                        dateStr = dateObj.toLocaleDateString('vi-VN');
+                        createdTime = dateObj.getTime();
+                        dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
                     }
 
                     // Tạo snippet nội dung (tối đa 150 ký tự)
-                    let snippet = stripHTML(data.content);
+                    let snippet = stripHTML(data.content || "");
                     if (snippet.length > 150) snippet = snippet.substring(0, 150) + "...";
 
-                    groupedArticles[category].push({
+                    allArticles.push({
                         id: doc.id,
                         title: data.title,
-                        author: data.author,
+                        author: data.author || "Ban Quản Trị",
                         date: dateStr,
-                        snippet: snippet
+                        snippet: snippet,
+                        viewCount: data.viewCount || 0,
+                        createdTime: createdTime
                     });
                 });
 
-                // Render giao diện
-                let finalHTML = '';
-
-                // Duyệt qua từng chuyên mục đã gom nhóm
-                for (const [categoryName, articlesList] of Object.entries(groupedArticles)) {
-                    
-                    let cardsHTML = '';
-                    articlesList.forEach(article => {
-                        // Link tới trang chi tiết bài viết (chi_tiet.html)
-                        cardsHTML += `
-                            <a href="chi_tiet.html?id=${article.id}" class="article-card">
-                                <div class="article-title">${article.title}</div>
-                                <div class="article-meta">
-                                    <span>👤 ${article.author}</span>
-                                    <span>•</span>
-                                    <span>📅 ${article.date}</span>
-                                </div>
-                                <div class="article-snippet">${article.snippet}</div>
-                            </a>
-                        `;
-                    });
-
-                    // Bọc các thẻ bài viết vào một Section Chuyên mục
-                    finalHTML += `
-                        <div class="category-section">
-                            <h3 class="category-title">${categoryName}</h3>
-                            <div class="articles-grid">
-                                ${cardsHTML}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                articlesContainer.innerHTML = finalHTML;
+                sortAndRenderArticles();
 
             } catch (error) {
                 console.error("Lỗi lấy bài viết:", error);
@@ -249,8 +238,79 @@
             }
         }
 
+        function sortAndRenderArticles() {
+            const sortBy = sortBySelect.value;
+            const sortOrder = sortOrderSelect.value;
+            
+            allArticles.sort((a, b) => {
+                if (sortBy === 'date') {
+                    return sortOrder === 'desc' ? b.createdTime - a.createdTime : a.createdTime - b.createdTime;
+                } else if (sortBy === 'views') {
+                    return sortOrder === 'desc' ? b.viewCount - a.viewCount : a.viewCount - b.viewCount;
+                }
+            });
+
+            currentPage = 1;
+            renderArticleList();
+        }
+
+        function renderArticleList() {
+            articlesContainer.innerHTML = '';
+            
+            if (allArticles.length === 0) {
+                articlesContainer.innerHTML = '<div class="empty-message">Hiện tại chưa có bài viết nào trên hệ thống.</div>';
+                paginationContainer.innerHTML = ''; 
+                return;
+            }
+
+            const currentItems = allArticles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+            currentItems.forEach(article => {
+                const card = document.createElement('a');
+                card.href = `chi_tiet.html?id=${article.id}`;
+                card.className = 'article-card-horizontal';
+
+                card.innerHTML = `
+                    <div class="article-main-content">
+                        <div class="article-card-title">${article.title}</div>
+                        <div class="article-snippet">${article.snippet}</div>
+                        <div class="article-card-meta">
+                            <span class="article-card-author">${article.author}</span>
+                            <span>•</span>
+                            <span>${article.date}</span>
+                        </div>
+                    </div>
+                    <div class="article-card-stats">
+                        <div class="count">${article.viewCount}</div>
+                        <div class="label">Lượt xem</div>
+                    </div>
+                `;
+                
+                articlesContainer.appendChild(card);
+            });
+            renderPagination();
+        }
+
+        function renderPagination() {
+            paginationContainer.innerHTML = '';
+            const totalPages = Math.ceil(allArticles.length / itemsPerPage);
+            if (totalPages <= 1) return;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.addEventListener('click', () => { 
+                    currentPage = i; 
+                    renderArticleList(); 
+                    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                });
+                paginationContainer.appendChild(btn);
+            }
+        }
+
         // Gọi hàm khi trang tải xong
-        fetchAndGroupArticles();
+        fetchArticles();
     </script>
 </body>
 </html>
