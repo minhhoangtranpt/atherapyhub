@@ -7,39 +7,90 @@
     <!-- Nhúng CSS dùng chung -->
     <link rel="stylesheet" href="style.css">
     <style>
-        /* CSS riêng cho trang tìm kiếm (có thể gộp vào style.css sau) */
+        /* CSS riêng cho trang tìm kiếm */
         .search-results-header {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
         }
         
         .search-keyword {
-            color: var(--accent-blue);
+            color: var(--accent-color);
             font-weight: 700;
         }
 
         .no-results {
             text-align: center;
             color: var(--text-muted);
-            padding: 50px 0;
-            background-color: white;
+            padding: 50px 20px;
+            background-color: var(--bg-card);
             border-radius: 8px;
             border: 1px solid var(--border-color);
+        }
+
+        /* Tái sử dụng lại CSS của dạng danh sách phẳng (Flat List) từ trang chủ */
+        .article-list-vertical { 
+            display: flex; flex-direction: column; gap: 0; 
+            background: var(--bg-card); border: 1px solid var(--border-color); 
+            border-radius: 8px; overflow: hidden;
+        }
+        
+        .article-card-horizontal {
+            padding: 15px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between; 
+            text-decoration: none; color: inherit; gap: 15px; transition: background-color 0.2s;
+        }
+        
+        .article-card-horizontal:last-child { border-bottom: none; }
+        .article-card-horizontal:hover { background-color: var(--theme-light); }
+
+        .article-main-content { flex: 1; min-width: 0; }
+        
+        .article-card-title {
+            font-size: 16px; font-weight: 600; color: var(--theme-primary); line-height: 1.4;
+            margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        .article-snippet {
+            font-size: 13.5px; color: var(--text-main); line-height: 1.5;
+            margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        .article-card-meta { 
+            font-size: 12px; color: var(--text-muted); display: flex; 
+            align-items: center; gap: 8px; flex-wrap: wrap; 
+        }
+        
+        .article-card-author { color: var(--text-main); font-weight: 500; }
+        
+        .category-badge {
+            background-color: #F1F5F9; color: var(--text-muted); padding: 2px 8px;
+            border-radius: 4px; font-size: 11px; font-weight: 600; border: 1px solid var(--border-color);
+        }
+
+        .article-card-stats { text-align: center; min-width: 70px; padding-left: 15px; border-left: 1px solid var(--border-color); }
+        .article-card-stats .count { font-size: 18px; font-weight: 700; color: var(--accent-color); }
+        .article-card-stats .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+
+        @media (max-width: 768px) {
+            #main-content { margin: 15px auto; padding: 0 10px; }
+            .article-card-horizontal { padding: 12px; gap: 10px; }
+            .article-card-stats { border-left: none; padding-left: 0; min-width: 45px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Nội dung chính -->
     <main id="main-content">
         <div class="search-results-header">
             <h2>Kết quả tìm kiếm cho: "<span id="keyword-display" class="search-keyword">...</span>"</h2>
-            <p id="result-count" style="color: var(--text-muted); font-size: 14px;">Đang tìm kiếm...</p>
+            <p id="result-count" style="color: var(--text-muted); font-size: 14px; margin-top: 5px;">Đang tìm kiếm dữ liệu...</p>
         </div>
 
         <!-- Vùng hiển thị kết quả -->
-        <div id="results-container">
+        <div id="results-container" class="article-list-vertical">
             <!-- JavaScript sẽ điền kết quả vào đây -->
         </div>
     </main>
@@ -47,54 +98,158 @@
     <!-- Nhúng JS dạng module để tự động gắn Header/Footer -->
     <script type="module" src="layout.js"></script>
 
-    <!-- Script xử lý kết quả tìm kiếm -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // 1. Lấy từ khóa từ URL (ví dụ: search.html?q=đột+quỵ)
+    <!-- Script xử lý tìm kiếm với Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
+            authDomain: "datatherapy-52437.firebaseapp.com",
+            projectId: "datatherapy-52437",
+            storageBucket: "datatherapy-52437.firebasestorage.app",
+            messagingSenderId: "206559916642",
+            appId: "1:206559916642:web:d4e911752ef2bb3b58973b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Hàm tiện ích: Loại bỏ thẻ HTML để tạo chuỗi xem trước (snippet)
+        function stripHTML(html) {
+            let tmp = document.createElement("DIV");
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || "";
+        }
+
+        // Loại bỏ dấu tiếng Việt để tìm kiếm không phân biệt dấu
+        function removeVietnameseTones(str) {
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+            str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+            str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+            str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+            str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+            str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+            str = str.replace(/Đ/g, "D");
+            return str.toLowerCase();
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Lấy từ khóa từ URL
             const urlParams = new URLSearchParams(window.location.search);
-            const keyword = urlParams.get('q');
+            const keywordRaw = urlParams.get('q');
             
             const keywordDisplay = document.getElementById('keyword-display');
             const resultsContainer = document.getElementById('results-container');
             const resultCount = document.getElementById('result-count');
 
-            if (keyword) {
-                // Hiển thị từ khóa lên giao diện
-                keywordDisplay.textContent = keyword;
-
-                /* 
-                  Ở ĐÂY LÀ NƠI BẠN SẼ GỌI API HOẶC FIREBASE FIRESTORE ĐỂ TÌM KIẾM
-                  Ví dụ (Mô phỏng):
-                */
-                setTimeout(() => {
-                    // Giả sử mảng này là kết quả trả về từ cơ sở dữ liệu
-                    const mockResults = []; // Đổi thành mảng có chứa dữ liệu để test giao diện có kết quả
-
-                    if (mockResults.length === 0) {
-                        resultCount.textContent = `Tìm thấy 0 kết quả phù hợp.`;
-                        resultsContainer.innerHTML = `
-                            <div class="no-results">
-                                <span style="font-size: 30px;">🔍</span>
-                                <h3>Không tìm thấy bài viết nào</h3>
-                                <p>Rất tiếc, chúng tôi không tìm thấy nội dung phù hợp với từ khóa "<strong>${keyword}</strong>".<br>Vui lòng thử lại bằng các từ khóa khác (ví dụ: lâm sàng, cơ xương khớp...).</p>
-                            </div>
-                        `;
-                    } else {
-                        // Render kết quả nếu có (bạn có thể copy class .card từ giao diện cũ sang đây)
-                        resultCount.textContent = `Tìm thấy ${mockResults.length} kết quả phù hợp.`;
-                        // ... code vòng lặp in HTML bài viết ...
-                    }
-                }, 800); // Giả lập thời gian chờ tải mạng
-
-            } else {
-                // Nếu người dùng vào thẳng trang search.html mà không gõ gì
+            if (!keywordRaw || keywordRaw.trim() === '') {
                 keywordDisplay.textContent = "Trống";
                 resultCount.textContent = "";
+                resultsContainer.style.background = "transparent";
+                resultsContainer.style.border = "none";
                 resultsContainer.innerHTML = `
                     <div class="no-results">
                         <p>Vui lòng nhập từ khóa vào thanh tìm kiếm ở phía trên.</p>
                     </div>
                 `;
+                return;
+            }
+
+            const keywordStr = keywordRaw.trim();
+            const keywordNormalized = removeVietnameseTones(keywordStr);
+            keywordDisplay.textContent = keywordStr;
+
+            try {
+                // Tải tất cả bài viết từ Firebase
+                const querySnapshot = await getDocs(collection(db, "articles"));
+                const matchedArticles = [];
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const title = data.title || "";
+                    const content = data.content || "";
+                    const category = data.category || "";
+
+                    const textToSearch = removeVietnameseTones(title + " " + content + " " + category);
+
+                    // Kiểm tra xem từ khóa có nằm trong bài viết không
+                    if (textToSearch.includes(keywordNormalized)) {
+                        let dateStr = "Vừa xong";
+                        if (data.createdAt && data.createdAt.toDate) {
+                            dateStr = data.createdAt.toDate().toLocaleDateString('vi-VN');
+                        }
+
+                        let snippet = stripHTML(content);
+                        if (snippet.length > 150) snippet = snippet.substring(0, 150) + "...";
+
+                        // Highlight (bôi đậm) từ khóa trong tiêu đề
+                        // (Chỉ highlight đơn giản, nếu gõ không dấu thì không highlight được chính xác tiếng Việt có dấu)
+                        
+                        matchedArticles.push({
+                            id: doc.id,
+                            title: title,
+                            author: data.author || "Ban Quản Trị",
+                            category: category || "Chưa phân loại",
+                            date: dateStr,
+                            snippet: snippet,
+                            viewCount: data.viewCount || 0
+                        });
+                    }
+                });
+
+                if (matchedArticles.length === 0) {
+                    resultCount.textContent = `Tìm thấy 0 kết quả phù hợp.`;
+                    resultsContainer.style.background = "transparent";
+                    resultsContainer.style.border = "none";
+                    resultsContainer.innerHTML = `
+                        <div class="no-results">
+                            <h3 style="color: var(--theme-primary); margin-bottom: 10px;">Không tìm thấy bài viết nào</h3>
+                            <p>Rất tiếc, chúng tôi không tìm thấy nội dung phù hợp với từ khóa "<strong>${keywordStr}</strong>".<br>Vui lòng thử lại bằng các từ khóa khác ngắn gọn hơn.</p>
+                        </div>
+                    `;
+                } else {
+                    resultCount.textContent = `Tìm thấy ${matchedArticles.length} kết quả phù hợp.`;
+                    let cardsHTML = '';
+                    
+                    matchedArticles.forEach(article => {
+                        cardsHTML += `
+                            <a href="chi_tiet.html?id=${article.id}" class="article-card-horizontal">
+                                <div class="article-main-content">
+                                    <div class="article-card-title">${article.title}</div>
+                                    <div class="article-snippet">${article.snippet}</div>
+                                    <div class="article-card-meta">
+                                        <span class="category-badge">${article.category}</span>
+                                        <span>•</span>
+                                        <span class="article-card-author">${article.author}</span>
+                                        <span>•</span>
+                                        <span>${article.date}</span>
+                                    </div>
+                                </div>
+                                <div class="article-card-stats">
+                                    <div class="count">${article.viewCount}</div>
+                                    <div class="label">Lượt xem</div>
+                                </div>
+                            </a>
+                        `;
+                    });
+
+                    resultsContainer.innerHTML = cardsHTML;
+                }
+
+            } catch (error) {
+                console.error("Lỗi tìm kiếm:", error);
+                resultCount.textContent = "";
+                resultsContainer.style.background = "transparent";
+                resultsContainer.style.border = "none";
+                resultsContainer.innerHTML = '<div class="no-results" style="color: var(--danger);">Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại sau.</div>';
             }
         });
     </script>
