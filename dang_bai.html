@@ -176,12 +176,10 @@
     <script type="module" src="layout.js"></script>
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { 
-            getFirestore, collection, addDoc, doc, getDoc, updateDoc, deleteDoc, serverTimestamp 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
@@ -195,7 +193,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
         const ADMIN_UID = '4RRhZdR29FQ0S17tvKHY9ysCMpH3'; 
 
         const authWarning = document.getElementById('auth-warning');
@@ -211,21 +208,8 @@
 
         var quill = new Quill('#editor', {
             theme: 'snow',
-            placeholder: 'Soạn thảo nội dung chi tiết. Chèn ảnh, danh sách...',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],        
-                    ['blockquote', 'code-block'],                     
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],     
-                    [{ 'script': 'sub'}, { 'script': 'super' }],      
-                    [{ 'indent': '-1'}, { 'indent': '+1' }],          
-                    [{ 'color': [] }, { 'background': [] }],          
-                    [{ 'align': [] }],                                
-                    ['link', 'image', 'video'],                       
-                    ['clean']                                         
-                ]
-            }
+            placeholder: 'Soạn thảo nội dung chi tiết...',
+            modules: { toolbar: [ [{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', 'strike'], ['blockquote', 'code-block'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], [{ 'script': 'sub'}, { 'script': 'super' }], [{ 'indent': '-1'}, { 'indent': '+1' }], [{ 'color': [] }, { 'background': [] }], [{ 'align': [] }], ['link', 'image', 'video'], ['clean'] ] }
         });
 
         onAuthStateChanged(auth, async (user) => {
@@ -239,19 +223,18 @@
                     btnDeletePost.style.display = 'inline-block'; 
                     
                     try {
-                        const docRef = doc(db, "articles", postId);
-                        const docSnap = await getDoc(docRef);
-                        if (docSnap.exists()) {
-                            const data = docSnap.data();
-                            titleInput.value = data.title || '';
-                            snippetInput.value = data.snippet || ''; // Đổ dữ liệu vào ô xem trước
-                            quill.root.innerHTML = data.content || '';
+                        // Tải từ 2 bảng
+                        const snippetSnap = await getDoc(doc(db, "article_snippets", postId));
+                        const contentSnap = await getDoc(doc(db, "article_contents", postId));
+                        
+                        if (snippetSnap.exists()) {
+                            titleInput.value = snippetSnap.data().title || '';
+                            snippetInput.value = snippetSnap.data().snippet || '';
+                            if(contentSnap.exists()) quill.root.innerHTML = contentSnap.data().content || '';
                         } else {
-                            alert("Bài viết không tồn tại hoặc đã bị xóa!");
+                            alert("Bài viết không tồn tại!");
                         }
-                    } catch (error) {
-                        console.error("Lỗi khi tải dữ liệu bài viết:", error);
-                    }
+                    } catch (error) { console.error("Lỗi tải:", error); }
                 }
             } else {
                 authWarning.style.display = 'block';
@@ -259,71 +242,54 @@
             }
         });
 
-        // XỬ LÝ LƯU HOẶC SỬA BÀI VIẾT
         btnSubmitPost.addEventListener('click', async () => {
             const title = titleInput.value.trim();
             const snippet = snippetInput.value.trim();
             const content = quill.root.innerHTML; 
 
-            if (!title) return alert("Vui lòng nhập tiêu đề bài viết.");
-            if (!snippet) return alert("Vui lòng nhập nội dung xem trước.");
-            if (quill.getText().trim() === '' && !content.includes('<img')) {
-                return alert("Nội dung chính thức không được để trống.");
-            }
+            if (!title || !snippet) return alert("Vui lòng nhập tiêu đề và nội dung xem trước.");
+            if (quill.getText().trim() === '' && !content.includes('<img')) return alert("Nội dung chính thức không được để trống.");
 
-            btnSubmitPost.textContent = "Đang xử lý...";
-            btnSubmitPost.disabled = true;
+            btnSubmitPost.textContent = "Đang xử lý..."; btnSubmitPost.disabled = true;
 
             try {
                 if (postId) {
-                    await updateDoc(doc(db, "articles", postId), {
-                        title: title,
-                        snippet: snippet,
-                        content: content,
-                        updatedAt: serverTimestamp()
-                    });
-                    alert('Cập nhật bài viết thành công!');
+                    await updateDoc(doc(db, "article_snippets", postId), { title: title, snippet: snippet, updatedAt: serverTimestamp() });
+                    await updateDoc(doc(db, "article_contents", postId), { content: content, updatedAt: serverTimestamp() });
+                    alert('Cập nhật thành công!');
                     btnSubmitPost.textContent = "Cập nhật bài viết";
                 } else {
-                    await addDoc(collection(db, "articles"), {
-                        title: title,
-                        snippet: snippet,
-                        content: content,
-                        author: "Ban Quản Trị",
-                        authorUid: auth.currentUser.uid,
-                        createdAt: serverTimestamp(),
-                        viewCount: 0 
+                    // Tạo ID chung cho cả 2 bảng
+                    const newDocRef = doc(collection(db, "article_snippets"));
+                    const newId = newDocRef.id;
+
+                    await setDoc(newDocRef, {
+                        title: title, snippet: snippet, author: "Ban Quản Trị", authorUid: auth.currentUser.uid, createdAt: serverTimestamp(), viewCount: 0 
                     });
+                    await setDoc(doc(db, "article_contents", newId), { content: content });
+                    
                     alert('Xuất bản bài viết thành công!');
-                    titleInput.value = '';
-                    snippetInput.value = '';
-                    quill.setContents([]); 
+                    titleInput.value = ''; snippetInput.value = ''; quill.setContents([]); 
                     btnSubmitPost.textContent = "Xuất bản bài viết";
                 }
                 btnSubmitPost.disabled = false;
             } catch (error) {
-                console.error("Lỗi xử lý:", error);
-                alert("Đã xảy ra lỗi khi đăng/sửa bài.");
+                console.error("Lỗi:", error); alert("Lỗi khi lưu bài.");
                 btnSubmitPost.textContent = postId ? "Cập nhật bài viết" : "Xuất bản bài viết";
                 btnSubmitPost.disabled = false;
             }
         });
 
-        // XỬ LÝ NÚT XÓA BÀI VIẾT
         btnDeletePost.addEventListener('click', async () => {
-            if(confirm("Hành động này không thể hoàn tác.\nBạn có chắc chắn muốn xóa vĩnh viễn bài viết này không?")) {
-                btnDeletePost.textContent = "Đang xóa...";
-                btnDeletePost.disabled = true;
-                
+            if(confirm("Bạn có chắc chắn muốn xóa vĩnh viễn bài viết này?")) {
+                btnDeletePost.textContent = "Đang xóa..."; btnDeletePost.disabled = true;
                 try {
-                    await deleteDoc(doc(db, "articles", postId));
-                    alert("Đã xóa bài viết thành công!");
-                    window.location.href = "index.html"; 
+                    await deleteDoc(doc(db, "article_snippets", postId));
+                    await deleteDoc(doc(db, "article_contents", postId));
+                    alert("Xóa thành công!"); window.location.href = "index.html"; 
                 } catch (error) {
-                    console.error("Lỗi xóa bài:", error);
-                    alert("Đã xảy ra lỗi khi xóa bài viết. Vui lòng thử lại.");
-                    btnDeletePost.textContent = "Xóa bài viết";
-                    btnDeletePost.disabled = false;
+                    console.error("Lỗi xóa:", error); alert("Lỗi khi xóa bài.");
+                    btnDeletePost.textContent = "Xóa bài viết"; btnDeletePost.disabled = false;
                 }
             }
         });
