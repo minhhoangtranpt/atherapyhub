@@ -132,7 +132,7 @@
         <!-- Cảnh báo chưa đăng nhập -->
         <div id="auth-warning" style="display: none; text-align: center; padding: 60px 20px; background: white; border-radius: 12px; border: 1px solid var(--border-color); max-width: 800px; margin: 0 auto;">
             <h3 style="color: var(--danger); margin-bottom: 10px;">Yêu cầu Đăng nhập</h3>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">Bạn cần đăng nhập để xem nội dung chi tiết của bài viết này.</p>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Bạn cần đăng nhập và xác thực Email để xem nội dung chi tiết của bài viết này.</p>
             <button class="btn-primary" style="max-width: 200px; padding: 8px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
         </div>
 
@@ -192,11 +192,10 @@
         const bodyEl = document.getElementById('article-body');
         const btnEdit = document.getElementById('btn-edit-article');
 
-        let isArticleLoaded = false; // Cờ để tránh việc tăng view nhiều lần khi hàm bị gọi lại
+        let isArticleLoaded = false; 
 
-        // Hàm tải nội dung bài viết
         async function loadArticle() {
-            if (isArticleLoaded) return; // Nếu đã tải rồi thì không tải lại
+            if (isArticleLoaded) return; 
             
             if (!articleId) {
                 titleEl.textContent = "Lỗi";
@@ -212,8 +211,12 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
-                    // Tăng lượt xem (viewCount) lên 1
-                    await updateDoc(docRef, { viewCount: increment(1) });
+                    // Thử cộng lượt xem. Nếu bị chặn bởi Firestore Rules thì bỏ qua để không sập trang.
+                    try {
+                        await updateDoc(docRef, { viewCount: increment(1) });
+                    } catch (e) {
+                        console.log("Bỏ qua lỗi cộng lượt xem do cấu hình Firebase Rules bảo vệ.");
+                    }
 
                     titleEl.textContent = data.title;
                     document.title = data.title + " - ATherapyHub"; 
@@ -247,15 +250,13 @@
             }
         }
 
-        // Kiểm tra quyền đăng nhập trước khi hiển thị bài
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // Đã đăng nhập: Hiện bài viết
+            // Yêu cầu đăng nhập và đã xác thực email
+            if (user && user.emailVerified) {
                 authWarning.style.display = 'none';
                 articleWrapper.style.display = 'block';
                 loadArticle();
 
-                // Kiểm tra xem có phải là Admin không để hiện nút Sửa
                 if (user.uid === ADMIN_UID) {
                     btnEdit.style.display = 'inline-flex';
                     btnEdit.onclick = () => {
@@ -265,7 +266,6 @@
                     btnEdit.style.display = 'none';
                 }
             } else {
-                // Chưa đăng nhập: Bắt buộc đăng nhập
                 authWarning.style.display = 'block';
                 articleWrapper.style.display = 'none';
                 btnEdit.style.display = 'none';
