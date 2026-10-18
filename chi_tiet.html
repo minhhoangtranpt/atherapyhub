@@ -9,7 +9,7 @@
         /* Tối ưu không gian đọc bài */
         .article-wrapper {
             max-width: 800px;
-            margin: 30px auto;
+            margin: 0 auto 30px auto;
             background-color: var(--bg-card);
             padding: 40px;
             border-radius: 12px;
@@ -25,7 +25,7 @@
 
         .article-title {
             font-size: 28px;
-            color: var(--navy-primary);
+            color: var(--theme-primary);
             margin-bottom: 15px;
             line-height: 1.3;
             font-weight: 700;
@@ -46,7 +46,7 @@
         }
 
         .btn-edit-article {
-            background-color: #F59E0B; /* Màu vàng cam cảnh báo/sửa */
+            background-color: #F59E0B; 
             color: white;
             padding: 6px 15px;
             border-radius: 6px;
@@ -75,7 +75,7 @@
 
         .article-body p { margin-bottom: 15px; }
         .article-body h1, .article-body h2, .article-body h3 {
-            color: var(--navy-primary);
+            color: var(--theme-primary);
             margin-top: 25px;
             margin-bottom: 10px;
         }
@@ -89,7 +89,7 @@
         }
 
         .article-body blockquote {
-            border-left: 4px solid var(--accent-blue);
+            border-left: 4px solid var(--accent-color);
             padding-left: 15px;
             margin: 15px 0;
             color: var(--text-muted);
@@ -115,10 +115,10 @@
             font-size: 14px;
         }
 
-        .btn-back:hover { color: var(--navy-primary); }
+        .btn-back:hover { color: var(--theme-primary); }
 
         @media (max-width: 768px) {
-            .article-wrapper { padding: 20px; margin: 15px auto; }
+            .article-wrapper { padding: 20px; margin: 0 auto 15px auto; }
             .article-title { font-size: 24px; }
             .article-body { font-size: 15px; }
         }
@@ -129,7 +129,15 @@
     <main id="main-content">
         <a href="index.html" class="btn-back">← Quay lại Trang chủ</a>
 
-        <div class="article-wrapper">
+        <!-- Cảnh báo chưa đăng nhập -->
+        <div id="auth-warning" style="display: none; text-align: center; padding: 60px 20px; background: white; border-radius: 12px; border: 1px solid var(--border-color); max-width: 800px; margin: 0 auto;">
+            <h3 style="color: var(--danger); margin-bottom: 10px;">Yêu cầu Đăng nhập</h3>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Bạn cần đăng nhập để xem nội dung chi tiết của bài viết này.</p>
+            <button class="btn-primary" style="max-width: 200px; padding: 8px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
+        </div>
+
+        <!-- Wrapper chứa bài viết (Ẩn mặc định) -->
+        <div id="article-wrapper" class="article-wrapper" style="display: none;">
             <div class="article-header">
                 <h1 id="article-title" class="article-title">Đang tải bài viết...</h1>
                 <div id="article-meta" class="article-meta">
@@ -157,7 +165,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
@@ -174,17 +182,22 @@
 
         const ADMIN_UID = '4RRhZdR29FQ0S17tvKHY9ysCMpH3';
 
-        // Lấy ID bài viết từ tham số URL
         const urlParams = new URLSearchParams(window.location.search);
         const articleId = urlParams.get('id');
 
+        const authWarning = document.getElementById('auth-warning');
+        const articleWrapper = document.getElementById('article-wrapper');
         const titleEl = document.getElementById('article-title');
         const metaEl = document.getElementById('article-meta');
         const bodyEl = document.getElementById('article-body');
         const btnEdit = document.getElementById('btn-edit-article');
 
+        let isArticleLoaded = false; // Cờ để tránh việc tăng view nhiều lần khi hàm bị gọi lại
+
         // Hàm tải nội dung bài viết
         async function loadArticle() {
+            if (isArticleLoaded) return; // Nếu đã tải rồi thì không tải lại
+            
             if (!articleId) {
                 titleEl.textContent = "Lỗi";
                 bodyEl.innerHTML = '<div style="text-align: center; color: var(--danger);">Không tìm thấy mã bài viết.</div>';
@@ -199,27 +212,28 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
-                    // Set Tiêu đề
-                    titleEl.textContent = data.title;
-                    document.title = data.title + " - ATherapyHub"; // Đổi title trình duyệt
+                    // Tăng lượt xem (viewCount) lên 1
+                    await updateDoc(docRef, { viewCount: increment(1) });
 
-                    // Xử lý ngày tháng
+                    titleEl.textContent = data.title;
+                    document.title = data.title + " - ATherapyHub"; 
+
                     let dateStr = "";
                     if (data.createdAt && data.createdAt.toDate) {
                         const dateObj = data.createdAt.toDate();
                         dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
                     }
 
-                    // Render Meta
                     metaEl.innerHTML = `
                         <span style="font-weight: 500; color: var(--text-main);">👤 ${data.author || 'Ban Quản Trị'}</span>
                         <span>•</span>
                         <span>📅 ${dateStr}</span>
-                        ${data.category ? `<span>•</span><span style="color: var(--navy-secondary); font-weight: 600;">📁 ${data.category}</span>` : ''}
+                        <span>•</span>
+                        <span>👁️ ${data.viewCount ? data.viewCount + 1 : 1} lượt xem</span>
                     `;
 
-                    // Đổ nội dung HTML từ Quill.js
                     bodyEl.innerHTML = data.content;
+                    isArticleLoaded = true;
 
                 } else {
                     titleEl.textContent = "Bài viết không tồn tại";
@@ -233,21 +247,30 @@
             }
         }
 
-        // Kiểm tra quyền Admin để hiện nút sửa
+        // Kiểm tra quyền đăng nhập trước khi hiển thị bài
         onAuthStateChanged(auth, (user) => {
-            if (user && user.uid === ADMIN_UID) {
-                btnEdit.style.display = 'inline-flex';
-                btnEdit.addEventListener('click', () => {
-                    // Chuyển hướng sang trang đăng bài kèm ID để sửa
-                    window.location.href = `dang_bai.html?id=${articleId}`;
-                });
+            if (user) {
+                // Đã đăng nhập: Hiện bài viết
+                authWarning.style.display = 'none';
+                articleWrapper.style.display = 'block';
+                loadArticle();
+
+                // Kiểm tra xem có phải là Admin không để hiện nút Sửa
+                if (user.uid === ADMIN_UID) {
+                    btnEdit.style.display = 'inline-flex';
+                    btnEdit.onclick = () => {
+                        window.location.href = `dang_bai.html?id=${articleId}`;
+                    };
+                } else {
+                    btnEdit.style.display = 'none';
+                }
             } else {
+                // Chưa đăng nhập: Bắt buộc đăng nhập
+                authWarning.style.display = 'block';
+                articleWrapper.style.display = 'none';
                 btnEdit.style.display = 'none';
             }
         });
-
-        // Bắt đầu chạy
-        loadArticle();
     </script>
 </body>
 </html>
