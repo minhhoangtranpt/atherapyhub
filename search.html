@@ -164,7 +164,7 @@
 
             try {
                 // Tải tất cả bài viết từ Firebase (Bảng articles)
-                const querySnapshot = await getDocs(collection(db, "articles"));
+                const querySnapshot = await getDocs(collection(db, "article_snippets"));
                 const matchedArticles = [];
 
                 querySnapshot.forEach((doc) => {
