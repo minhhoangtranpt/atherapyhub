@@ -6,33 +6,34 @@
     <title>Đọc bài viết - ATherapyHub</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Tối ưu không gian đọc bài */
+        /* Tối ưu không gian đọc bài - Giao diện phẳng */
         .article-wrapper {
             max-width: 800px;
             margin: 0 auto 30px auto;
             background-color: var(--bg-card);
-            padding: 40px;
-            border-radius: 12px;
+            padding: 30px;
+            border-radius: 8px;
             border: 1px solid var(--border-color);
+            box-shadow: none; /* Bỏ đổ bóng */
         }
 
         .article-header {
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 20px;
+            padding-bottom: 15px;
             position: relative;
         }
 
         .article-title {
-            font-size: 28px;
+            font-size: 26px;
             color: var(--theme-primary);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             line-height: 1.3;
             font-weight: 700;
         }
 
         .article-meta {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-muted);
             display: flex;
             align-items: center;
@@ -108,18 +109,18 @@
 
         .btn-back {
             display: inline-block;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: var(--text-muted);
             text-decoration: none;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .btn-back:hover { color: var(--theme-primary); }
 
         @media (max-width: 768px) {
             .article-wrapper { padding: 20px; margin: 0 auto 15px auto; }
-            .article-title { font-size: 24px; }
+            .article-title { font-size: 22px; }
             .article-body { font-size: 15px; }
         }
     </style>
@@ -130,13 +131,13 @@
         <a href="index.html" class="btn-back">← Quay lại Trang chủ</a>
 
         <!-- Cảnh báo chưa đăng nhập -->
-        <div id="auth-warning" style="display: none; text-align: center; padding: 60px 20px; background: white; border-radius: 12px; border: 1px solid var(--border-color); max-width: 800px; margin: 0 auto;">
+        <div id="auth-warning" style="display: none; text-align: center; padding: 40px 20px; background: white; border-radius: 8px; border: 1px solid var(--border-color); max-width: 800px; margin: 0 auto;">
             <h3 style="color: var(--danger); margin-bottom: 10px;">Yêu cầu Đăng nhập</h3>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">Bạn cần đăng nhập và xác thực Email để xem nội dung chi tiết của bài viết này.</p>
+            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">Bạn cần đăng nhập và xác thực Email để xem nội dung chi tiết của bài viết này.</p>
             <button class="btn-primary" style="max-width: 200px; padding: 8px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
         </div>
 
-        <!-- Wrapper chứa bài viết (Ẩn mặc định) -->
+        <!-- Wrapper chứa bài viết -->
         <div id="article-wrapper" class="article-wrapper" style="display: none;">
             <div class="article-header">
                 <h1 id="article-title" class="article-title">Đang tải bài viết...</h1>
@@ -147,7 +148,7 @@
                 <!-- Khu vực nút Admin (Ẩn mặc định) -->
                 <div class="admin-actions">
                     <button id="btn-edit-article" class="btn-edit-article" style="display: none;">
-                        ✏️ Sửa bài viết
+                        Sửa bài viết
                     </button>
                 </div>
             </div>
@@ -211,7 +212,6 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
-                    // Thử cộng lượt xem. Nếu bị chặn bởi Firestore Rules thì bỏ qua để không sập trang.
                     try {
                         await updateDoc(docRef, { viewCount: increment(1) });
                     } catch (e) {
@@ -228,11 +228,11 @@
                     }
 
                     metaEl.innerHTML = `
-                        <span style="font-weight: 500; color: var(--text-main);">👤 ${data.author || 'Ban Quản Trị'}</span>
+                        <span style="font-weight: 500; color: var(--text-main);">Tác giả: ${data.author || 'Ban Quản Trị'}</span>
                         <span>•</span>
-                        <span>📅 ${dateStr}</span>
+                        <span>Ngày đăng: ${dateStr}</span>
                         <span>•</span>
-                        <span>👁️ ${data.viewCount ? data.viewCount + 1 : 1} lượt xem</span>
+                        <span>${data.viewCount ? data.viewCount + 1 : 1} lượt xem</span>
                     `;
 
                     bodyEl.innerHTML = data.content;
@@ -251,7 +251,6 @@
         }
 
         onAuthStateChanged(auth, (user) => {
-            // Yêu cầu đăng nhập và đã xác thực email
             if (user && user.emailVerified) {
                 authWarning.style.display = 'none';
                 articleWrapper.style.display = 'block';
