@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng bài viết mới - ATherapyHub Admin</title>
+    <title>Quản lý bài viết - ATherapyHub Admin</title>
     
-    <!-- Nhúng CSS dùng chung -->
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Nhúng CSS của trình soạn thảo Quill.js -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     
     <style>
@@ -63,7 +60,6 @@
             background-color: white;
         }
 
-        /* Tùy chỉnh khung soạn thảo Quill */
         .ql-toolbar {
             background-color: #F8FAFC;
             border-top-left-radius: 8px;
@@ -78,7 +74,7 @@
             border-color: var(--border-color) !important;
             font-family: inherit;
             font-size: 15px;
-            height: 400px; /* Chiều cao vùng soạn thảo */
+            height: 400px; 
             background-color: white;
         }
 
@@ -109,7 +105,6 @@
 
     <main id="main-content">
         
-        <!-- Cảnh báo không có quyền -->
         <div id="auth-warning" style="display: none; text-align: center; padding: 60px 20px; background: white; border-radius: 12px; border: 1px solid var(--border-color); max-width: 600px; margin: 40px auto;">
             <span style="font-size: 40px;">🔒</span>
             <h3 style="color: var(--danger); margin: 15px 0 10px 0;">Khu vực Dành riêng cho Quản trị viên</h3>
@@ -117,10 +112,9 @@
             <button class="btn-primary" style="max-width: 200px; padding: 8px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập Admin</button>
         </div>
 
-        <!-- Khung soạn thảo bài viết (Chỉ hiện khi đúng Admin UID) -->
         <div id="admin-post-section" class="admin-wrapper" style="display: none;">
             <div class="admin-header">
-                <h2>Đăng bài viết mới (Dành cho Admin)</h2>
+                <h2 id="page-title">Đăng bài viết mới (Dành cho Admin)</h2>
             </div>
             
             <div class="form-group">
@@ -129,19 +123,7 @@
             </div>
 
             <div class="form-group">
-                <label>Thư mục / Chuyên mục</label>
-                <select id="post-category" class="form-control">
-                    <option value="" disabled selected>-- Chọn chuyên mục --</option>
-                    <option value="Lâm sàng">Lâm sàng (Clinical)</option>
-                    <option value="Học thuật">Học thuật (Academics)</option>
-                    <option value="Ca bệnh">Ca bệnh (Case Studies)</option>
-                    <option value="Tin tức">Tin tức & Sự kiện</option>
-                </select>
-            </div>
-
-            <div class="form-group">
                 <label>Nội dung chi tiết</label>
-                <!-- Nơi chứa thanh công cụ và trình soạn thảo Quill -->
                 <div id="editor"></div>
             </div>
 
@@ -150,16 +132,15 @@
 
     </main>
 
-    <!-- Nạp Layout Header/Footer -->
     <script type="module" src="layout.js"></script>
-
-    <!-- Nạp thư viện Quill.js -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { 
+            getFirestore, collection, addDoc, doc, getDoc, updateDoc, serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
@@ -174,87 +155,105 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const ADMIN_UID = '4RRhZdR29FQ0S17tvKHY9ysCMpH3'; // UID DUY NHẤT ĐƯỢC PHÉP ĐĂNG
+        const ADMIN_UID = '4RRhZdR29FQ0S17tvKHY9ysCMpH3'; 
 
         const authWarning = document.getElementById('auth-warning');
         const adminSection = document.getElementById('admin-post-section');
         const titleInput = document.getElementById('post-title');
-        const categorySelect = document.getElementById('post-category');
         const btnSubmitPost = document.getElementById('btn-submit-post');
+        const pageTitle = document.getElementById('page-title');
 
-        // KHỞI TẠO TRÌNH SOẠN THẢO QUILL
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('id');
+
         var quill = new Quill('#editor', {
             theme: 'snow',
             placeholder: 'Nhập nội dung bài viết. Bạn có thể chèn ảnh, tạo danh sách, bôi đậm...',
             modules: {
                 toolbar: [
                     [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],        // Định dạng chữ
-                    ['blockquote', 'code-block'],                     // Trích dẫn, code
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],     // Danh sách
-                    [{ 'script': 'sub'}, { 'script': 'super' }],      // Chỉ số trên/dưới
-                    [{ 'indent': '-1'}, { 'indent': '+1' }],          // Thụt lề
-                    [{ 'color': [] }, { 'background': [] }],          // Màu sắc
-                    [{ 'align': [] }],                                // Căn lề
-                    ['link', 'image', 'video'],                       // Chèn link, ảnh, video
-                    ['clean']                                         // Xóa định dạng
+                    ['bold', 'italic', 'underline', 'strike'],        
+                    ['blockquote', 'code-block'],                     
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],     
+                    [{ 'script': 'sub'}, { 'script': 'super' }],      
+                    [{ 'indent': '-1'}, { 'indent': '+1' }],          
+                    [{ 'color': [] }, { 'background': [] }],          
+                    [{ 'align': [] }],                                
+                    ['link', 'image', 'video'],                       
+                    ['clean']                                         
                 ]
             }
         });
 
-        // KIỂM TRA QUYỀN TRUY CẬP
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user && user.uid === ADMIN_UID) {
                 authWarning.style.display = 'none';
                 adminSection.style.display = 'block';
+
+                if (postId) {
+                    pageTitle.textContent = "Sửa bài viết (Dành cho Admin)";
+                    btnSubmitPost.textContent = "Cập nhật bài viết";
+                    
+                    try {
+                        const docRef = doc(db, "articles", postId);
+                        const docSnap = await getDoc(docRef);
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            titleInput.value = data.title || '';
+                            quill.root.innerHTML = data.content || '';
+                        } else {
+                            alert("Bài viết không tồn tại hoặc đã bị xóa!");
+                        }
+                    } catch (error) {
+                        console.error("Lỗi khi tải dữ liệu bài viết:", error);
+                    }
+                }
             } else {
                 authWarning.style.display = 'block';
                 adminSection.style.display = 'none';
             }
         });
 
-        // LƯU BÀI VIẾT LÊN FIREBASE
         btnSubmitPost.addEventListener('click', async () => {
             const title = titleInput.value.trim();
-            const category = categorySelect.value;
-            const content = quill.root.innerHTML; // Lấy toàn bộ mã HTML của nội dung bài viết
+            const content = quill.root.innerHTML; 
 
-            // Kiểm tra tính hợp lệ
             if (!title) return alert("Vui lòng nhập tiêu đề bài viết.");
-            if (!category) return alert("Vui lòng chọn thư mục.");
             if (quill.getText().trim() === '' && !content.includes('<img')) {
                 return alert("Nội dung bài viết không được để trống.");
             }
 
-            btnSubmitPost.textContent = "Đang xuất bản...";
+            btnSubmitPost.textContent = "Đang xử lý...";
             btnSubmitPost.disabled = true;
 
             try {
-                // Lưu vào collection 'articles' (bạn có thể đổi thành tên collection khác nếu muốn)
-                await addDoc(collection(db, "articles"), {
-                    title: title,
-                    category: category,
-                    content: content,
-                    author: "Ban Quản Trị",
-                    authorUid: auth.currentUser.uid,
-                    createdAt: serverTimestamp(),
-                    viewCount: 0 // Khởi tạo số lượt xem
-                });
-
-                alert('Xuất bản bài viết thành công!');
-                
-                // Xóa form sau khi đăng
-                titleInput.value = '';
-                categorySelect.value = '';
-                quill.setContents([]); 
-                
-                btnSubmitPost.textContent = "Xuất bản bài viết";
+                if (postId) {
+                    await updateDoc(doc(db, "articles", postId), {
+                        title: title,
+                        content: content,
+                        updatedAt: serverTimestamp()
+                    });
+                    alert('Cập nhật bài viết thành công!');
+                    btnSubmitPost.textContent = "Cập nhật bài viết";
+                } else {
+                    await addDoc(collection(db, "articles"), {
+                        title: title,
+                        content: content,
+                        author: "Ban Quản Trị",
+                        authorUid: auth.currentUser.uid,
+                        createdAt: serverTimestamp(),
+                        viewCount: 0 
+                    });
+                    alert('Xuất bản bài viết thành công!');
+                    titleInput.value = '';
+                    quill.setContents([]); 
+                    btnSubmitPost.textContent = "Xuất bản bài viết";
+                }
                 btnSubmitPost.disabled = false;
-
             } catch (error) {
-                console.error("Lỗi xuất bản:", error);
-                alert("Đã xảy ra lỗi khi đăng bài.");
-                btnSubmitPost.textContent = "Xuất bản bài viết";
+                console.error("Lỗi xử lý:", error);
+                alert("Đã xảy ra lỗi khi đăng/sửa bài.");
+                btnSubmitPost.textContent = postId ? "Cập nhật bài viết" : "Xuất bản bài viết";
                 btnSubmitPost.disabled = false;
             }
         });
