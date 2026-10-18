@@ -6,28 +6,6 @@
     <title>Trang chủ - ATherapyHub</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .welcome-banner {
-            text-align: center;
-            padding: 35px 20px;
-            background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
-            color: white;
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
-
-        .welcome-banner h2 {
-            font-size: 26px;
-            margin-bottom: 8px;
-            color: white;
-        }
-
-        .welcome-banner p {
-            font-size: 14.5px;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
         .list-header-section {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;
@@ -97,8 +75,6 @@
 
         @media (max-width: 768px) {
             #main-content { margin: 15px auto; padding: 0 10px; }
-            .welcome-banner { padding: 25px 15px; margin-bottom: 20px; }
-            .welcome-banner h2 { font-size: 22px; }
             .list-header-section { flex-direction: column; align-items: flex-start; gap: 10px; }
             .header-actions { width: 100%; justify-content: space-between; }
             .filter-group { flex: 1; }
@@ -110,11 +86,6 @@
 <body>
 
     <main id="main-content">
-        
-        <div class="welcome-banner">
-            <h2>Chào mừng đến với ATherapyHub</h2>
-            <p>Diễn đàn chia sẻ kiến thức lâm sàng, học thuật và nghiên cứu khoa học dành riêng cho cộng đồng nhà trị liệu.</p>
-        </div>
 
         <div class="list-header-section">
             <h3>Bài viết mới nhất</h3>
@@ -188,6 +159,7 @@
 
         async function fetchArticles() {
             try {
+                // Tải dữ liệu từ collection mới (article_snippets)
                 const q = query(collection(db, "article_snippets"));
                 const querySnapshot = await getDocs(q);
                 
@@ -203,8 +175,6 @@
                         dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
                     }
 
-                    // Ưu tiên sử dụng đoạn mồi (snippet) từ cơ sở dữ liệu. 
-                    // Nếu bài viết cũ không có, mới dùng thuật toán cắt nội dung chính.
                     let snippet = data.snippet;
                     if (!snippet) {
                         snippet = stripHTML(data.content || "");
