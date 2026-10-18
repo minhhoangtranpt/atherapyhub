@@ -30,6 +30,35 @@
         .name-warning { font-size: 12px; margin-top: 6px; display: none; }
         #profile-message { text-align: center; margin-top: 15px; font-size: 13px; font-weight: 500; height: 18px; }
         
+        /* Giao diện khu vực Thông báo */
+        .notifications-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed var(--border-color);
+        }
+        
+        .notification-card {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            background: #F8FAFC;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        
+        .notification-card:hover {
+            background: var(--navy-light);
+            border-color: var(--navy-secondary);
+        }
+        
+        .notification-meta {
+            color: var(--text-muted);
+            font-size: 11px;
+            margin-top: 6px;
+        }
+
         @media (max-width: 768px) { 
             .profile-wrapper { padding: 20px; margin: 15px; } 
         }
@@ -57,13 +86,24 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Tên hiển thị</label>
+                    <label>Tên hiển thị (Tên người dùng)</label>
                     <input type="text" id="profile-name" placeholder="Nhập tên bạn muốn hiển thị với những người khác">
                     <div id="name-warning" class="name-warning"></div>
                 </div>
                 
                 <button id="btn-save-profile" class="btn-primary" style="padding: 10px; font-size: 14px; margin-top: 10px;">Lưu thay đổi</button>
                 <div id="profile-message"></div>
+
+                <!-- Khu vực thông báo phản hồi -->
+                <div class="notifications-section">
+                    <div class="profile-header" style="margin-bottom: 15px;">
+                        <h2 style="font-size: 17px;">Thông báo của bạn</h2>
+                        <p style="font-size: 12px;">Các lượt trả lời mới nhất liên quan đến bạn</p>
+                    </div>
+                    <div id="notifications-list">
+                        <div style="text-align: center; color: var(--text-muted); font-size: 13px;">Đang tải thông báo...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -73,7 +113,10 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { 
+            getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, 
+            serverTimestamp, collectionGroup, orderBy, limit 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
@@ -95,6 +138,7 @@
         const nameWarning = document.getElementById('name-warning');
         const btnSave = document.getElementById('btn-save-profile');
         const messageBox = document.getElementById('profile-message');
+        const notificationsList = document.getElementById('notifications-list');
 
         let originalName = "";
         let canChangeName = true;
@@ -132,7 +176,7 @@
                             canChangeName = false;
                             nameInput.disabled = true;
                             const daysLeft = 60 - diffDays;
-                            nameWarning.textContent = `🔒 Đã đổi tên gần đây. Bạn được đổi tên lại sau ${daysLeft} ngày nữa.`;
+                            nameWarning.innerHTML = `🔒 Đã đổi tên gần đây.<br>Bạn được đổi tên lại sau <b>${daysLeft} ngày</b> nữa.`;
                             nameWarning.style.color = "var(--text-muted)";
                             nameWarning.style.display = 'block';
                         } else {
@@ -141,9 +185,69 @@
                             nameWarning.style.display = 'none';
                         }
                     }
+
+                    // Tải thông báo phản hồi (Nếu đã có tên)
+                    loadNotifications(originalName);
+                } else {
+                    notificationsList.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px;">Vui lòng lưu Tên hiển thị để xem thông báo.</div>';
                 }
             } catch (error) {
                 console.error("Lỗi:", error);
+            }
+        }
+
+        // TẢI THÔNG BÁO (Lọc 50 phản hồi mới nhất trên toàn hệ thống xem có ai nhắc tên mình không)
+        async function loadNotifications(myName) {
+            if (!myName) {
+                notificationsList.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px;">Vui lòng lưu Tên hiển thị để xem thông báo.</div>';
+                return;
+            }
+
+            try {
+                // Lấy 100 bình luận mới nhất trên toàn diễn đàn
+                const q = query(collectionGroup(db, "replies"), orderBy("createdAt", "desc"), limit(100));
+                const snap = await getDocs(q);
+                
+                let html = '';
+                let count = 0;
+
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    
+                    // Lọc: Nếu bình luận đó trả lời cho "Tên của tôi" và người bình luận KHÔNG phải là tôi
+                    if (data.replyToUser === myName && data.authorUid !== auth.currentUser.uid) {
+                        count++;
+                        let dateStr = "Vừa xong";
+                        if(data.createdAt && data.createdAt.toDate) {
+                            const d = data.createdAt.toDate();
+                            dateStr = d.toLocaleDateString('vi-VN') + " " + d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                        }
+                        
+                        // Trích xuất ID câu hỏi gốc (nằm ở cấp trên của collection replies)
+                        const questionId = docSnap.ref.parent.parent.id;
+                        
+                        let snippet = data.content;
+                        if(snippet.length > 60) snippet = snippet.substring(0, 60) + "...";
+
+                        html += `
+                            <div class="notification-card" onclick="window.location.href='chi_tiet_hoi_dap.html?id=${questionId}'">
+                                <div><strong style="color:var(--navy-primary)">${data.author}</strong> đã phản hồi bạn:</div>
+                                <div style="margin-top: 4px; color: var(--text-main); font-style: italic;">"${snippet}"</div>
+                                <div class="notification-meta">${dateStr}</div>
+                            </div>
+                        `;
+                    }
+                });
+
+                if (count === 0) {
+                    notificationsList.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px;">Bạn chưa có thông báo mới nào.</div>';
+                } else {
+                    notificationsList.innerHTML = html;
+                }
+
+            } catch (error) {
+                console.error("Lỗi lấy thông báo:", error);
+                notificationsList.innerHTML = '<div style="text-align: center; color: var(--danger); font-size: 13px;">Không thể tải thông báo lúc này.</div>';
             }
         }
 
@@ -157,20 +261,26 @@
                 return;
             }
 
-            // Kiểm tra xem tên có thực sự thay đổi không
             const isNameChanged = (newName !== originalName);
 
-            // Nếu người dùng cố tình đổi tên khi chưa đủ 60 ngày
+            // Bắt lỗi nếu cố tình đổi khi chưa đủ 60 ngày
             if (isNameChanged && !canChangeName) {
                 showMessage("Bạn chưa thể đổi tên lúc này.", "var(--danger)");
                 return;
+            }
+
+            // --- THÊM CẢNH BÁO CONFIRM 60 NGÀY ---
+            if (isNameChanged) {
+                const confirmMsg = `LƯU Ý QUAN TRỌNG:\n\nBạn đang đổi tên thành "${newName}".\nSau khi đổi, bạn sẽ KHÔNG thể thay đổi tên này trong vòng 60 ngày tiếp theo.\n\nBạn có chắc chắn muốn sử dụng tên này không?`;
+                if (!confirm(confirmMsg)) {
+                    return; // Hủy lưu nếu người dùng không đồng ý
+                }
             }
 
             btnSave.textContent = "Đang kiểm tra...";
             btnSave.disabled = true;
 
             try {
-                // Kiểm tra trùng lặp nếu tên thay đổi
                 if (isNameChanged) {
                     const q = query(collection(db, "users"), where("displayName", "==", newName));
                     const querySnapshot = await getDocs(q);
@@ -196,11 +306,9 @@
                     updatedAt: serverTimestamp()
                 };
 
-                // Chỉ ghi nhận mốc thời gian khi tên thực sự bị đổi
                 if (isNameChanged && originalName !== "") {
                     updateData.lastNameChangeAt = serverTimestamp();
                 } else if (isNameChanged && originalName === "") {
-                    // Cập nhật tên lần đầu tiên cũng bắt đầu đếm 60 ngày
                     updateData.lastNameChangeAt = serverTimestamp();
                 }
 
@@ -209,7 +317,7 @@
                 showMessage("Cập nhật thông tin thành công!", "#03543F");
                 
                 if (isNameChanged) {
-                    await loadUserProfile(user.uid); // Tải lại để khóa form nếu vừa đổi tên
+                    await loadUserProfile(user.uid); 
                 }
             } catch (error) {
                 showMessage("Có lỗi xảy ra.", "var(--danger)");
