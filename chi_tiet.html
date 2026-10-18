@@ -163,7 +163,7 @@
     <script type="module" src="layout.js"></script>
 
     <!-- Script tải dữ liệu Firebase -->
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -180,7 +180,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
         const ADMIN_UID = '4RRhZdR29FQ0S17tvKHY9ysCMpH3';
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -193,82 +192,81 @@
         const bodyEl = document.getElementById('article-body');
         const btnEdit = document.getElementById('btn-edit-article');
 
-        let isArticleLoaded = false; 
-
-        async function loadArticle() {
-            if (isArticleLoaded) return; 
-            
-            if (!articleId) {
-                titleEl.textContent = "Lỗi";
-                bodyEl.innerHTML = '<div style="text-align: center; color: var(--danger);">Không tìm thấy mã bài viết.</div>';
-                metaEl.innerHTML = '';
-                return;
-            }
+        // Hàm tải nội dung (Được gọi mỗi khi trạng thái đăng nhập thay đổi)
+        async function renderArticle(user) {
+            if (!articleId) return;
+            articleWrapper.style.display = 'block';
 
             try {
-                const docRef = doc(db, "articles", articleId);
-                const docSnap = await getDoc(docRef);
+                // 1. Tải dữ liệu công khai từ bảng snippets (Ai cũng xem được)
+                const snippetRef = doc(db, "article_snippets", articleId);
+                const snippetSnap = await getDoc(snippetRef);
 
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    
-                    try {
-                        await updateDoc(docRef, { viewCount: increment(1) });
-                    } catch (e) {
-                        console.log("Bỏ qua lỗi cộng lượt xem do cấu hình Firebase Rules bảo vệ.");
-                    }
-
-                    titleEl.textContent = data.title;
-                    document.title = data.title + " - ATherapyHub"; 
-
-                    let dateStr = "";
-                    if (data.createdAt && data.createdAt.toDate) {
-                        const dateObj = data.createdAt.toDate();
-                        dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
-                    }
-
-                    metaEl.innerHTML = `
-                        <span style="font-weight: 500; color: var(--text-main);">Tác giả: ${data.author || 'Ban Quản Trị'}</span>
-                        <span>•</span>
-                        <span>Ngày đăng: ${dateStr}</span>
-                        <span>•</span>
-                        <span>${data.viewCount ? data.viewCount + 1 : 1} lượt xem</span>
-                    `;
-
-                    bodyEl.innerHTML = data.content;
-                    isArticleLoaded = true;
-
-                } else {
+                if (!snippetSnap.exists()) {
                     titleEl.textContent = "Bài viết không tồn tại";
                     bodyEl.innerHTML = '<div style="text-align: center; color: var(--danger);">Bài viết này đã bị xóa hoặc đường dẫn không hợp lệ.</div>';
-                    metaEl.innerHTML = '';
+                    return;
+                }
+
+                const snippetData = snippetSnap.data();
+                titleEl.textContent = snippetData.title;
+                document.title = snippetData.title + " - ATherapyHub"; 
+
+                let dateStr = "";
+                if (snippetData.createdAt && snippetData.createdAt.toDate) {
+                    dateStr = snippetData.createdAt.toDate().toLocaleDateString('vi-VN');
+                }
+
+                metaEl.innerHTML = `
+                    <span style="font-weight: 500; color: var(--text-main);">Tác giả: ${snippetData.author}</span>
+                    <span>•</span><span>Ngày đăng: ${dateStr}</span>
+                    <span>•</span><span>${snippetData.viewCount ? snippetData.viewCount : 0} lượt xem</span>
+                `;
+
+                // 2. Xử lý hiển thị nội dung tùy theo trạng thái đăng nhập
+                if (user && user.emailVerified) {
+                    // Đã đăng nhập -> Lấy dữ liệu từ bảng contents
+                    authWarning.style.display = 'none';
+                    try {
+                        const contentSnap = await getDoc(doc(db, "article_contents", articleId));
+                        if (contentSnap.exists()) {
+                            bodyEl.innerHTML = contentSnap.data().content;
+                            // Cộng lượt xem
+                            try { await updateDoc(snippetRef, { viewCount: increment(1) }); } catch(e){}
+                        }
+                    } catch (e) {
+                        bodyEl.innerHTML = '<div style="text-align: center; color: var(--danger);">Bạn không có quyền xem nội dung này.</div>';
+                    }
+
+                    // Hiện nút sửa nếu là Admin
+                    if (user.uid === ADMIN_UID) {
+                        btnEdit.style.display = 'inline-flex';
+                        btnEdit.onclick = () => { window.location.href = `dang_bai.html?id=${articleId}`; };
+                    } else {
+                        btnEdit.style.display = 'none';
+                    }
+
+                } else {
+                    // Chưa đăng nhập -> Hiện đoạn mồi và che đi, hiện nút yêu cầu đăng nhập
+                    authWarning.style.display = 'block';
+                    btnEdit.style.display = 'none';
+                    
+                    // Tạo hiệu ứng mờ dần (fade out) cho đoạn snippet
+                    bodyEl.innerHTML = `
+                        <div style="position: relative; overflow: hidden; max-height: 120px;">
+                            <p style="color: var(--text-main); font-style: italic;">${snippetData.snippet}</p>
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, var(--bg-card));"></div>
+                        </div>
+                    `;
                 }
             } catch (error) {
-                console.error("Lỗi tải bài viết:", error);
+                console.error("Lỗi:", error);
                 titleEl.textContent = "Lỗi hệ thống";
-                bodyEl.innerHTML = '<div style="text-align: center; color: var(--danger);">Có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại sau.</div>';
             }
         }
 
         onAuthStateChanged(auth, (user) => {
-            if (user && user.emailVerified) {
-                authWarning.style.display = 'none';
-                articleWrapper.style.display = 'block';
-                loadArticle();
-
-                if (user.uid === ADMIN_UID) {
-                    btnEdit.style.display = 'inline-flex';
-                    btnEdit.onclick = () => {
-                        window.location.href = `dang_bai.html?id=${articleId}`;
-                    };
-                } else {
-                    btnEdit.style.display = 'none';
-                }
-            } else {
-                authWarning.style.display = 'block';
-                articleWrapper.style.display = 'none';
-                btnEdit.style.display = 'none';
-            }
+            renderArticle(user);
         });
     </script>
 </body>
