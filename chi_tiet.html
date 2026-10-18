@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đọc bài viết - ATherapyHub</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Tối ưu không gian đọc bài */
+        .article-wrapper {
+            max-width: 800px;
+            margin: 30px auto;
+            background-color: var(--bg-card);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .article-header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            position: relative;
+        }
+
+        .article-title {
+            font-size: 28px;
+            color: var(--navy-primary);
+            margin-bottom: 15px;
+            line-height: 1.3;
+            font-weight: 700;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        /* Nút Sửa dành cho Admin */
+        .admin-actions {
+            margin-top: 15px;
+        }
+
+        .btn-edit-article {
+            background-color: #F59E0B; /* Màu vàng cam cảnh báo/sửa */
+            color: white;
+            padding: 6px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-edit-article:hover {
+            background-color: #D97706;
+        }
+
+        /* Định dạng nội dung bài viết từ Quill.js */
+        .article-body {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        .article-body p { margin-bottom: 15px; }
+        .article-body h1, .article-body h2, .article-body h3 {
+            color: var(--navy-primary);
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        
+        .article-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .article-body blockquote {
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 15px;
+            margin: 15px 0;
+            color: var(--text-muted);
+            font-style: italic;
+            background-color: var(--bg-body);
+            padding: 10px 15px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .article-body ul, .article-body ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .article-body li { margin-bottom: 5px; }
+
+        .btn-back {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .btn-back:hover { color: var(--navy-primary); }
+
+        @media (max-width: 768px) {
+            .article-wrapper { padding: 20px; margin: 15px auto; }
+            .article-title { font-size: 24px; }
+            .article-body { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <main id="main-content">
+        <a href="index.html" class="btn-back">← Quay lại Trang chủ</a>
+
+        <div class="article-wrapper">
+            <div class="article-header">
+                <h1 id="article-title" class="article-title">Đang tải bài viết...</h1>
+                <div id="article-meta" class="article-meta">
+                    <!-- Thông tin tác giả, ngày đăng sẽ được JS render -->
+                </div>
+                
+                <!-- Khu vực nút Admin (Ẩn mặc định) -->
+                <div class="admin-actions">
+                    <button id="btn-edit-article" class="btn-edit-article" style="display: none;">
+                        ✏️ Sửa bài viết
+                    </button>
+                </div>
+            </div>
+
+            <div id="article-body" class="article-body">
+                <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">Vui lòng chờ trong giây lát...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Nạp Layout Header/Footer -->
+    <script type="module" src="layout.js"></script>
+
+    <!-- Script tải dữ liệu Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
+            authDomain: "datatherapy-52437.firebaseapp.com",
+            projectId: "datatherapy-52437",
+            storageBucket: "datatherapy-52437.firebasestorage.app",
+            messagingSenderId: "206559916642",
+            appId: "1:206559916642:web:d4e911752ef2bb3b58973b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const ADMIN_UID = '4RRhZdR29FQ0S17tvKHY9ysCMpH3';
+
+        // Lấy ID bài viết từ tham số URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+
+        const titleEl = document.getElementById('article-title');
+        const metaEl = document.getElementById('article-meta');
+        const bodyEl = document.getElementById('article-body');
+        const btnEdit = document.getElementById('btn-edit-article');
+
+        // Hàm tải nội dung bài viết
+        async function loadArticle() {
+            if (!articleId) {
+                titleEl.textContent = "Lỗi";
+                bodyEl.innerHTML = '<div style="text-align: center; color: var(--danger);">Không tìm thấy mã bài viết.</div>';
+                metaEl.innerHTML = '';
+                return;
+            }
+
+            try {
+                const docRef = doc(db, "articles", articleId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // Set Tiêu đề
+                    titleEl.textContent = data.title;
+                    document.title = data.title + " - ATherapyHub"; // Đổi title trình duyệt
+
+                    // Xử lý ngày tháng
+                    let dateStr = "";
+                    if (data.createdAt && data.createdAt.toDate) {
+                        const dateObj = data.createdAt.toDate();
+                        dateStr = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                    }
+
+                    // Render Meta
+                    metaEl.innerHTML = `
+                        <span style="font-weight: 500; color: var(--text-main);">👤 ${data.author || 'Ban Quản Trị'}</span>
+                        <span>•</span>
+                        <span>📅 ${dateStr}</span>
+                        ${data.category ? `<span>•</span><span style="color: var(--navy-secondary); font-weight: 600;">📁 ${data.category}</span>` : ''}
+                    `;
+
+                    // Đổ nội dung HTML từ Quill.js
+                    bodyEl.innerHTML = data.content;
+
+                } else {
+                    titleEl.textContent = "Bài viết không tồn tại";
+                    bodyEl.innerHTML = '<div style="text-align: center; color: var(--danger);">Bài viết này đã bị xóa hoặc đường dẫn không hợp lệ.</div>';
+                    metaEl.innerHTML = '';
+                }
+            } catch (error) {
+                console.error("Lỗi tải bài viết:", error);
+                titleEl.textContent = "Lỗi hệ thống";
+                bodyEl.innerHTML = '<div style="text-align: center; color: var(--danger);">Có lỗi xảy ra khi kết nối máy chủ. Vui lòng thử lại sau.</div>';
+            }
+        }
+
+        // Kiểm tra quyền Admin để hiện nút sửa
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.uid === ADMIN_UID) {
+                btnEdit.style.display = 'inline-flex';
+                btnEdit.addEventListener('click', () => {
+                    // Chuyển hướng sang trang đăng bài kèm ID để sửa
+                    window.location.href = `dang_bai.html?id=${articleId}`;
+                });
+            } else {
+                btnEdit.style.display = 'none';
+            }
+        });
+
+        // Bắt đầu chạy
+        loadArticle();
+    </script>
+</body>
+</html>
