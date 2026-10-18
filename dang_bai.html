@@ -78,6 +78,14 @@
             background-color: white;
         }
 
+        /* Khu vực nút bấm */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            align-items: center;
+        }
+
         .btn-submit-post {
             background-color: var(--theme-primary);
             color: white;
@@ -88,16 +96,34 @@
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.2s;
-            margin-top: 10px;
         }
 
         .btn-submit-post:hover {
             background-color: var(--theme-secondary);
         }
 
+        .btn-delete-post {
+            background-color: transparent;
+            color: var(--danger);
+            padding: 12px 25px;
+            font-size: 15px;
+            font-weight: 600;
+            border: 1px solid var(--danger);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-delete-post:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .admin-wrapper { padding: 20px; margin: 15px; }
             .ql-container { height: 300px; }
+            .action-buttons { flex-direction: column; gap: 10px; }
+            .action-buttons button { width: 100%; }
         }
     </style>
 </head>
@@ -127,7 +153,10 @@
                 <div id="editor"></div>
             </div>
 
-            <button id="btn-submit-post" class="btn-submit-post">Xuất bản bài viết</button>
+            <div class="action-buttons">
+                <button id="btn-submit-post" class="btn-submit-post">Xuất bản bài viết</button>
+                <button id="btn-delete-post" class="btn-delete-post" style="display: none;">Xóa bài viết</button>
+            </div>
         </div>
 
     </main>
@@ -139,7 +168,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
-            getFirestore, collection, addDoc, doc, getDoc, updateDoc, serverTimestamp 
+            getFirestore, collection, addDoc, doc, getDoc, updateDoc, deleteDoc, serverTimestamp 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -161,6 +190,7 @@
         const adminSection = document.getElementById('admin-post-section');
         const titleInput = document.getElementById('post-title');
         const btnSubmitPost = document.getElementById('btn-submit-post');
+        const btnDeletePost = document.getElementById('btn-delete-post');
         const pageTitle = document.getElementById('page-title');
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -193,6 +223,7 @@
                 if (postId) {
                     pageTitle.textContent = "Sửa bài viết (Dành cho Admin)";
                     btnSubmitPost.textContent = "Cập nhật bài viết";
+                    btnDeletePost.style.display = 'inline-block'; // Hiện nút xóa khi ở chế độ sửa
                     
                     try {
                         const docRef = doc(db, "articles", postId);
@@ -214,6 +245,7 @@
             }
         });
 
+        // XỬ LÝ LƯU HOẶC SỬA BÀI VIẾT
         btnSubmitPost.addEventListener('click', async () => {
             const title = titleInput.value.trim();
             const content = quill.root.innerHTML; 
@@ -255,6 +287,25 @@
                 alert("Đã xảy ra lỗi khi đăng/sửa bài.");
                 btnSubmitPost.textContent = postId ? "Cập nhật bài viết" : "Xuất bản bài viết";
                 btnSubmitPost.disabled = false;
+            }
+        });
+
+        // XỬ LÝ NÚT XÓA BÀI VIẾT
+        btnDeletePost.addEventListener('click', async () => {
+            if(confirm("Hành động này không thể hoàn tác.\nBạn có chắc chắn muốn xóa vĩnh viễn bài viết này không?")) {
+                btnDeletePost.textContent = "Đang xóa...";
+                btnDeletePost.disabled = true;
+                
+                try {
+                    await deleteDoc(doc(db, "articles", postId));
+                    alert("Đã xóa bài viết thành công!");
+                    window.location.href = "index.html"; // Chuyển về trang chủ sau khi xóa
+                } catch (error) {
+                    console.error("Lỗi xóa bài:", error);
+                    alert("Đã xảy ra lỗi khi xóa bài viết. Vui lòng thử lại.");
+                    btnDeletePost.textContent = "Xóa bài viết";
+                    btnDeletePost.disabled = false;
+                }
             }
         });
     </script>
