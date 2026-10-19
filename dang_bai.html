@@ -145,7 +145,7 @@
 
         <div id="admin-post-section" class="admin-wrapper" style="display: none;">
             <div class="admin-header">
-                <h2 id="page-title">Đăng bài viết mới (Dành cho Admin)</h2>
+                <h2 id="page-title">Đăng bài viết mới</h2>
             </div>
             
             <div class="form-group">
@@ -155,13 +155,13 @@
 
             <!-- BẢNG 1: NỘI DUNG XEM TRƯỚC -->
             <div class="form-group">
-                <label style="color: var(--theme-secondary);">Nội dung xem trước (Hiển thị ngoài Trang chủ & cho người chưa đăng nhập)</label>
+                <label style="color: var(--theme-secondary);">Nội dung xem trước</label>
                 <textarea id="post-snippet" class="form-control snippet-textarea" placeholder="Nhập một đoạn ngắn tóm tắt bài viết (khoảng 2-3 câu)..."></textarea>
             </div>
 
             <!-- BẢNG 2: NỘI DUNG ĐẦY ĐỦ -->
             <div class="form-group">
-                <label style="color: var(--navy-primary);">Nội dung chính thức đầy đủ (Chỉ người dùng đã đăng nhập mới xem được)</label>
+                <label style="color: var(--navy-primary);">Nội dung chính thức đầy đủ</label>
                 <div id="editor"></div>
             </div>
 
@@ -218,7 +218,7 @@
                 adminSection.style.display = 'block';
 
                 if (postId) {
-                    pageTitle.textContent = "Sửa bài viết (Dành cho Admin)";
+                    pageTitle.textContent = "Sửa bài viết";
                     btnSubmitPost.textContent = "Cập nhật bài viết";
                     btnDeletePost.style.display = 'inline-block'; 
                     
