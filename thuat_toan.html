@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thuật toán Can thiệp Lâm sàng - ATherapyHub</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .algorithm-wrapper {
+            max-width: 900px;
+            margin: 30px auto;
+            background-color: var(--bg-card, #ffffff);
+            padding: 30px 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color, #e2e8f0);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .header-title {
+            color: var(--theme-primary, #1e3a8a);
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color, #e2e8f0);
+            padding-bottom: 10px;
+        }
+
+        .mode-switch {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-mode {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid var(--theme-primary);
+            background: white;
+            color: var(--theme-primary);
+            font-weight: 600;
+        }
+
+        .btn-mode.active {
+            background: var(--theme-primary);
+            color: white;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #334155; }
+        .form-control {
+            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px;
+            font-size: 15px; background-color: #f8fafc; transition: 0.2s;
+        }
+        .form-control:focus { outline: none; border-color: var(--theme-secondary, #3b82f6); background-color: #fff; }
+
+        .btn-calc, .btn-save {
+            background-color: var(--theme-primary, #1e3a8a); color: white; padding: 12px 25px;
+            font-size: 15px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer;
+            width: 100%; margin-top: 10px; transition: 0.2s;
+        }
+        .btn-calc:hover, .btn-save:hover { background-color: var(--theme-secondary, #3b82f6); }
+
+        /* Chế độ Sử dụng */
+        #dynamic-inputs { padding: 15px; border: 1px dashed #cbd5e1; border-radius: 8px; margin-bottom: 20px; background-color: #f8fafc; }
+        .result-section { margin-top: 30px; padding: 20px; border-radius: 8px; display: none; background-color: #f0fdf4; border: 1px solid #bbf7d0; }
+        .result-title { color: #166534; font-size: 18px; margin-bottom: 10px; }
+        .result-content { font-size: 15px; line-height: 1.6; color: #166534; }
+
+        /* Chế độ Chỉnh sửa (Admin) */
+        #admin-panel { display: none; margin-top: 20px; padding: 20px; border: 1px solid #f59e0b; border-radius: 8px; background-color: #fffbeb; }
+        .rule-card { background: white; border: 1px solid #fbbf24; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .rule-card label { font-size: 13px; color: #b45309; }
+        .rule-card input { font-family: monospace; color: #b45309; font-weight: bold; }
+        .rule-card textarea { height: 100px; resize: vertical; }
+        .btn-add-rule { background: #f59e0b; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; margin-bottom: 15px; }
+        .btn-remove-rule { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; float: right; font-size: 12px; }
+        
+        .variable-hint { font-size: 13px; color: #64748b; margin-bottom: 15px; padding: 10px; background: #e2e8f0; border-radius: 6px; }
+        .variable-hint span { font-family: monospace; font-weight: bold; color: #0f172a; background: #cbd5e1; padding: 2px 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <main id="main-content">
+        <div class="algorithm-wrapper">
+            <div class="header-title">
+                Hệ thống Can thiệp (CDSS)
+                <div class="mode-switch">
+                    <button id="btn-use-mode" class="btn-mode active">Sử dụng</button>
+                    <button id="btn-edit-mode" class="btn-mode">Chỉnh sửa (Admin)</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Chọn Vấn đề / Bệnh lý lâm sàng:</label>
+                <select id="clinical-problem" class="form-control">
+                    <option value="" disabled selected>-- Chọn bệnh lý --</option>
+                    <!-- Options sẽ được render bằng JS -->
+                </select>
+            </div>
+
+            <!-- ================= CHẾ ĐỘ SỬ DỤNG ================= -->
+            <div id="use-panel" style="display: none;">
+                <div id="dynamic-inputs"></div>
+                <button id="btn-calculate" class="btn-calc">Phân tích & Đưa ra can thiệp</button>
+                <div id="result-display" class="result-section">
+                    <h3 class="result-title">Phác đồ can thiệp đề xuất:</h3>
+                    <div id="result-content" class="result-content"></div>
+                </div>
+            </div>
+
+            <!-- ================= CHẾ ĐỘ CHỈNH SỬA ================= -->
+            <div id="admin-panel">
+                <h3 style="color: #d97706; margin-bottom: 10px;">Chỉnh sửa Cơ chế (Rules)</h3>
+                <div id="variable-hints" class="variable-hint"></div>
+                <div id="rules-container"></div>
+                <button id="btn-add-rule" class="btn-add-rule">+ Thêm luật mới</button>
+                <button id="btn-save-rules" class="btn-save">Lưu cấu hình thuật toán</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Script hệ thống -->
+    <script type="module" src="layout.js"></script>
+
+    <script>
+        // Dữ liệu mặc định nếu chưa có trong localStorage
+        const defaultData = {
+            stroke_ue: {
+                name: "Đột quỵ - Chức năng chi trên (FMA-UE)",
+                inputs: [
+                    { id: "fmaScore", label: "Điểm Fugl-Meyer Chi trên (0 - 66)", type: "number", min: 0, max: 66 }
+                ],
+                rules: [
+                    { condition: "fmaScore <= 22", output: "<strong>Mức độ Nặng:</strong><br>- Vận động thụ động, phòng co rút.<br>- Định vị tư thế." },
+                    { condition: "fmaScore >= 23 && fmaScore <= 47", output: "<strong>Mức độ Trung bình:</strong><br>- Phá vỡ đồng vận.<br>- Tập luyện có hỗ trợ." },
+                    { condition: "fmaScore >= 48", output: "<strong>Mức độ Nhẹ:</strong><br>- Tập kỹ năng tinh vi, phối hợp.<br>- CIMT." }
+                ]
+            },
+            lbp: {
+                name: "Đau thắt lưng (LBP)",
+                inputs: [
+                    { id: "vasScore", label: "Mức độ đau VAS (0 - 10)", type: "number", min: 0, max: 10 },
+                    { id: "romLimit", label: "Hướng gây đau", type: "select", options: [{val: "'flexion'", text: "Gập"}, {val: "'extension'", text: "Duỗi"}] }
+                ],
+                rules: [
+                    { condition: "vasScore >= 7", output: "<strong>Giai đoạn Cấp:</strong><br>Nghỉ ngơi, kiểm soát đau bằng TENS, Nhiệt." },
+                    { condition: "vasScore < 7 && romLimit == 'flexion'", output: "<strong>Đau khi gập:</strong><br>Tập bài tập McKenzie hướng duỗi." },
+                    { condition: "vasScore < 7 && romLimit == 'extension'", output: "<strong>Đau khi duỗi:</strong><br>Tập bài tập Williams hướng gập." }
+                ]
+            }
+        };
+
+        // Lấy dữ liệu từ LocalStorage hoặc gán mặc định
+        let algorithmsData = JSON.parse(localStorage.getItem('algorithmsData')) || defaultData;
+
+        // Elements
+        const problemSelect = document.getElementById('clinical-problem');
+        const btnUseMode = document.getElementById('btn-use-mode');
+        const btnEditMode = document.getElementById('btn-edit-mode');
+        const usePanel = document.getElementById('use-panel');
+        const adminPanel = document.getElementById('admin-panel');
+        
+        // Use Mode Elements
+        const dynamicInputs = document.getElementById('dynamic-inputs');
+        const btnCalculate = document.getElementById('btn-calculate');
+        const resultDisplay = document.getElementById('result-display');
+        const resultContent = document.getElementById('result-content');
+
+        // Admin Mode Elements
+        const rulesContainer = document.getElementById('rules-container');
+        const btnAddRule = document.getElementById('btn-add-rule');
+        const btnSaveRules = document.getElementById('btn-save-rules');
+        const variableHints = document.getElementById('variable-hints');
+
+        let currentProblem = "";
+        let isEditMode = false;
+
+        // Khởi tạo danh sách bệnh lý
+        function initSelect() {
+            problemSelect.innerHTML = '<option value="" disabled selected>-- Chọn bệnh lý --</option>';
+            for (let key in algorithmsData) {
+                problemSelect.innerHTML += `<option value="${key}">${algorithmsData[key].name}</option>`;
+            }
+        }
+        initSelect();
+
+        // Chuyển đổi chế độ
+        btnUseMode.addEventListener('click', () => { isEditMode = false; updateUI(); });
+        btnEditMode.addEventListener('click', () => { isEditMode = true; updateUI(); });
+
+        function updateUI() {
+            btnUseMode.classList.toggle('active', !isEditMode);
+            btnEditMode.classList.toggle('active', isEditMode);
+            
+            if (!currentProblem) {
+                usePanel.style.display = 'none';
+                adminPanel.style.display = 'none';
+                return;
+            }
+
+            if (isEditMode) {
+                usePanel.style.display = 'none';
+                adminPanel.style.display = 'block';
+                renderAdminPanel();
+            } else {
+                adminPanel.style.display = 'none';
+                usePanel.style.display = 'block';
+                renderUsePanel();
+            }
+        }
+
+        problemSelect.addEventListener('change', (e) => {
+            currentProblem = e.target.value;
+            resultDisplay.style.display = 'none';
+            updateUI();
+        });
+
+        // ================= XỬ LÝ CHẾ ĐỘ SỬ DỤNG =================
+        function renderUsePanel() {
+            const data = algorithmsData[currentProblem];
+            let html = '';
+            data.inputs.forEach(inp => {
+                html += `<div class="form-group"><label>${inp.label}:</label>`;
+                if (inp.type === 'select') {
+                    html += `<select id="input-${inp.id}" class="form-control">`;
+                    inp.options.forEach(opt => html += `<option value="${opt.val.replace(/'/g,"")}">${opt.text}</option>`);
+                    html += `</select>`;
+                } else {
+                    html += `<input type="number" id="input-${inp.id}" class="form-control" min="${inp.min}" max="${inp.max}">`;
+                }
+                html += `</div>`;
+            });
+            dynamicInputs.innerHTML = html;
+        }
+
+        btnCalculate.addEventListener('click', () => {
+            const data = algorithmsData[currentProblem];
+            const inputValues = {};
+            
+            // Thu thập giá trị
+            data.inputs.forEach(inp => {
+                const val = document.getElementById(`input-${inp.id}`).value;
+                inputValues[inp.id] = inp.type === 'number' ? parseFloat(val) : `'${val}'`;
+            });
+
+            // Chạy thuật toán (Đánh giá từng luật)
+            let finalOutput = "<em>Chưa có luật nào thỏa mãn điều kiện.</em>";
+            
+            for (let rule of data.rules) {
+                try {
+                    // Cấu trúc hàm tự động kiểm tra điều kiện
+                    const keys = Object.keys(inputValues);
+                    const values = Object.values(inputValues).map(v => typeof v === 'string' ? v.replace(/'/g,"") : v);
+                    
+                    // Tạo một hàm JS an toàn để đánh giá logic
+                    const evaluator = new Function(...keys, `return ${rule.condition};`);
+                    
+                    if (evaluator(...values)) {
+                        finalOutput = rule.output;
+                        break; // Dừng lại ở luật đầu tiên đúng
+                    }
+                } catch (e) {
+                    console.error("Lỗi cú pháp trong luật:", e);
+                }
+            }
+
+            resultContent.innerHTML = finalOutput;
+            resultDisplay.style.display = 'block';
+        });
+
+        // ================= XỬ LÝ CHẾ ĐỘ CHỈNH SỬA (ADMIN) =================
+        function renderAdminPanel() {
+            const data = algorithmsData[currentProblem];
+            
+            // Hiển thị biến gợi ý
+            let hintHtml = `<strong>Các biến (variables) bạn có thể dùng để lập luật:</strong><br>`;
+            data.inputs.forEach(inp => {
+                hintHtml += `Biến: <span>${inp.id}</span> <em>(${inp.label})</em><br>`;
+            });
+            hintHtml += `<br><em>Toán tử hỗ trợ: <code>></code> (lớn hơn), <code><</code> (nhỏ hơn), <code>==</code> (bằng), <code>&&</code> (Và), <code>||</code> (Hoặc).</em>`;
+            variableHints.innerHTML = hintHtml;
+
+            // Hiển thị danh sách luật
+            rulesContainer.innerHTML = '';
+            data.rules.forEach((rule, index) => {
+                addRuleCard(rule.condition, rule.output, index);
+            });
+        }
+
+        function addRuleCard(condition = "", output = "", index = -1) {
+            const div = document.createElement('div');
+            div.className = 'rule-card';
+            div.innerHTML = `
+                <button class="btn-remove-rule" onclick="this.parentElement.remove()">Xóa</button>
+                <div class="form-group">
+                    <label>Điều kiện logic (JavaScript):</label>
+                    <input type="text" class="form-control rule-condition" placeholder="Ví dụ: fmaScore <= 22" value="${condition}">
+                </div>
+                <div class="form-group">
+                    <label>Kết quả (Mã HTML):</label>
+                    <textarea class="form-control rule-output" placeholder="Nhập phác đồ can thiệp...">${output}</textarea>
+                </div>
+            `;
+            rulesContainer.appendChild(div);
+        }
+
+        btnAddRule.addEventListener('click', () => addRuleCard());
+
+        btnSaveRules.addEventListener('click', () => {
+            const ruleCards = rulesContainer.querySelectorAll('.rule-card');
+            const newRules = [];
+            
+            ruleCards.forEach(card => {
+                const cond = card.querySelector('.rule-condition').value.trim();
+                const out = card.querySelector('.rule-output').value.trim();
+                if (cond && out) {
+                    newRules.push({ condition: cond, output: out });
+                }
+            });
+
+            algorithmsData[currentProblem].rules = newRules;
+            
+            // Lưu vào localStorage
+            localStorage.setItem('algorithmsData', JSON.stringify(algorithmsData));
+            alert("Đã lưu cấu hình thuật toán thành công!");
+        });
+
+    </script>
+</body>
+</html>
