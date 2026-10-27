@@ -113,7 +113,7 @@ const headerHTML = `
             </div>
             <div class="form-group" id="password-group">
                 <label>Mật khẩu</label>
-                <input type="password" id="auth-password" placeholder="Nhập mật khẩu (từ 6 ký tự)" required>
+                <input type="password" id="auth-password" placeholder="Nhập mật khẩu" required>
             </div>
             <div class="form-group" id="confirm-password-group" style="display: none;">
                 <label>Xác nhận mật khẩu</label>
