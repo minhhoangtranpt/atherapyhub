@@ -138,7 +138,7 @@ const headerHTML = `
 // =========================================================
 const footerHTML = `
     <footer>
-        &copy; ATherapyHub 2026.
+        &copy; ATherapyHub 2026
     </footer>
 `;
 
