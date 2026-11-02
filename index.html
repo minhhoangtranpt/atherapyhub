@@ -31,7 +31,7 @@
         }
         .sort-select:focus { border-color: var(--theme-secondary); }
 
-        /* Lưới 5 cột x 5 hàng */
+        /* Lưới 5 cột x 5 hàng trên máy tính */
         .article-grid-container { 
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -153,15 +153,53 @@
         @media (max-width: 992px) {
             .article-grid-container { grid-template-columns: repeat(3, 1fr); }
         }
+        
+        /* Giao diện Điện thoại & Máy tính bảng nhỏ: Thu gọn chiều dọc thẻ */
         @media (max-width: 768px) {
-            #main-content { margin: 15px auto; padding: 0 12px; }
-            .list-header-section { flex-direction: column; align-items: flex-start; gap: 10px; }
+            #main-content { margin: 12px auto; padding: 0 10px; }
+            .list-header-section { flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; }
             .header-actions { width: 100%; justify-content: space-between; }
             .filter-group { flex: 1; }
-            .article-grid-container { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            
+            .article-grid-container { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            
+            .article-card { border-radius: 8px; }
+            .article-card-banner { height: 60px; font-size: 14px; letter-spacing: 0.5px; }
+            .article-card-body { padding: 10px; }
+            
+            .article-card-title { 
+                font-size: 13.5px; 
+                line-height: 1.35; 
+                margin-bottom: 4px; 
+                min-height: 36px; 
+            }
+            
+            .article-snippet { 
+                font-size: 12px; 
+                line-height: 1.4; 
+                margin-bottom: 8px; 
+                -webkit-line-clamp: 2; /* Chỉ hiện tối đa 2 dòng trên điện thoại */
+            }
+            
+            .article-card-meta { 
+                font-size: 10.5px; 
+                padding-top: 6px; 
+                margin-bottom: 8px; 
+            }
+            
+            .btn-detail { 
+                padding: 6px 10px; 
+                font-size: 12px; 
+                border-radius: 5px; 
+            }
         }
+
         @media (max-width: 480px) {
-            .article-grid-container { grid-template-columns: 1fr; }
+            /* Nếu muốn điện thoại màn hình nhỏ hiển thị 1 cột siêu gọn thì giữ nguyên 1fr, 
+               hoặc đổi thành repeat(2, 1fr) nếu muốn luôn chia 2 cột song song */
+            .article-grid-container { grid-template-columns: 1fr; gap: 10px; }
+            .article-card-banner { height: 50px; font-size: 13.5px; }
+            .article-card-title { min-height: auto; }
         }
     </style>
 </head>
