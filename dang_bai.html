@@ -176,7 +176,7 @@
     <script type="module" src="layout.js"></script>
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-<script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -233,6 +233,7 @@
                             if(contentSnap.exists()) quill.root.innerHTML = contentSnap.data().content || '';
                         } else {
                             alert("Bài viết không tồn tại!");
+                            window.location.href = "index.html";
                         }
                     } catch (error) { console.error("Lỗi tải:", error); }
                 }
@@ -250,14 +251,15 @@
             if (!title || !snippet) return alert("Vui lòng nhập tiêu đề và nội dung xem trước.");
             if (quill.getText().trim() === '' && !content.includes('<img')) return alert("Nội dung chính thức không được để trống.");
 
-            btnSubmitPost.textContent = "Đang xử lý..."; btnSubmitPost.disabled = true;
+            btnSubmitPost.textContent = "Đang xử lý..."; 
+            btnSubmitPost.disabled = true;
 
             try {
                 if (postId) {
                     await updateDoc(doc(db, "article_snippets", postId), { title: title, snippet: snippet, updatedAt: serverTimestamp() });
                     await updateDoc(doc(db, "article_contents", postId), { content: content, updatedAt: serverTimestamp() });
                     alert('Cập nhật thành công!');
-                    btnSubmitPost.textContent = "Cập nhật bài viết";
+                    window.location.href = "index.html"; // Đưa về trang chủ sau khi sửa
                 } else {
                     // Tạo ID chung cho cả 2 bảng
                     const newDocRef = doc(collection(db, "article_snippets"));
@@ -269,12 +271,11 @@
                     await setDoc(doc(db, "article_contents", newId), { content: content });
                     
                     alert('Xuất bản bài viết thành công!');
-                    titleInput.value = ''; snippetInput.value = ''; quill.setContents([]); 
-                    btnSubmitPost.textContent = "Xuất bản bài viết";
+                    window.location.href = "index.html"; // Đưa về trang chủ sau khi đăng mới
                 }
-                btnSubmitPost.disabled = false;
             } catch (error) {
-                console.error("Lỗi:", error); alert("Lỗi khi lưu bài.");
+                console.error("Lỗi:", error); 
+                alert("Lỗi khi lưu bài.");
                 btnSubmitPost.textContent = postId ? "Cập nhật bài viết" : "Xuất bản bài viết";
                 btnSubmitPost.disabled = false;
             }
@@ -282,14 +283,18 @@
 
         btnDeletePost.addEventListener('click', async () => {
             if(confirm("Bạn có chắc chắn muốn xóa vĩnh viễn bài viết này?")) {
-                btnDeletePost.textContent = "Đang xóa..."; btnDeletePost.disabled = true;
+                btnDeletePost.textContent = "Đang xóa..."; 
+                btnDeletePost.disabled = true;
                 try {
                     await deleteDoc(doc(db, "article_snippets", postId));
                     await deleteDoc(doc(db, "article_contents", postId));
-                    alert("Xóa thành công!"); window.location.href = "index.html"; 
+                    alert("Xóa thành công!"); 
+                    window.location.href = "index.html"; // Đưa về trang chủ sau khi xóa
                 } catch (error) {
-                    console.error("Lỗi xóa:", error); alert("Lỗi khi xóa bài.");
-                    btnDeletePost.textContent = "Xóa bài viết"; btnDeletePost.disabled = false;
+                    console.error("Lỗi xóa:", error); 
+                    alert("Lỗi khi xóa bài.");
+                    btnDeletePost.textContent = "Xóa bài viết"; 
+                    btnDeletePost.disabled = false;
                 }
             }
         });
