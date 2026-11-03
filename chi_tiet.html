@@ -107,6 +107,28 @@
 
         .article-body li { margin-bottom: 5px; }
 
+        /* Định dạng bản xem trước có hiệu ứng mờ dòng cuối */
+        .snippet-preview-container {
+            position: relative;
+            padding-bottom: 5px;
+        }
+
+        .snippet-preview-text {
+            color: var(--text-main);
+            white-space: pre-line;
+            margin-bottom: 0 !important;
+        }
+
+        .snippet-fade-last-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 32px; /* Độ cao vừa khít làm mờ hàng chữ cuối cùng */
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, var(--bg-card, #ffffff) 95%);
+            pointer-events: none;
+        }
+
         .btn-back {
             display: inline-block;
             margin-bottom: 15px;
@@ -130,13 +152,6 @@
     <main id="main-content">
         <a href="index.html" class="btn-back">← Quay lại Trang chủ</a>
 
-        <!-- Cảnh báo chưa đăng nhập -->
-        <div id="auth-warning" style="display: none; text-align: center; padding: 40px 20px; background: white; border-radius: 8px; border: 1px solid var(--border-color); max-width: 800px; margin: 0 auto;">
-            <h3 style="color: var(--danger); margin-bottom: 10px;">Yêu cầu đăng nhập</h3>
-            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px;">Bạn cần đăng nhập để xem nội dung chi tiết của bài viết này.</p>
-            <button class="btn-primary" style="max-width: 200px; padding: 8px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
-        </div>
-
         <!-- Wrapper chứa bài viết -->
         <div id="article-wrapper" class="article-wrapper" style="display: none;">
             <div class="article-header">
@@ -156,6 +171,13 @@
             <div id="article-body" class="article-body">
                 <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">Vui lòng chờ trong giây lát...</div>
             </div>
+
+            <!-- Cảnh báo chưa đăng nhập (Đặt ngay dưới dòng chữ mờ cuối cùng của bản xem trước) -->
+            <div id="auth-warning" style="display: none; text-align: center; padding: 30px 20px; background: var(--bg-body, #f8fafc); border-radius: 8px; border: 1px dashed var(--border-color); margin-top: 15px;">
+                <h3 style="color: var(--danger); margin-bottom: 8px;">Yêu cầu đăng nhập</h3>
+                <p style="color: var(--text-muted); margin-bottom: 18px; font-size: 14px;">Bạn cần đăng nhập để tiếp tục đọc toàn bộ nội dung chuyên sâu của bài viết này.</p>
+                <button class="btn-primary" style="max-width: 200px; padding: 9px 18px;" onclick="document.getElementById('login-modal').style.display='flex'">Đăng nhập ngay</button>
+            </div>
         </div>
     </main>
 
@@ -163,7 +185,7 @@
     <script type="module" src="layout.js"></script>
 
     <!-- Script tải dữ liệu Firebase -->
-<script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -205,6 +227,7 @@
                 if (!snippetSnap.exists()) {
                     titleEl.textContent = "Bài viết không tồn tại";
                     bodyEl.innerHTML = '<div style="text-align: center; color: var(--danger);">Bài viết này đã bị xóa hoặc đường dẫn không hợp lệ.</div>';
+                    authWarning.style.display = 'none';
                     return;
                 }
 
@@ -247,15 +270,14 @@
                     }
 
                 } else {
-                    // Chưa đăng nhập -> Hiện đoạn mồi và che đi, hiện nút yêu cầu đăng nhập
+                    // Chưa đăng nhập -> Hiện TOÀN BỘ nội dung xem trước (không cắt bớt) kèm hiệu ứng mờ hàng cuối
                     authWarning.style.display = 'block';
                     btnEdit.style.display = 'none';
                     
-                    // Tạo hiệu ứng mờ dần (fade out) cho đoạn snippet
                     bodyEl.innerHTML = `
-                        <div style="position: relative; overflow: hidden; max-height: 120px;">
-                            <p style="color: var(--text-main); font-style: italic;">${snippetData.snippet}</p>
-                            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, var(--bg-card));"></div>
+                        <div class="snippet-preview-container">
+                            <p class="snippet-preview-text">${snippetData.snippet || ''}</p>
+                            <div class="snippet-fade-last-line"></div>
                         </div>
                     `;
                 }
