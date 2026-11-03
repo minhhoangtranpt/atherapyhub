@@ -4,6 +4,7 @@ favicon.rel = 'icon';
 favicon.type = 'image/jpeg';
 favicon.href = 'logo.jpg';
 document.head.appendChild(favicon);
+
 // =========================================================
 // 0. KHỞI TẠO FIREBASE VÀ IMPORT CÁC HÀM CẦN THIẾT
 // =========================================================
@@ -12,11 +13,18 @@ import {
     getAuth, 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
+    updateProfile,
     sendPasswordResetEmail, 
     sendEmailVerification,
     onAuthStateChanged, 
     signOut 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { 
+    getFirestore, 
+    doc, 
+    setDoc, 
+    serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBcC-sXCRnZ1eg9gzGR25HvaNi-B1P3Xuo",
@@ -29,6 +37,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 // =========================================================
 // 1. TẠO CẤU TRÚC HTML CHO HEADER, TÌM KIẾM VÀ MODAL
@@ -107,6 +116,12 @@ const headerHTML = `
             <button id="close-login-modal" class="btn-close-modal">&times;</button>
             <h2 id="modal-title">Đăng nhập</h2>
             
+            <!-- Ô nhập Tên người dùng (Chỉ hiện khi Đăng ký) -->
+            <div class="form-group" id="username-group" style="display: none;">
+                <label>Tên người dùng <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="auth-username" placeholder="Nhập tên hiển thị của bạn" required>
+            </div>
+
             <div class="form-group">
                 <label>Email</label>
                 <input type="email" id="auth-email" placeholder="Nhập email của bạn" required>
@@ -196,6 +211,8 @@ const errorMsg = document.getElementById('error-msg');
 
 let currentAuthMode = 'login'; 
 const modalTitle = document.getElementById('modal-title');
+const usernameGroup = document.getElementById('username-group');
+const authUsername = document.getElementById('auth-username');
 const authEmail = document.getElementById('auth-email');
 const authPassword = document.getElementById('auth-password');
 const authConfirmPassword = document.getElementById('auth-confirm-password');
@@ -214,6 +231,7 @@ function switchAuthMode(mode) {
 
     if (mode === 'login') {
         modalTitle.textContent = 'Đăng nhập';
+        usernameGroup.style.display = 'none';
         passGroup.style.display = 'block';
         confirmPassGroup.style.display = 'none';
         authMainBtn.textContent = 'Đăng nhập';
@@ -223,6 +241,7 @@ function switchAuthMode(mode) {
         linkBackLogin.style.display = 'none';
     } else if (mode === 'register') {
         modalTitle.textContent = 'Đăng ký tài khoản';
+        usernameGroup.style.display = 'block';
         passGroup.style.display = 'block';
         confirmPassGroup.style.display = 'block';
         authMainBtn.textContent = 'Đăng ký';
@@ -232,6 +251,7 @@ function switchAuthMode(mode) {
         linkBackLogin.style.display = 'inline-block';
     } else if (mode === 'forgot') {
         modalTitle.textContent = 'Khôi phục mật khẩu';
+        usernameGroup.style.display = 'none';
         passGroup.style.display = 'none';
         confirmPassGroup.style.display = 'none';
         authMainBtn.textContent = 'Gửi email khôi phục';
@@ -257,7 +277,8 @@ onAuthStateChanged(auth, (user) => {
     if (user && user.emailVerified) {
         openLoginBtn.classList.add('hidden');
         logoutBtn.classList.remove('hidden');
-        userEmailDisplay.textContent = user.email;
+        // Ưu tiên hiển thị Tên người dùng nếu có, nếu không thì hiện Email
+        userEmailDisplay.textContent = user.displayName || user.email;
         userEmailDisplay.classList.remove('hidden');
     } else {
         if (user && !user.emailVerified) {
@@ -271,12 +292,20 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // Xử lý Form Xác thực
-authMainBtn.addEventListener('click', () => {
+authMainBtn.addEventListener('click', async () => {
+    const username = authUsername.value.trim();
     const email = authEmail.value.trim();
     const password = authPassword.value;
     const confirmPassword = authConfirmPassword.value;
 
+    if (currentAuthMode === 'register' && !username) {
+        errorMsg.style.color = 'var(--danger)';
+        errorMsg.textContent = "Vui lòng nhập Tên người dùng!";
+        return;
+    }
+
     if (!email) {
+        errorMsg.style.color = 'var(--danger)';
         errorMsg.textContent = "Vui lòng nhập Email!";
         return;
     }
@@ -308,24 +337,37 @@ authMainBtn.addEventListener('click', () => {
         if (password.length < 6) return errorMsg.textContent = "Mật khẩu phải từ 6 ký tự!";
         if (password !== confirmPassword) return errorMsg.textContent = "Mật khẩu xác nhận không khớp!";
         
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                sendEmailVerification(user).then(() => {
-                    signOut(auth); 
-                    errorMsg.style.color = "#03543F";
-                    errorMsg.textContent = "Đăng ký thành công! Vui lòng kiểm tra email (cả mục Spam) để xác thực tài khoản trước khi đăng nhập.";
-                    authPassword.value = '';
-                    authConfirmPassword.value = '';
-                });
-            })
-            .catch((err) => {
-                if (err.code === 'auth/email-already-in-use') {
-                    errorMsg.textContent = "Email này đã được sử dụng!";
-                } else {
-                    errorMsg.textContent = "Lỗi đăng ký: " + err.message;
-                }
-            });
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // 1. Cập nhật displayName vào Firebase Auth
+            await updateProfile(user, { displayName: username });
+
+            // 2. Lưu hồ sơ người dùng vào bảng users trên Firestore (khi đang có phiên đăng nhập)
+            await setDoc(doc(db, "users", user.uid), {
+                displayName: username,
+                email: email,
+                createdAt: serverTimestamp()
+            }, { merge: true });
+
+            // 3. Gửi email xác thực và đăng xuất tạm thời
+            await sendEmailVerification(user);
+            await signOut(auth);
+
+            errorMsg.style.color = "#03543F";
+            errorMsg.textContent = "Đăng ký thành công! Vui lòng kiểm tra email (cả mục Spam) để xác thực tài khoản trước khi đăng nhập.";
+            authUsername.value = '';
+            authPassword.value = '';
+            authConfirmPassword.value = '';
+
+        } catch (err) {
+            if (err.code === 'auth/email-already-in-use') {
+                errorMsg.textContent = "Email này đã được sử dụng!";
+            } else {
+                errorMsg.textContent = "Lỗi đăng ký: " + err.message;
+            }
+        }
 
     } else if (currentAuthMode === 'forgot') {
         sendPasswordResetEmail(auth, email)
