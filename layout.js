@@ -332,26 +332,27 @@ authMainBtn.addEventListener('click', async () => {
                 errorMsg.textContent = "Sai email hoặc mật khẩu!";
             });
 
-    } else if (currentAuthMode === 'register') {
+} else if (currentAuthMode === 'register') {
         if (!password) return errorMsg.textContent = "Vui lòng nhập mật khẩu!";
         if (password.length < 6) return errorMsg.textContent = "Mật khẩu phải từ 6 ký tự!";
         if (password !== confirmPassword) return errorMsg.textContent = "Mật khẩu xác nhận không khớp!";
         
         try {
+            // 1. Tạo tài khoản với Email và Mật khẩu
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // 1. Cập nhật displayName vào Firebase Auth
+            // 2. Gán trực tiếp Tên người dùng vào hồ sơ Firebase Auth (displayName)
             await updateProfile(user, { displayName: username });
 
-            // 2. Lưu hồ sơ người dùng vào bảng users trên Firestore (khi đang có phiên đăng nhập)
+            // 3. Đồng thời lưu thông tin chi tiết vào bảng users trên Firestore
             await setDoc(doc(db, "users", user.uid), {
                 displayName: username,
                 email: email,
                 createdAt: serverTimestamp()
             }, { merge: true });
 
-            // 3. Gửi email xác thực và đăng xuất tạm thời
+            // 4. Gửi email xác thực và đăng xuất tạm thời chờ kích hoạt
             await sendEmailVerification(user);
             await signOut(auth);
 
@@ -368,7 +369,7 @@ authMainBtn.addEventListener('click', async () => {
                 errorMsg.textContent = "Lỗi đăng ký: " + err.message;
             }
         }
-
+    }
     } else if (currentAuthMode === 'forgot') {
         sendPasswordResetEmail(auth, email)
             .then(() => {
