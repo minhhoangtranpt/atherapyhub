@@ -4,14 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kết quả tìm kiếm - ATherapyHub</title>
-    <!-- Nhúng CSS dùng chung -->
     <link rel="stylesheet" href="style.css">
     <style>
-        /* CSS riêng cho trang tìm kiếm */
+        /* Mở rộng khung chứa đồng bộ với trang chủ */
+        #main-content {
+            max-width: 1400px;
+            margin: 25px auto;
+            padding: 0 20px;
+        }
+
         .search-results-header {
             margin-bottom: 20px;
-            padding-bottom: 15px;
+            padding-bottom: 12px;
             border-bottom: 2px solid var(--border-color);
+        }
+
+        .search-results-header h2 {
+            margin: 0;
+            color: var(--theme-primary);
+            font-size: 20px;
         }
         
         .search-keyword {
@@ -20,6 +31,7 @@
         }
 
         .no-results {
+            grid-column: 1 / -1;
             text-align: center;
             color: var(--text-muted);
             padding: 50px 20px;
@@ -28,51 +40,136 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Giao diện Danh sách Phẳng (Flat List View) */
-        .article-list-vertical { 
-            display: flex; flex-direction: column; gap: 0; 
-            background: var(--bg-card); border: 1px solid var(--border-color); 
-            border-radius: 8px; overflow: hidden;
+        /* Lưới 5 cột x 5 hàng trên máy tính */
+        .article-grid-container { 
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 18px;
         }
         
-        .article-card-horizontal {
-            padding: 15px; border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; justify-content: space-between; 
-            text-decoration: none; color: inherit; gap: 15px; transition: background-color 0.2s;
-        }
-        
-        .article-card-horizontal:last-child { border-bottom: none; }
-        .article-card-horizontal:hover { background-color: var(--theme-light); }
-
-        .article-main-content { flex: 1; min-width: 0; }
-        
-        .article-card-title {
-            font-size: 16px; font-weight: 600; color: var(--theme-primary); line-height: 1.4;
-            margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical; overflow: hidden;
+        /* Thẻ bài viết (Card) */
+        .article-card {
+            background: var(--bg-card, #ffffff);
+            border: 1px solid var(--border-color, #e2e8f0);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
         }
 
-        .article-snippet {
-            font-size: 13.5px; color: var(--text-main); line-height: 1.5;
-            margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical; overflow: hidden;
+        .article-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--theme-secondary, #3b82f6);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Khung trên cùng hiển thị Tên bài viết */
+        .article-card-banner {
+            min-height: 110px;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--theme-primary, #1e3a8a), var(--theme-secondary, #2563eb));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #ffffff;
+            border-bottom: 1px solid var(--border-color, #e2e8f0);
+            flex: 1;
+        }
+
+        .banner-title {
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.45;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .article-card-body {
+            padding: 12px 15px 15px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            background: var(--bg-card, #ffffff);
         }
 
         .article-card-meta { 
-            font-size: 12px; color: var(--text-muted); display: flex; 
-            align-items: center; gap: 8px; flex-wrap: wrap; 
+            font-size: 11.5px;
+            color: var(--text-muted, #64748b);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        /* Nút bấm Xem chi tiết: Nền trắng, chữ xanh, viền xanh */
+        .btn-detail {
+            display: block;
+            text-align: center;
+            background-color: #ffffff;
+            color: var(--theme-primary, #1e3a8a);
+            border: 1.5px solid var(--theme-primary, #1e3a8a);
+            text-decoration: none;
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-detail:hover {
+            background-color: var(--theme-light, #eff6ff);
+            color: var(--theme-secondary, #2563eb);
+            border-color: var(--theme-secondary, #2563eb);
+        }
+
+        /* Phân trang */
+        .pagination { display: flex; justify-content: center; gap: 6px; margin-top: 30px; flex-wrap: wrap; }
+        .page-btn {
+            padding: 6px 12px; border: 1px solid var(--border-color); background-color: white;
+            color: var(--text-main); border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500;
+        }
+        .page-btn:hover { background-color: var(--theme-light); }
+        .page-btn.active { background-color: var(--theme-primary); color: white; border-color: var(--theme-primary); }
+
+        /* Tương thích màn hình nhỏ (Responsive) */
+        @media (max-width: 1200px) {
+            .article-grid-container { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 992px) {
+            .article-grid-container { grid-template-columns: repeat(3, 1fr); }
         }
         
-        .article-card-author { color: var(--text-main); font-weight: 500; }
-
-        .article-card-stats { text-align: center; min-width: 70px; padding-left: 15px; border-left: 1px solid var(--border-color); }
-        .article-card-stats .count { font-size: 18px; font-weight: 700; color: var(--accent-color); }
-        .article-card-stats .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
-
+        /* Giao diện Điện thoại & Máy tính bảng nhỏ: Thu gọn chiều dọc thẻ */
         @media (max-width: 768px) {
-            #main-content { margin: 15px auto; padding: 0 10px; }
-            .article-card-horizontal { padding: 12px; gap: 10px; }
-            .article-card-stats { border-left: none; padding-left: 0; min-width: 45px; }
+            #main-content { margin: 12px auto; padding: 0 10px; }
+            .search-results-header { margin-bottom: 12px; padding-bottom: 8px; }
+            .search-results-header h2 { font-size: 17px; }
+            
+            .article-grid-container { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            
+            .article-card { border-radius: 8px; }
+            .article-card-banner { min-height: 75px; padding: 10px; }
+            .banner-title { font-size: 13.5px; line-height: 1.35; -webkit-line-clamp: 3; }
+            
+            .article-card-body { padding: 8px 10px 10px 10px; }
+            .article-card-meta { font-size: 10.5px; margin-bottom: 8px; }
+            
+            .btn-detail { 
+                padding: 5px 10px; 
+                font-size: 12px; 
+                border-radius: 5px; 
+            }
+        }
+
+        @media (max-width: 480px) {
+            .article-grid-container { grid-template-columns: 1fr; gap: 10px; }
+            .article-card-banner { min-height: 65px; padding: 12px; }
+            .banner-title { -webkit-line-clamp: 2; }
         }
     </style>
 </head>
@@ -81,13 +178,14 @@
     <main id="main-content">
         <div class="search-results-header">
             <h2>Kết quả tìm kiếm cho: "<span id="keyword-display" class="search-keyword">...</span>"</h2>
-            <p id="result-count" style="color: var(--text-muted); font-size: 14px; margin-top: 5px;">Đang tìm kiếm dữ liệu...</p>
+            <p id="result-count" style="color: var(--text-muted); font-size: 13.5px; margin-top: 5px;">Đang tìm kiếm dữ liệu...</p>
         </div>
 
-        <!-- Vùng hiển thị kết quả -->
-        <div id="results-container" class="article-list-vertical">
-            <!-- JavaScript sẽ điền kết quả vào đây -->
-        </div>
+        <!-- Vùng hiển thị kết quả dạng lưới -->
+        <div id="results-container" class="article-grid-container"></div>
+
+        <!-- Phân trang nếu kết quả > 25 bài -->
+        <div id="pagination-container" class="pagination"></div>
     </main>
 
     <!-- Nhúng JS dạng module -->
@@ -110,12 +208,14 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Loại bỏ thẻ HTML thừa nếu có
-        function stripHTML(html) {
-            let tmp = document.createElement("DIV");
-            tmp.innerHTML = html;
-            return tmp.textContent || tmp.innerText || "";
-        }
+        const keywordDisplay = document.getElementById('keyword-display');
+        const resultsContainer = document.getElementById('results-container');
+        const resultCount = document.getElementById('result-count');
+        const paginationContainer = document.getElementById('pagination-container');
+
+        let matchedArticles = [];
+        let currentPage = 1;
+        const itemsPerPage = 25; // 5 hàng x 5 cột = 25 bài viết mỗi trang
 
         // Loại bỏ dấu tiếng Việt để tìm kiếm không phân biệt dấu
         function removeVietnameseTones(str) {
@@ -136,19 +236,57 @@
             return str.toLowerCase();
         }
 
+        function renderSearchResults() {
+            resultsContainer.innerHTML = '';
+            const currentItems = matchedArticles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+            currentItems.forEach(article => {
+                const card = document.createElement('div');
+                card.className = 'article-card';
+
+                card.innerHTML = `
+                    <div class="article-card-banner" title="${article.title}">
+                        <div class="banner-title">${article.title}</div>
+                    </div>
+                    <div class="article-card-body">
+                        <div class="article-card-meta">
+                            <span>${article.date}</span>
+                            <span>${article.viewCount} lượt xem</span>
+                        </div>
+                        <a href="chi_tiet.html?id=${article.id}" class="btn-detail">Xem chi tiết</a>
+                    </div>
+                `;
+                resultsContainer.appendChild(card);
+            });
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            paginationContainer.innerHTML = '';
+            const totalPages = Math.ceil(matchedArticles.length / itemsPerPage);
+            if (totalPages <= 1) return;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.addEventListener('click', () => { 
+                    currentPage = i; 
+                    renderSearchResults(); 
+                    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                });
+                paginationContainer.appendChild(btn);
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const keywordRaw = urlParams.get('q');
-            
-            const keywordDisplay = document.getElementById('keyword-display');
-            const resultsContainer = document.getElementById('results-container');
-            const resultCount = document.getElementById('result-count');
 
             if (!keywordRaw || keywordRaw.trim() === '') {
                 keywordDisplay.textContent = "Trống";
                 resultCount.textContent = "";
-                resultsContainer.style.background = "transparent";
-                resultsContainer.style.border = "none";
                 resultsContainer.innerHTML = `
                     <div class="no-results">
                         <p>Vui lòng nhập từ khóa vào thanh tìm kiếm ở phía trên.</p>
@@ -162,80 +300,56 @@
             keywordDisplay.textContent = keywordStr;
 
             try {
-                // Tải danh sách bài viết từ bảng xem trước (an toàn không cần đăng nhập)
+                // Tải danh sách bài viết từ bảng xem trước (vẫn quét cả tiêu đề lẫn nội dung snippet để tìm chính xác)
                 const querySnapshot = await getDocs(collection(db, "article_snippets"));
-                const matchedArticles = [];
+                matchedArticles = [];
 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    const title = data.title || "";
+                    const title = data.title || "Bài viết không có tiêu đề";
                     const snippetData = data.snippet || "";
 
                     const textToSearch = removeVietnameseTones(title + " " + snippetData);
 
-                    // Kiểm tra xem từ khóa có nằm trong bài viết không
                     if (textToSearch.includes(keywordNormalized)) {
                         let dateStr = "Vừa xong";
+                        let createdTime = 0;
                         if (data.createdAt && data.createdAt.toDate) {
-                            dateStr = data.createdAt.toDate().toLocaleDateString('vi-VN');
+                            const dateObj = data.createdAt.toDate();
+                            createdTime = dateObj.getTime();
+                            dateStr = dateObj.toLocaleDateString('vi-VN');
                         }
-
-                        let snippet = stripHTML(snippetData);
-                        if (snippet.length > 150) snippet = snippet.substring(0, 150) + "...";
 
                         matchedArticles.push({
                             id: doc.id,
                             title: title,
-                            author: data.author || "Ban Quản Trị",
                             date: dateStr,
-                            snippet: snippet,
-                            viewCount: data.viewCount || 0
+                            viewCount: data.viewCount || 0,
+                            createdTime: createdTime
                         });
                     }
                 });
 
+                // Sắp xếp kết quả tìm kiếm mới nhất lên đầu
+                matchedArticles.sort((a, b) => b.createdTime - a.createdTime);
+
                 if (matchedArticles.length === 0) {
                     resultCount.textContent = `Tìm thấy 0 kết quả phù hợp.`;
-                    resultsContainer.style.background = "transparent";
-                    resultsContainer.style.border = "none";
                     resultsContainer.innerHTML = `
                         <div class="no-results">
                             <h3 style="color: var(--theme-primary); margin-bottom: 10px;">Không tìm thấy bài viết nào</h3>
-                            <p>Rất tiếc, chúng tôi không tìm thấy nội dung phù hợp với từ khóa "<strong>${keywordStr}</strong>".<br>Vui lòng thử lại bằng các từ khóa khác.</p>
+                            <p>Rất tiếc, chúng tôi không tìm thấy nội dung phù hợp với từ khóa "<strong>${keywordStr}</strong>".<br>Vui lòng thử lại bằng các từ khóa khác ngắn gọn hơn.</p>
                         </div>
                     `;
                 } else {
                     resultCount.textContent = `Tìm thấy ${matchedArticles.length} kết quả phù hợp.`;
-                    let cardsHTML = '';
-                    
-                    matchedArticles.forEach(article => {
-                        cardsHTML += `
-                            <a href="chi_tiet.html?id=${article.id}" class="article-card-horizontal">
-                                <div class="article-main-content">
-                                    <div class="article-card-title">${article.title}</div>
-                                    <div class="article-snippet">${article.snippet}</div>
-                                    <div class="article-card-meta">
-                                        <span class="article-card-author">${article.author}</span>
-                                        <span>•</span>
-                                        <span>${article.date}</span>
-                                    </div>
-                                </div>
-                                <div class="article-card-stats">
-                                    <div class="count">${article.viewCount}</div>
-                                    <div class="label">Lượt xem</div>
-                                </div>
-                            </a>
-                        `;
-                    });
-
-                    resultsContainer.innerHTML = cardsHTML;
+                    currentPage = 1;
+                    renderSearchResults();
                 }
 
             } catch (error) {
                 console.error("Lỗi tìm kiếm:", error);
                 resultCount.textContent = "";
-                resultsContainer.style.background = "transparent";
-                resultsContainer.style.border = "none";
                 resultsContainer.innerHTML = '<div class="no-results" style="color: var(--danger);">Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại sau.</div>';
             }
         });
